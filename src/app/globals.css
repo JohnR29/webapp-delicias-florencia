@@ -1,0 +1,165 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /* Brand colors matching original design */
+  --primary-color: #d33939;
+  --secondary-color: #db2777;
+  --accent-color: #f59e0b;
+  --text-dark: #1a1a1a;
+  --text-light: #666;
+  --bg-light: #fafafa;
+  --border-light: #e5e5e5;
+}
+
+/* Mobile-first optimizations */
+* {
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  font-family: var(--font-poppins), 'Poppins', system-ui, sans-serif;
+  line-height: 1.6;
+  color: var(--text-dark);
+  background-color: var(--bg-light);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Font utilities */
+.font-dancing-script {
+  font-family: var(--font-dancing-script), 'Dancing Script', cursive;
+}
+
+.font-script {
+  font-family: var(--font-dancing-script), 'Dancing Script', cursive;
+}
+
+/* Touch-friendly buttons */
+@media (pointer: coarse) {
+  button, 
+  [role="button"], 
+  .touch-target {
+    min-height: 44px;
+    min-width: 44px;
+  }
+}
+
+/* Smooth animations for better UX */
+@layer utilities {
+  .animate-fade-in {
+    animation: fadeIn 0.5s ease-in-out;
+  }
+  
+  .animate-slide-up {
+    animation: slideUp 0.3s ease-out;
+  }
+  
+  .animate-bounce-gentle {
+    animation: bounce 2s infinite;
+  }
+  
+  .animate-pulse-soft {
+    animation: pulse 3s infinite;
+  }
+}
+
+/* Animations keyframes */
+@keyframes fadeIn {
+  from { 
+    opacity: 0; 
+    transform: translateY(10px);
+  }
+  to { 
+    opacity: 1; 
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideUp {
+  from { 
+    transform: translateY(20px); 
+    opacity: 0; 
+  }
+  to { 
+    transform: translateY(0); 
+    opacity: 1; 
+  }
+}
+
+/* Custom scrollbar for mobile */
+::-webkit-scrollbar {
+  width: 4px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--primary-color);
+  border-radius: 2px;
+}
+
+/* Leaflet custom styles */
+.custom-tooltip {
+  background-color: rgba(255, 255, 255, 0.95) !important;
+  border: 2px solid var(--primary-color) !important;
+  border-radius: 8px !important;
+  font-weight: 600 !important;
+  color: var(--primary-color) !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+}
+
+.custom-tooltip::before {
+  border-top-color: var(--primary-color) !important;
+}
+
+/* Ensure Leaflet controls are visible */
+.leaflet-control-zoom a {
+  color: #333 !important;
+}
+
+.leaflet-container {
+  font-family: inherit !important;
+}
+
+/* Focus styles for accessibility */
+:focus-visible {
+  outline: 2px solid var(--primary-color);
+  outline-offset: 2px;
+}
+
+/* Improved touch interactions */
+@media (hover: none) and (pointer: coarse) {
+  /* Disable hover effects on touch devices */
+  .hover-only:hover {
+    transform: none !important;
+    box-shadow: none !important;
+  }
+  
+  /* Enhance tap feedback */
+  button:active,
+  [role="button"]:active {
+    transform: scale(0.95);
+    transition: transform 0.1s ease;
+  }
+}
+
+/* Prevent horizontal scroll on mobile */
+html, body {
+  overflow-x: hidden;
+}
+
+/* Safe area padding for mobile */
+@supports (padding: max(0px)) {
+  .safe-area-bottom {
+    padding-bottom: max(1rem, env(safe-area-inset-bottom));
+  }
+  
+  .safe-area-top {
+    padding-top: max(1rem, env(safe-area-inset-top));
+  }
+}

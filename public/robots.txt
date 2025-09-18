@@ -1,0 +1,13 @@
+User-agent: *
+Allow: /
+
+# Disallow admin areas (if any)
+Disallow: /api/
+Disallow: /_next/
+Disallow: /admin/
+
+# Sitemap location
+Sitemap: https://deliciasflorencia.cl/sitemap.xml
+
+# Crawl delay (optional)
+Crawl-delay: 1
