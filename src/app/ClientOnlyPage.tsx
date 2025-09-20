@@ -1,0 +1,162 @@
+ 'use client';
+
+import ClientHeader from '@/components/ClientHeader';
+import Banner from '@/components/Banner';
+import ClientCoverageMap from '@/components/ClientCoverageMap';
+import PricingTiers from '@/components/PricingTiers';
+import ProductCard from '@/components/ProductCard';
+import ClientContactForm from '@/components/ClientContactForm';
+import ClientScrollToCart from '@/components/ClientScrollToCart';
+import { useCart } from '@/hooks/useCart';
+import { saboresData, saboresUnicos } from '@/data/productos';
+import { useState } from 'react';
+
+export default function ClientOnlyPage() {
+  const [isMobileCartOpen, setIsMobileCartOpen] = useState(false);
+  const {
+    items,
+    cartState,
+    updateQuantity,
+    clearCart,
+    cumpleMinimoMayorista,
+    unidadesHastaSiguienteTier,
+    tierActual,
+    productosSeleccionados
+  } = useCart(saboresData);
+
+  return (
+    <main className="min-h-screen bg-gradient-to-br from-primary-50 via-white to-secondary-50">
+      <ClientHeader />
+      <Banner />
+      {/* Hero Section */}
+      <section id="inicio" className="py-16 lg:py-24">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-16 animate-fade-in">
+            <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-gray-800 mb-6">
+              Tu Socio Comercial en Repostería
+            </h2>
+            <p className="text-xl text-gray-600 max-w-3xl mx-auto mb-8 leading-relaxed">
+              Amplia tu oferta con nuestras tortas artesanales de alta rotación y excelente margen
+            </p>
+            <div className="flex flex-wrap justify-center gap-4 text-sm text-gray-600">
+              <div className="flex items-center space-x-2 animate-slide-up" style={{ animationDelay: '0.1s' }}>
+                <span className="w-2 h-2 bg-primary-400 rounded-full"></span>
+                <span>Productos artesanales</span>
+              </div>
+              <div className="flex items-center space-x-2 animate-slide-up" style={{ animationDelay: '0.2s' }}>
+                <span className="w-2 h-2 bg-secondary-400 rounded-full"></span>
+                <span>Entrega programada</span>
+              </div>
+              <div className="flex items-center space-x-2 animate-slide-up" style={{ animationDelay: '0.3s' }}>
+                <span className="w-2 h-2 bg-accent-400 rounded-full"></span>
+                <span>Precios mayoristas</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+      {/* Coverage Information */}
+      <section id="cobertura" className="py-16 bg-white">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-12 animate-fade-in">
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-800 mb-4">
+              Zonas de Distribución
+            </h2>
+            <p className="text-lg text-gray-600">
+              Rutas de entrega programadas para tu negocio
+            </p>
+          </div>
+          <div className="grid lg:grid-cols-2 gap-8 mb-12">
+            <div className="animate-fade-in">
+              <ClientCoverageMap className="h-96 shadow-lg" />
+            </div>
+            <div className="flex flex-col justify-center animate-fade-in" style={{ animationDelay: '0.1s' }}>
+              <h3 className="text-2xl font-semibold mb-4 text-primary-700">Cobertura actual</h3>
+              <ul className="text-lg text-gray-700 mb-4">
+                <li>San Bernardo</li>
+                <li>La Pintana</li>
+                <li>El Bosque</li>
+                <li>La Cisterna</li>
+              </ul>
+              <p className="text-gray-500 text-sm">¿Tu comuna no aparece? ¡Contáctanos para evaluar nuevas rutas!</p>
+            </div>
+          </div>
+        </div>
+      </section>
+      {/* Product Catalog */}
+      <section id="catalogo" className="py-16">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-12 animate-fade-in">
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-800 mb-4">Catálogo de Tortas</h2>
+            <p className="text-lg text-gray-600">Elige los sabores y formatos para tu negocio</p>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+            {saboresUnicos.map((sabor) => (
+              <ProductCard
+                key={sabor.key}
+                sabor={sabor}
+                items={items}
+                total12oz={cartState.total12oz}
+                total9oz={cartState.total9oz}
+                onUpdateQuantity={updateQuantity}
+              />
+            ))}
+          </div>
+        </div>
+      </section>
+      {/* Pricing Tiers */}
+      <section id="precios" className="py-16 bg-white">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-12 animate-fade-in">
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-800 mb-4">Precios Mayoristas</h2>
+            <p className="text-lg text-gray-600">A mayor volumen, mejor precio por unidad</p>
+          </div>
+          <PricingTiers tierActual={tierActual} unidadesHastaSiguienteTier={unidadesHastaSiguienteTier} />
+        </div>
+      </section>
+      {/* Contact Form */}
+      <section id="cotizar" className="py-16">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-12 animate-fade-in">
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-800 mb-4">Solicita tu Cotización</h2>
+            <p className="text-lg text-gray-600">Completa el formulario y te contactaremos a la brevedad</p>
+          </div>
+          <div className="max-w-2xl mx-auto animate-fade-in">
+            <ClientContactForm
+              cartState={cartState}
+              productosSeleccionados={productosSeleccionados}
+              clearCart={clearCart}
+            />
+          </div>
+        </div>
+      </section>
+      {/* Footer */}
+      <footer className="bg-gray-900 text-white py-8 mt-16">
+        <div className="container mx-auto px-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
+            <div className="text-center md:text-left animate-fade-in">
+              <h4 className="font-semibold mb-4">Contacto</h4>
+              <p>Email: <a href="mailto:johnrojas297@gmail.com" className="underline">johnrojas297@gmail.com</a></p>
+              <p>WhatsApp: <a href="https://wa.me/56912345678" className="underline">+56 9 1234 5678</a></p>
+            </div>
+            <div className="text-center animate-fade-in" style={{ animationDelay: '0.2s' }}>
+              <h4 className="font-semibold mb-4">Entregas</h4>
+              <div className="space-y-2 text-gray-300">
+                <p>Rutas programadas: Lunes y Viernes</p>
+                <p>Pedidos con 48 horas de anticipación</p>
+              </div>
+            </div>
+            <div className="text-center animate-fade-in" style={{ animationDelay: '0.3s' }}>
+              <p>&copy; 2024 Delicias Florencia. Todos los derechos reservados.</p>
+            </div>
+          </div>
+        </div>
+      </footer>
+      {/* Barra flotante móvil */}
+      <ClientScrollToCart
+        cartState={cartState}
+        cumpleMinimoMayorista={cumpleMinimoMayorista}
+      />
+    </main>
+  );
+}

@@ -1,14 +1,18 @@
+
 import Link from 'next/link'
+import Image from 'next/image'
 
 export default function Banner() {
   return (
     <section className="relative w-full h-[500px] sm:h-[600px] lg:h-[700px] overflow-hidden">
       {/* Imagen de fondo */}
       <div className="absolute inset-0">
-        <img
+        <Image
           src="/images/torta1.png"
           alt="Tortas artesanales Delicias Florencia en vaso"
+          fill
           className="w-full h-full object-cover"
+          priority
         />
         {/* Overlay oscuro */}
         <div className="absolute inset-0 bg-black bg-opacity-40" />
@@ -19,7 +23,7 @@ export default function Banner() {
         <div className="text-center text-white px-4 max-w-4xl mx-auto">
           {/* Logo */}
           <div className="mb-6 flex justify-center">
-            <img
+            <Image
               src="/images/logo-delicias-florencia.png"
               alt="Logo Delicias Florencia"
               width={160}
@@ -28,6 +32,7 @@ export default function Banner() {
               style={{ 
                 filter: 'brightness(0) saturate(100%) invert(1)' 
               }}
+              priority
             />
           </div>
           

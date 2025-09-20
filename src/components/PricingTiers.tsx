@@ -2,7 +2,12 @@
 
 import { PRICING_CONFIG } from '@/lib/types';
 
-export default function PricingTiers() {
+interface PricingTiersProps {
+  tierActual?: number;
+  unidadesHastaSiguienteTier?: number;
+}
+
+export default function PricingTiers({ tierActual, unidadesHastaSiguienteTier }: PricingTiersProps) {
   const tramos12oz = [
     {
       titulo: 'Tramo 1 - Inicial',

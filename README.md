@@ -1,3 +1,18 @@
+### 🚀 Build y despliegue en producción
+
+1. Compila el proyecto:
+   ```sh
+   npm run build
+   ```
+
+2. Inicia el servidor en modo producción:
+   ```sh
+   npm start
+   ```
+
+3. Asegúrate de tener el archivo `.env.local` con las variables de entorno necesarias (ver ejemplo en el repositorio).
+
+4. Para servidores cloud/VPS, configura el proceso con PM2, Docker o similar para mantener el servicio activo.
 # Delicias Florencia - Next.js Migration
 
 ## 🍰 Mobile-First Wholesale Cake Distributor WebApp

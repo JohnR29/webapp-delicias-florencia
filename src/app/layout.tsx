@@ -38,9 +38,6 @@ export const metadata: Metadata = {
   authors: [{ name: 'Delicias Florencia' }],
   creator: 'Delicias Florencia',
   publisher: 'Delicias Florencia',
-  viewport: 'width=device-width, initial-scale=1, maximum-scale=5',
-  themeColor: '#d33939',
-  colorScheme: 'light',
   robots: {
     index: true,
     follow: true,
@@ -87,7 +84,15 @@ export const metadata: Metadata = {
   },
   category: 'food',
   classification: 'business',
-}
+};
+
+export const viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 5,
+  themeColor: '#d33939',
+  colorScheme: 'light',
+};
 
 export default function RootLayout({
   children,

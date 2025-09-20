@@ -173,16 +173,18 @@ const CoverageMap: React.FC<CoverageMapProps> = ({ className = '' }) => {
 
       } catch (error) {
         console.error('Error cargando datos del mapa:', error);
-        // Mostrar fallback en caso de error
-        const fallbackDiv = document.createElement('div');
-        fallbackDiv.className = 'flex items-center justify-center h-full text-gray-500';
-        fallbackDiv.innerHTML = `
-          <div class="text-center">
-            <div class="text-2xl mb-2">🗺️</div>
-            <p>Error cargando el mapa</p>
-          </div>
-        `;
-        mapRef.current?.appendChild(fallbackDiv);
+        // Mostrar fallback en caso de error SOLO en cliente
+        if (typeof window !== 'undefined' && mapRef.current) {
+          const fallbackDiv = document.createElement('div');
+          fallbackDiv.className = 'flex items-center justify-center h-full text-gray-500';
+          fallbackDiv.innerHTML = `
+            <div class="text-center">
+              <div class="text-2xl mb-2">🗺️</div>
+              <p>Error cargando el mapa</p>
+            </div>
+          `;
+          mapRef.current.appendChild(fallbackDiv);
+        }
       }
     };
 

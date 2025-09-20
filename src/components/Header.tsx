@@ -81,10 +81,12 @@ const Header = () => {
   };
 
   const scrollToSection = (sectionId: string) => {
-    const element = document.getElementById(sectionId);
-    if (element) {
-      element.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      setIsMenuOpen(false);
+    if (typeof window !== 'undefined') {
+      const element = document.getElementById(sectionId);
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        setIsMenuOpen(false);
+      }
     }
   };
 
@@ -94,10 +96,13 @@ const Header = () => {
         <div className="flex items-center justify-between h-20 min-w-0 gap-2">
           {/* Logo */}
           <div className="flex items-center space-x-2 flex-1 min-w-0">
-            <img
+            <Image
               src="/images/logo-delicias-florencia.png"
               alt="Delicias Florencia"
+              width={120}
+              height={40}
               className="h-10 w-auto flex-shrink-0"
+              priority
             />
             <span className="font-dancing-script text-lg sm:text-2xl md:text-3xl lg:text-4xl font-extrabold bg-gradient-to-r from-primary-600 to-secondary-600 bg-clip-text text-transparent drop-shadow-md whitespace-nowrap">
               DeliciasFlorencia.cl&nbsp;&nbsp;

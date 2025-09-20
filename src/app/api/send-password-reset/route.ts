@@ -12,7 +12,7 @@ export async function POST(request: NextRequest) {
 
     if (!email || !token) {
       return NextResponse.json(
-        { message: 'Email y token son requeridos' },
+        { success: false, message: 'Email y token son requeridos' },
         { status: 400 }
       );
     }
@@ -172,6 +172,7 @@ export async function POST(request: NextRequest) {
     await transporter.sendMail(mailOptions);
 
     return NextResponse.json({
+      success: true,
       message: 'Email de recuperación enviado exitosamente'
     });
 
@@ -180,6 +181,7 @@ export async function POST(request: NextRequest) {
     
     return NextResponse.json(
       { 
+        success: false,
         message: 'Error interno del servidor. No se pudo enviar el email.',
         error: process.env.NODE_ENV === 'development' ? error : undefined
       },

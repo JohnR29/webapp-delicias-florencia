@@ -89,9 +89,10 @@ const ContactForm: React.FC<ContactFormProps> = ({ cartState, productosSeleccion
     return () => {
       if (typeof window !== 'undefined') {
         window.removeEventListener('storage', handleStorageChange);
-        // Restore original localStorage.setItem if it was modified
+        // Restaurar métodos originales de localStorage si fueron modificados
         if (typeof localStorage !== 'undefined') {
           localStorage.setItem = Storage.prototype.setItem;
+          localStorage.removeItem = Storage.prototype.removeItem;
         }
       }
     };

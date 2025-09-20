@@ -84,7 +84,7 @@ export function useAuth() {
     } finally {
       setIsInitialized(true);
     }
-  }, [isInitialized]);
+  }, [isInitialized, migrateUsersIfNeeded]);
 
   // Función para registrar usuario
   const register = async (email: string, password: string, businessInfo: BusinessForm): Promise<{ success: boolean; message: string }> => {

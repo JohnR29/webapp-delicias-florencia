@@ -24,28 +24,17 @@ export async function POST(request: NextRequest) {
 PEDIDO MAYORISTA
 
 INFORMACIÓN DEL NEGOCIO:
-- Nombre: ${businessInfo.negocio}
-- Contacto: ${businessInfo.contacto}
-- Teléfono: ${businessInfo.telefono}
-- Tipo: ${businessInfo.tipo}
-- Comuna: ${businessInfo.comuna}
-- Dirección: ${businessInfo.direccion}
 
 ${cart && cart.totalCantidad > 0 ? `
 DETALLE DEL PEDIDO:
 ${products.map((p: any) => `- ${p.producto.nombre} (${p.producto.formato}): ${p.cantidad} unidades`).join('\n')}
 
 RESUMEN:
-- Total 12oz: ${cart.total12oz}
-- Total 9oz: ${cart.total9oz}
-- Total unidades: ${cart.totalCantidad}
-- Total estimado: $${cart.totalMonto?.toLocaleString('es-CL')}
 ` : ''}
 
 Fecha del pedido: ${new Date().toLocaleDateString('es-CL')}
 Nota: Por favor confirmar disponibilidad y coordinar entrega.
 
----
 Pedido enviado desde: Sitio Web Delicias Florencia
     `;
 
@@ -68,9 +57,9 @@ Pedido enviado desde: Sitio Web Delicias Florencia
 
   } catch (error) {
     console.error('Error enviando email:', error);
-    return NextResponse.json(
-      { success: false, message: 'Error al enviar el pedido' },
-      { status: 500 }
-    );
+      return NextResponse.json(
+        { success: false, message: 'Error al enviar el pedido' },
+        { status: 500 }
+      );
   }
 }
