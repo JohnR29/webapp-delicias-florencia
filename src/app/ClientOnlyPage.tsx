@@ -73,13 +73,33 @@ export default function ClientOnlyPage() {
             </div>
             <div className="flex flex-col justify-center animate-fade-in" style={{ animationDelay: '0.1s' }}>
               <h3 className="text-2xl font-semibold mb-4 text-primary-700">Cobertura actual</h3>
-              <ul className="text-lg text-gray-700 mb-4">
-                <li>San Bernardo</li>
-                <li>La Pintana</li>
-                <li>El Bosque</li>
-                <li>La Cisterna</li>
-              </ul>
-              <p className="text-gray-500 text-sm">¿Tu comuna no aparece? ¡Contáctanos para evaluar nuevas rutas!</p>
+              <div className="grid grid-cols-2 gap-4 mb-4 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-2">
+                <div className="bg-accent-50 border-2 border-accent-200 rounded-2xl p-4 flex items-center shadow-md hover:shadow-lg transition-shadow group">
+                  <span className="bg-accent-100 rounded-full p-2 mr-3 flex items-center justify-center">
+                    <span className="text-3xl">🚚</span>
+                  </span>
+                  <span className="font-semibold text-lg text-accent-800">San Bernardo</span>
+                </div>
+                  <div className="bg-accent-50 border-2 border-accent-200 rounded-2xl p-4 flex items-center shadow-md hover:shadow-lg transition-shadow group">
+                    <span className="bg-accent-100 rounded-full p-2 mr-3 flex items-center justify-center">
+                      <span className="text-3xl">🚚</span>
+                    </span>
+                    <span className="font-semibold text-lg text-accent-800">La Pintana</span>
+                </div>
+                <div className="bg-accent-50 border-2 border-accent-200 rounded-2xl p-4 flex items-center shadow-md hover:shadow-lg transition-shadow group">
+                    <span className="bg-accent-100 rounded-full p-2 mr-3 flex items-center justify-center">
+                      <span className="text-3xl">🚚</span>
+                    </span>
+                    <span className="font-semibold text-lg text-accent-800">El Bosque</span>
+                </div>
+                <div className="bg-accent-50 border-2 border-accent-200 rounded-2xl p-4 flex items-center shadow-md hover:shadow-lg transition-shadow group">
+                    <span className="bg-accent-100 rounded-full p-2 mr-3 flex items-center justify-center">
+                      <span className="text-3xl">🚚</span>
+                    </span>
+                    <span className="font-semibold text-lg text-accent-800">La Cisterna</span>
+                </div>
+              </div>
+              <p className="text-gray-500 text-sm text-center">¿Tu comuna no aparece? <span className="text-primary-600 font-semibold">¡Contáctanos</span> para evaluar nuevas rutas!</p>
             </div>
           </div>
         </div>
