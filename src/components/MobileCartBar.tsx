@@ -1,19 +1,27 @@
 'use client';
 
+import { useState } from 'react';
 import { CartState } from '@/lib/types';
+import MobileCartBarDetail from './MobileCartBarDetail';
 
 interface MobileCartBarProps {
   cartState: CartState;
   cumpleMinimoMayorista: boolean;
   onOpenCart: () => void;
+  productosSeleccionados: Array<{ producto: any; cantidad: number }>;
+  clearCart: () => void;
 }
+
 
 export default function MobileCartBar({ 
   cartState, 
   cumpleMinimoMayorista, 
-  onOpenCart 
+  onOpenCart,
+  productosSeleccionados,
+  clearCart
 }: MobileCartBarProps) {
   const isVisible = cartState.totalCantidad > 0;
+  const [showDetail, setShowDetail] = useState(false);
 
   if (!isVisible) return null;
 
@@ -21,12 +29,11 @@ export default function MobileCartBar({
     <>
       {/* Espacio para evitar que la barra tape contenido */}
       <div className="h-20 md:hidden" />
-      
       {/* Barra flotante móvil */}
       <div className="fixed bottom-0 left-0 right-0 bg-white border-t-2 border-gray-200 shadow-lg z-50 md:hidden">
         <div className="flex items-center justify-between p-4">
-          {/* Información del total */}
-          <div className="flex-1">
+          {/* Información del total (expandible) */}
+          <div className="flex-1 cursor-pointer" onClick={() => setShowDetail(true)}>
             <div className="flex items-center space-x-3">
               <div className="text-lg font-bold text-gray-800">
                 {cartState.totalCantidad} uds
@@ -35,15 +42,14 @@ export default function MobileCartBar({
               <div className="text-lg font-bold text-primary-600">
                 ${cartState.totalMonto.toLocaleString('es-CL')}
               </div>
+              <span className="ml-2 text-gray-400 text-xl">▲</span>
             </div>
-            
             {!cumpleMinimoMayorista && (
               <div className="text-xs text-gray-500 mt-1">
                 Mínimo 6 unidades para mayorista
               </div>
             )}
           </div>
-
           {/* Botón de solicitar */}
           <button
             onClick={onOpenCart}
@@ -58,6 +64,15 @@ export default function MobileCartBar({
           </button>
         </div>
       </div>
+      {/* Panel detalle */}
+      {showDetail && (
+        <MobileCartBarDetail
+          productosSeleccionados={productosSeleccionados}
+          cartState={cartState}
+          clearCart={clearCart}
+          onClose={() => setShowDetail(false)}
+        />
+      )}
     </>
   );
 }

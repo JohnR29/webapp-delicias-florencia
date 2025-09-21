@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import nodemailer from 'nodemailer';
+import fs from 'fs';
+import path from 'path';
 
 export async function POST(request: NextRequest) {
   try {
@@ -19,20 +21,72 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    // Construir el contenido del email
+    // Generar número de pedido secuencial en formato #0001
+    const now = new Date();
+    const orderNumberFile = path.resolve(process.cwd(), 'order-seq.txt');
+    let orderSeq = 1;
+    try {
+      if (fs.existsSync(orderNumberFile)) {
+        const last = parseInt(fs.readFileSync(orderNumberFile, 'utf8'), 10);
+        if (!isNaN(last)) orderSeq = last + 1;
+      }
+      fs.writeFileSync(orderNumberFile, String(orderSeq));
+    } catch (e) {
+      // Si hay error, igual seguimos con el número calculado
+    }
+    const orderNumber = `#${String(orderSeq).padStart(4, '0')}`;
+
+    // Agrupar productos por formato y calcular subtotales
+    const formatos = ['12oz', '9oz'];
+    const productosPorFormato: Record<string, { sabor: string, cantidad: number, subtotal: number }[]> = {};
+    const subtotales: Record<string, number> = {};
+    if (products && products.length > 0) {
+      for (const formato of formatos) {
+        productosPorFormato[formato] = [];
+        subtotales[formato] = 0;
+      }
+      for (const p of products) {
+        let sabor = p.producto.nombre.replace(/\s*\([^)]+\)\s*$/, '').trim();
+        let formato = p.producto.formato;
+        let cantidad = p.cantidad;
+        let precioUnitario = p.producto.precio || 0;
+        let subtotal = cantidad * precioUnitario;
+        productosPorFormato[formato].push({ sabor, cantidad, subtotal });
+        subtotales[formato] += subtotal;
+      }
+    }
+
+    // Construir el detalle agrupado
+    let pedidoDetalle = '';
+    for (const formato of formatos) {
+      if (productosPorFormato[formato] && productosPorFormato[formato].length > 0) {
+        pedidoDetalle += '---------------------------------\n';
+        pedidoDetalle += `${formato}:\n`;
+        for (const prod of productosPorFormato[formato]) {
+          pedidoDetalle += `-${prod.cantidad} x ${prod.sabor}\n`;
+        }
+        pedidoDetalle += `Subtotal: $${subtotales[formato].toLocaleString('es-CL')}\n`;
+      }
+    }
+    if (pedidoDetalle) pedidoDetalle += '---------------------------------\n';
+
+    const totalPedido = cart && cart.totalMonto ? cart.totalMonto : 0;
+
     const emailContent = `
-PEDIDO MAYORISTA
+N° de Pedido: ${orderNumber}
 
 INFORMACIÓN DEL NEGOCIO:
+• Nombre del negocio: ${businessInfo.negocio}
+• Persona de contacto: ${businessInfo.contacto}
+• Teléfono: ${businessInfo.telefono}
+• Tipo de negocio: ${businessInfo.tipo}
+• Comuna: ${businessInfo.comuna}
+• Dirección: ${businessInfo.direccion}
 
-${cart && cart.totalCantidad > 0 ? `
-DETALLE DEL PEDIDO:
-${products.map((p: any) => `- ${p.producto.nombre} (${p.producto.formato}): ${p.cantidad} unidades`).join('\n')}
+${pedidoDetalle ? `DETALLE DEL PEDIDO:\n${pedidoDetalle}` : ''}
+                       TOTAL: $${totalPedido.toLocaleString('es-CL')}
 
-RESUMEN:
-` : ''}
-
-Fecha del pedido: ${new Date().toLocaleDateString('es-CL')}
+Fecha del pedido: ${now.toLocaleDateString('es-CL')}
 Nota: Por favor confirmar disponibilidad y coordinar entrega.
 
 Pedido enviado desde: Sitio Web Delicias Florencia
@@ -42,7 +96,7 @@ Pedido enviado desde: Sitio Web Delicias Florencia
     const mailOptions = {
       from: process.env.EMAIL_USER,
       to: 'johnrojas297@gmail.com',
-      subject: `Pedido Mayorista - ${businessInfo.negocio}`,
+      subject: `Pedido ${orderNumber} - ${businessInfo.negocio}`,
       text: emailContent,
       html: emailContent.replace(/\n/g, '<br>'),
     };
