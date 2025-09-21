@@ -94,34 +94,30 @@ export default function ProductCard({
         {/* Fila inferior: Controles de formato que ocupan todo el ancho */}
         <div className="flex gap-3">
           {/* Formato 12oz */}
-          <div className="bg-gray-50 rounded-lg p-3 flex-1">
-            <div className="text-center mb-3">
-              <div className="font-bold text-gray-800 text-lg">12oz</div>
-              <div className="text-sm text-gray-600">
-                ${getPrecioUnitario(total12oz, '12oz').toLocaleString('es-CL')} c/u
-              </div>
+          <div className="bg-gray-50 rounded-lg p-2 flex-1 min-w-0">
+            <div className="text-center mb-2">
+              <div className="font-bold text-gray-800 text-base">12oz</div>
+              {/* Precio eliminado */}
             </div>
-            <div className="flex items-center justify-center gap-3">
+            <div className="flex items-center justify-center gap-2">
               <button
                 onClick={() => decrementQuantity('12oz')}
                 disabled={getQuantity('12oz') === 0}
-                className="w-8 h-8 rounded bg-gray-200 hover:bg-gray-300 
+                className="w-7 h-7 rounded bg-gray-200 hover:bg-gray-300 
                          flex items-center justify-center text-gray-700 font-bold
-                         transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                         transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed text-base"
                 aria-label="Restar 12oz"
               >
                 −
               </button>
-              
-              <span className="min-w-[2rem] text-center font-bold text-gray-800 tabular-nums text-xl">
+              <span className="min-w-[1.5rem] text-center font-bold text-gray-800 tabular-nums text-lg">
                 {getQuantity('12oz')}
               </span>
-              
               <button
                 onClick={() => incrementQuantity('12oz')}
-                className="w-8 h-8 rounded bg-red-500 hover:bg-red-600 
+                className="w-7 h-7 rounded bg-red-500 hover:bg-red-600 
                          flex items-center justify-center text-white font-bold
-                         transition-all duration-200"
+                         transition-all duration-200 text-base"
                 aria-label="Agregar 12oz"
               >
                 +
@@ -130,34 +126,30 @@ export default function ProductCard({
           </div>
 
           {/* Formato 9oz */}
-          <div className="bg-gray-50 rounded-lg p-3 flex-1">
-            <div className="text-center mb-3">
-              <div className="font-bold text-gray-800 text-lg">9oz</div>
-              <div className="text-sm text-gray-600">
-                ${getPrecioUnitario(total9oz, '9oz').toLocaleString('es-CL')} c/u
-              </div>
+          <div className="bg-gray-50 rounded-lg p-2 flex-1 min-w-0">
+            <div className="text-center mb-2">
+              <div className="font-bold text-gray-800 text-base">9oz</div>
+              {/* Precio eliminado */}
             </div>
-            <div className="flex items-center justify-center gap-3">
+            <div className="flex items-center justify-center gap-2">
               <button
                 onClick={() => decrementQuantity('9oz')}
                 disabled={getQuantity('9oz') === 0}
-                className="w-8 h-8 rounded bg-gray-200 hover:bg-gray-300 
+                className="w-7 h-7 rounded bg-gray-200 hover:bg-gray-300 
                          flex items-center justify-center text-gray-700 font-bold
-                         transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                         transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed text-base"
                 aria-label="Restar 9oz"
               >
                 −
               </button>
-              
-              <span className="min-w-[2rem] text-center font-bold text-gray-800 tabular-nums text-xl">
+              <span className="min-w-[1.5rem] text-center font-bold text-gray-800 tabular-nums text-lg">
                 {getQuantity('9oz')}
               </span>
-              
               <button
                 onClick={() => incrementQuantity('9oz')}
-                className="w-8 h-8 rounded bg-red-500 hover:bg-red-600 
+                className="w-7 h-7 rounded bg-red-500 hover:bg-red-600 
                          flex items-center justify-center text-white font-bold
-                         transition-all duration-200"
+                         transition-all duration-200 text-base"
                 aria-label="Agregar 9oz"
               >
                 +
