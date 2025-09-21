@@ -7,6 +7,7 @@ import PricingTiers from '@/components/PricingTiers';
 import ProductCard from '@/components/ProductCard';
 import ClientContactForm from '@/components/ClientContactForm';
 import ClientScrollToCart from '@/components/ClientScrollToCart';
+import MobileCartBar from '@/components/MobileCartBar';
 import { useCart } from '@/hooks/useCart';
 import { saboresData, saboresUnicos } from '@/data/productos';
 import { useState } from 'react';
@@ -130,8 +131,8 @@ export default function ClientOnlyPage() {
           </div>
         </div>
       </section>
-      {/* Footer */}
-      <footer className="bg-gray-900 text-white py-8 mt-16">
+  {/* Footer */}
+  <footer className="bg-gray-900 text-white py-8 mt-16">
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
             <div className="text-center md:text-left animate-fade-in">
@@ -156,6 +157,14 @@ export default function ClientOnlyPage() {
       <ClientScrollToCart
         cartState={cartState}
         cumpleMinimoMayorista={cumpleMinimoMayorista}
+      />
+      {/* Barra flotante móvil con detalle expandible */}
+      <MobileCartBar
+        cartState={cartState}
+        cumpleMinimoMayorista={cumpleMinimoMayorista}
+        onOpenCart={() => setIsMobileCartOpen(true)}
+        productosSeleccionados={productosSeleccionados}
+        clearCart={clearCart}
       />
     </main>
   );

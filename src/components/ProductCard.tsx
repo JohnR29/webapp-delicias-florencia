@@ -26,10 +26,45 @@ export default function ProductCard({
   total9oz, 
   onUpdateQuantity 
 }: ProductCardProps) {
+
   const [imageError, setImageError] = useState(false);
+  const [openMenu, setOpenMenu] = useState<null | ProductFormat>(null);
+  const [customInput, setCustomInput] = useState<{ [key in ProductFormat]?: string }>({});
+  const [inputError, setInputError] = useState<{ [key in ProductFormat]?: string }>({});
+
 
   const getQuantity = (formato: ProductFormat) => {
     return items[`${sabor.key}-${formato}`] || 0;
+  };
+
+  const handleMenuSelect = (formato: ProductFormat, value: number | 'custom') => {
+    if (value === 'custom') {
+      setOpenMenu(formato);
+      setCustomInput((prev) => ({ ...prev, [formato]: '' }));
+      setInputError((prev) => ({ ...prev, [formato]: '' }));
+    } else {
+      setOpenMenu(null);
+      onUpdateQuantity(`${sabor.key}-${formato}`, value);
+    }
+  };
+
+  const handleCustomInputChange = (formato: ProductFormat, val: string) => {
+    // Solo permitir números enteros positivos
+    if (/^\d*$/.test(val)) {
+      setCustomInput((prev) => ({ ...prev, [formato]: val }));
+      setInputError((prev) => ({ ...prev, [formato]: '' }));
+    }
+  };
+
+  const handleCustomInputSubmit = (formato: ProductFormat) => {
+    const val = customInput[formato];
+    const num = Number(val);
+    if (!val || isNaN(num) || num <= 0 || !Number.isInteger(num)) {
+      setInputError((prev) => ({ ...prev, [formato]: 'Ingrese un número entero positivo' }));
+      return;
+    }
+    setOpenMenu(null);
+    onUpdateQuantity(`${sabor.key}-${formato}`, num);
   };
 
   const incrementQuantity = (formato: ProductFormat) => {
@@ -99,7 +134,7 @@ export default function ProductCard({
               <div className="font-bold text-gray-800 text-base">12oz</div>
               {/* Precio eliminado */}
             </div>
-            <div className="flex items-center justify-center gap-2">
+            <div className="flex items-center justify-center gap-2 relative">
               <button
                 onClick={() => decrementQuantity('12oz')}
                 disabled={getQuantity('12oz') === 0}
@@ -110,7 +145,13 @@ export default function ProductCard({
               >
                 −
               </button>
-              <span className="min-w-[1.5rem] text-center font-bold text-gray-800 tabular-nums text-lg">
+              <span
+                className="min-w-[1.5rem] text-center font-bold text-gray-800 tabular-nums text-lg cursor-pointer border-b border-dotted border-gray-400 hover:text-red-500"
+                onClick={() => setOpenMenu(openMenu === '12oz' ? null : '12oz')}
+                tabIndex={0}
+                role="button"
+                aria-label="Seleccionar cantidad 12oz"
+              >
                 {getQuantity('12oz')}
               </span>
               <button
@@ -122,6 +163,48 @@ export default function ProductCard({
               >
                 +
               </button>
+              {/* Menú desplegable */}
+              {openMenu === '12oz' && (
+                <div className="absolute z-20 top-10 left-1/2 -translate-x-1/2 bg-white border border-gray-200 rounded-lg shadow-lg p-2 w-32 animate-fade-in">
+                  {[5, 10, 15, 20].map((opt) => (
+                    <button
+                      key={opt}
+                      className="block w-full text-left px-3 py-1.5 rounded hover:bg-red-100 text-gray-800 text-sm"
+                      onClick={() => handleMenuSelect('12oz', opt)}
+                    >
+                      {opt}
+                    </button>
+                  ))}
+                  <button
+                    className="block w-full text-left px-3 py-1.5 rounded hover:bg-red-100 text-gray-800 text-sm"
+                    onClick={() => handleMenuSelect('12oz', 'custom')}
+                  >
+                    Personalizado
+                  </button>
+                  {customInput['12oz'] !== undefined && (
+                    <div className="mt-2">
+                      <input
+                        type="text"
+                        inputMode="numeric"
+                        pattern="[0-9]*"
+                        className="w-full border rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-red-400"
+                        placeholder="Cantidad"
+                        value={customInput['12oz']}
+                        onChange={e => handleCustomInputChange('12oz', e.target.value)}
+                        onKeyDown={e => { if (e.key === 'Enter') handleCustomInputSubmit('12oz'); }}
+                        autoFocus
+                      />
+                      <button
+                        className="mt-1 w-full bg-red-500 text-white rounded px-2 py-1 text-xs hover:bg-red-600"
+                        onClick={() => handleCustomInputSubmit('12oz')}
+                      >
+                        Aceptar
+                      </button>
+                      {inputError['12oz'] && <div className="text-xs text-red-500 mt-1">{inputError['12oz']}</div>}
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           </div>
 
@@ -131,7 +214,7 @@ export default function ProductCard({
               <div className="font-bold text-gray-800 text-base">9oz</div>
               {/* Precio eliminado */}
             </div>
-            <div className="flex items-center justify-center gap-2">
+            <div className="flex items-center justify-center gap-2 relative">
               <button
                 onClick={() => decrementQuantity('9oz')}
                 disabled={getQuantity('9oz') === 0}
@@ -142,7 +225,13 @@ export default function ProductCard({
               >
                 −
               </button>
-              <span className="min-w-[1.5rem] text-center font-bold text-gray-800 tabular-nums text-lg">
+              <span
+                className="min-w-[1.5rem] text-center font-bold text-gray-800 tabular-nums text-lg cursor-pointer border-b border-dotted border-gray-400 hover:text-red-500"
+                onClick={() => setOpenMenu(openMenu === '9oz' ? null : '9oz')}
+                tabIndex={0}
+                role="button"
+                aria-label="Seleccionar cantidad 9oz"
+              >
                 {getQuantity('9oz')}
               </span>
               <button
@@ -154,6 +243,48 @@ export default function ProductCard({
               >
                 +
               </button>
+              {/* Menú desplegable */}
+              {openMenu === '9oz' && (
+                <div className="absolute z-20 top-10 left-1/2 -translate-x-1/2 bg-white border border-gray-200 rounded-lg shadow-lg p-2 w-32 animate-fade-in">
+                  {[5, 10, 15, 20].map((opt) => (
+                    <button
+                      key={opt}
+                      className="block w-full text-left px-3 py-1.5 rounded hover:bg-red-100 text-gray-800 text-sm"
+                      onClick={() => handleMenuSelect('9oz', opt)}
+                    >
+                      {opt}
+                    </button>
+                  ))}
+                  <button
+                    className="block w-full text-left px-3 py-1.5 rounded hover:bg-red-100 text-gray-800 text-sm"
+                    onClick={() => handleMenuSelect('9oz', 'custom')}
+                  >
+                    Personalizado
+                  </button>
+                  {customInput['9oz'] !== undefined && (
+                    <div className="mt-2">
+                      <input
+                        type="text"
+                        inputMode="numeric"
+                        pattern="[0-9]*"
+                        className="w-full border rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-red-400"
+                        placeholder="Cantidad"
+                        value={customInput['9oz']}
+                        onChange={e => handleCustomInputChange('9oz', e.target.value)}
+                        onKeyDown={e => { if (e.key === 'Enter') handleCustomInputSubmit('9oz'); }}
+                        autoFocus
+                      />
+                      <button
+                        className="mt-1 w-full bg-red-500 text-white rounded px-2 py-1 text-xs hover:bg-red-600"
+                        onClick={() => handleCustomInputSubmit('9oz')}
+                      >
+                        Aceptar
+                      </button>
+                      {inputError['9oz'] && <div className="text-xs text-red-500 mt-1">{inputError['9oz']}</div>}
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         </div>
