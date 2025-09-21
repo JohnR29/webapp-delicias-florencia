@@ -1,4 +1,8 @@
-'use client';
+
+"use client";
+
+// Ajustar el tamaño del mapa cuando la ventana cambie de tamaño
+// (el useEffect correspondiente debe ir después de declarar los refs)
 
 import { useEffect, useRef } from 'react';
 import L from 'leaflet';
@@ -25,6 +29,21 @@ interface CoverageMapProps {
 const CoverageMap: React.FC<CoverageMapProps> = ({ className = '' }) => {
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<L.Map | null>(null);
+
+  // Ajustar el tamaño del mapa cuando la ventana cambie de tamaño
+  useEffect(() => {
+    const handleResize = () => {
+      if (mapInstanceRef.current) {
+        mapInstanceRef.current.invalidateSize();
+      }
+    };
+    window.addEventListener('resize', handleResize);
+    // También forzar ajuste al montar por si el contenedor cambia
+    setTimeout(handleResize, 400);
+    return () => {
+      window.removeEventListener('resize', handleResize);
+    };
+  }, []);
 
   useEffect(() => {
     if (typeof window === 'undefined' || !mapRef.current || mapInstanceRef.current) return;
@@ -200,10 +219,16 @@ const CoverageMap: React.FC<CoverageMapProps> = ({ className = '' }) => {
   }, []);
 
   return (
-    <div className={`relative bg-gray-100 rounded-lg overflow-hidden ${className}`}>
-      <div ref={mapRef} className="w-full h-full min-h-[400px]" />
+    <div
+      className={`relative bg-gray-100 rounded-lg overflow-hidden ${className}`}
+      style={{ WebkitOverflowScrolling: 'touch' }}
+    >
+      <div
+        ref={mapRef}
+        className="w-full min-h-[320px] h-[400px] max-h-[60vh] sm:min-h-[400px] sm:h-[400px] sm:max-h-[500px] rounded-md"
+      />
       {/* Loader inicial - se ocultará automáticamente cuando el mapa cargue */}
-      <div 
+      <div
         className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-primary-50 to-secondary-50 pointer-events-none transition-opacity duration-500"
         style={{ zIndex: 1000 }}
       >
