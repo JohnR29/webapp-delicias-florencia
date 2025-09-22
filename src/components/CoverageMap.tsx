@@ -184,7 +184,13 @@ const CoverageMap: React.FC<CoverageMapProps> = ({ className = '' }) => {
         // Detectar si es móvil para ajustar el tamaño del ícono
         Object.entries(COMUNAS_COORDS).forEach(([nombre, { lat, lng }]) => {
           if (COMUNAS_PERMITIDAS.includes(nombre)) {
-            L.marker([lat, lng], { title: nombre })
+            L.circleMarker([lat, lng], {
+              radius: 10,
+              color: '#ff6600',
+              fillColor: '#fff7e6',
+              fillOpacity: 1,
+              weight: 3,
+            })
               .addTo(map)
               .bindTooltip(nombre, { direction: 'top', offset: [0, -6] });
           }
