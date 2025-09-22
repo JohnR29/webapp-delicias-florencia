@@ -182,24 +182,14 @@ const CoverageMap: React.FC<CoverageMapProps> = ({ className = '' }) => {
         console.log('Mapa cargado exitosamente');
 
         // Detectar si es móvil para ajustar el tamaño del ícono
-        const isMobile = window.innerWidth < 640;
-        const iconOptions = isMobile
-          ? {
-              iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
-              iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
-              shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
-              iconSize: [18, 28] as [number, number], // más pequeño
-              iconAnchor: [9, 28] as [number, number],
-              popupAnchor: [1, -24] as [number, number],
-              tooltipAnchor: [0, -18] as [number, number],
-            }
-          : undefined;
-
         Object.entries(COMUNAS_COORDS).forEach(([nombre, { lat, lng }]) => {
           if (COMUNAS_PERMITIDAS.includes(nombre)) {
-            const marker = L.marker([lat, lng], {
-              title: nombre,
-              icon: iconOptions ? L.icon(iconOptions) : undefined,
+            L.circleMarker([lat, lng], {
+              radius: 10,
+              color: '#ff6600',
+              fillColor: '#fff7e6',
+              fillOpacity: 1,
+              weight: 3,
             })
               .addTo(map)
               .bindTooltip(nombre, { direction: 'top', offset: [0, -6] });
