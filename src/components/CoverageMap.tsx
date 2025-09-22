@@ -188,8 +188,8 @@ const CoverageMap: React.FC<CoverageMapProps> = ({ className = '' }) => {
               iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
               iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
               shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
-              iconSize: [18, 28] as [number, number], // más pequeño
-              iconAnchor: [9, 28] as [number, number],
+              iconSize: [12, 18] as [number, number], // aún más pequeño
+              iconAnchor: [6, 18] as [number, number],
               popupAnchor: [1, -24] as [number, number],
               tooltipAnchor: [0, -18] as [number, number],
             }
