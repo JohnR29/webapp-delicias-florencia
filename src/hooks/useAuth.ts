@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import bcrypt from 'bcryptjs';
+import { supabase } from '../lib/supabaseClient';
 import { BusinessForm, User } from '@/lib/types';
 
 export interface AuthState {
@@ -16,8 +16,6 @@ export function useAuth() {
     isAuthenticated: false,
     isLoading: true,
   });
-  
-  const [isInitialized, setIsInitialized] = useState(false);
 
   // Función para migrar usuarios existentes sin passwordHash
   const migrateUsersIfNeeded = () => {
@@ -59,127 +57,93 @@ export function useAuth() {
     }
   };
 
-  // Cargar usuario desde localStorage al iniciar
+  // Cargar usuario autenticado desde Supabase al iniciar
   useEffect(() => {
-    if (isInitialized || typeof window === 'undefined') return; // Evitar ejecutar múltiples veces
-    
-    try {
-      // Primero migrar usuarios si es necesario
-      migrateUsersIfNeeded();
-      
-      const savedUser = localStorage.getItem('delicias_user');
-      if (savedUser) {
-        const user = JSON.parse(savedUser);
+    const getUser = async () => {
+      const { data, error } = await supabase.auth.getUser();
+      if (data.user) {
+        // Buscar datos adicionales en la tabla users
+        const { data: userData } = await supabase
+          .from('users')
+          .select('*')
+          .eq('email', data.user.email)
+          .single();
         setAuthState({
-          user,
+          user: userData,
           isAuthenticated: true,
           isLoading: false,
         });
       } else {
         setAuthState(prev => ({ ...prev, isLoading: false }));
       }
-    } catch (error) {
-      console.error('Error loading user from localStorage:', error);
-      setAuthState(prev => ({ ...prev, isLoading: false }));
-    } finally {
-      setIsInitialized(true);
-    }
-  }, [isInitialized, migrateUsersIfNeeded]);
+    };
+    getUser();
+  }, []);
 
-  // Función para registrar usuario
+  // Función para registrar usuario con Supabase
   const register = async (email: string, password: string, businessInfo: BusinessForm): Promise<{ success: boolean; message: string }> => {
     try {
-      // Verificar si el email ya existe
-      const existingUsers = getStoredUsers();
-      if (existingUsers.find(u => u.email === email)) {
-        return { success: false, message: 'Este email ya está registrado' };
+      const { data, error } = await supabase.auth.signUp({ email, password });
+      if (error) {
+        return { success: false, message: error.message };
       }
-
-      // Validar contraseña
-      if (password.length < 6) {
-        return { success: false, message: 'La contraseña debe tener al menos 6 caracteres' };
+      // Insertar datos adicionales en la tabla users
+      const { error: insertError } = await supabase
+        .from('users')
+        .insert({
+          id: data.user?.id,
+          email,
+          businessInfo,
+          created_at: new Date().toISOString(),
+          last_login: new Date().toISOString(),
+        });
+      if (insertError) {
+        return { success: false, message: insertError.message };
       }
-
-      // Hash de la contraseña
-      const saltRounds = 10;
-      const passwordHash = await bcrypt.hash(password, saltRounds);
-
-      // Crear nuevo usuario
-      const newUser: User = {
-        id: generateUserId(),
-        email,
-        passwordHash,
-        businessInfo,
-        createdAt: new Date().toISOString(),
-        lastLogin: new Date().toISOString(),
-      };
-
-      // Guardar en localStorage
-      saveUser(newUser);
-      existingUsers.push(newUser);
-      saveUsers(existingUsers);
-
       setAuthState({
-        user: newUser,
+        user: {
+          id: data.user?.id,
+          email,
+          businessInfo,
+          createdAt: new Date().toISOString(),
+          lastLogin: new Date().toISOString(),
+        } as User,
         isAuthenticated: true,
         isLoading: false,
       });
-
-      return { success: true, message: 'Registro exitoso' };
+      return { success: true, message: 'Registro exitoso. Revisa tu correo para confirmar tu cuenta.' };
     } catch (error) {
       console.error('Error during registration:', error);
       return { success: false, message: 'Error en el registro' };
     }
   };
 
-  // Función para login
+  // Función para login con Supabase
   const login = async (email: string, password: string): Promise<{ success: boolean; message: string }> => {
     try {
-      const existingUsers = getStoredUsers();
-      const user = existingUsers.find(u => u.email === email);
-
-      if (!user) {
-        return { success: false, message: 'Email o contraseña incorrectos' };
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error || !data.user) {
+        return { success: false, message: error?.message || 'Email o contraseña incorrectos' };
       }
-
-      // Verificar si el usuario necesita migración
-      if (user.passwordHash === 'MIGRATION_REQUIRED' || user.migrationNeeded) {
-        return { 
-          success: false, 
-          message: 'Tu cuenta necesita ser actualizada. Por favor usa "¿Olvidaste tu contraseña?" para establecer una nueva contraseña.' 
-        };
+      // Buscar datos adicionales en la tabla users
+      const { data: userData, error: userError } = await supabase
+        .from('users')
+        .select('*')
+        .eq('email', email)
+        .single();
+      if (userError || !userData) {
+        return { success: false, message: userError?.message || 'No se encontró el usuario' };
       }
-
-      // Verificar contraseña
-      const isPasswordValid = await bcrypt.compare(password, user.passwordHash);
-      if (!isPasswordValid) {
-        return { success: false, message: 'Email o contraseña incorrectos' };
-      }
-
-      // Actualizar último login
-      user.lastLogin = new Date().toISOString();
-      const updatedUsers = existingUsers.map(u => u.id === user.id ? user : u);
-      localStorage.setItem('delicias_users', JSON.stringify(updatedUsers));
-
-      saveUser(user);
-      console.log('🔐 Actualizando estado de autenticación...');
-      
-      // Forzar actualización inmediata y re-renderización
-      const newState = {
-        user,
+      // Actualizar last_login
+      await supabase
+        .from('users')
+        .update({ last_login: new Date().toISOString() })
+        .eq('id', userData.id);
+      setAuthState({
+        user: userData,
         isAuthenticated: true,
         isLoading: false,
-      };
-      
-      setAuthState(newState);
-      
-      // Forzar una segunda actualización para asegurar que todos los componentes se re-rendericen
-      setTimeout(() => {
-        setAuthState(prevState => ({ ...prevState }));
-      }, 50);
-      
-      console.log('✅ Estado actualizado:', { isAuthenticated: true, user: user.email });
-
+      });
       return { success: true, message: 'Login exitoso' };
     } catch (error) {
       console.error('Error during login:', error);
@@ -187,11 +151,9 @@ export function useAuth() {
     }
   };
 
-  // Función para logout
-  const logout = () => {
-    if (typeof window !== 'undefined') {
-      localStorage.removeItem('delicias_user');
-    }
+  // Función para logout con Supabase
+  const logout = async () => {
+    await supabase.auth.signOut();
     setAuthState({
       user: null,
       isAuthenticated: false,
@@ -199,51 +161,13 @@ export function useAuth() {
     });
   };
 
-  // Función para solicitar restablecimiento de contraseña
+  // Función para solicitar restablecimiento de contraseña con Supabase
   const requestPasswordReset = async (email: string): Promise<{ success: boolean; message: string }> => {
     try {
-      const existingUsers = getStoredUsers();
-      const user = existingUsers.find(u => u.email === email);
-
-      if (!user) {
-        // Por seguridad, no revelamos si el email existe o no
-        return { success: true, message: 'Si el email existe, recibirás instrucciones para restablecer tu contraseña' };
+      const { error } = await supabase.auth.resetPasswordForEmail(email);
+      if (error) {
+        return { success: false, message: error.message };
       }
-
-      // Generar token de reset
-      const resetToken = generateResetToken();
-      const resetTokenExpiry = new Date(Date.now() + 15 * 60 * 1000).toISOString(); // 15 minutos
-
-      // Actualizar usuario con token
-      user.resetToken = resetToken;
-      user.resetTokenExpiry = resetTokenExpiry;
-
-      const updatedUsers = existingUsers.map(u => u.id === user.id ? user : u);
-      localStorage.setItem('delicias_users', JSON.stringify(updatedUsers));
-
-      // Enviar email con token (llamar al API)
-      try {
-        const response = await fetch('/api/send-password-reset', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            email: user.email,
-            token: resetToken,
-          }),
-        });
-
-        if (!response.ok) {
-          const errorText = await response.text();
-          console.error('Error response del servidor:', response.status, errorText);
-          throw new Error('Error enviando email');
-        }
-      } catch (emailError) {
-        console.error('Error sending reset email:', emailError);
-        // Aún retornamos éxito para no revelar información
-      }
-
       return { success: true, message: 'Si el email existe, recibirás instrucciones para restablecer tu contraseña' };
     } catch (error) {
       console.error('Error requesting password reset:', error);
@@ -251,121 +175,46 @@ export function useAuth() {
     }
   };
 
-  // Función para restablecer contraseña con token
-  const resetPassword = async (token: string, newPassword: string): Promise<{ success: boolean; message: string }> => {
+  // Función para restablecer contraseña con Supabase (debe implementarse en la página de confirmación de Supabase)
+  const resetPassword = async (accessToken: string, newPassword: string): Promise<{ success: boolean; message: string }> => {
     try {
       if (newPassword.length < 6) {
         return { success: false, message: 'La contraseña debe tener al menos 6 caracteres' };
       }
-
-      const existingUsers = getStoredUsers();
-      const user = existingUsers.find(u => u.resetToken === token);
-
-      if (!user || !user.resetTokenExpiry) {
-        return { success: false, message: 'Token inválido o expirado' };
+      const { error } = await supabase.auth.updateUser({ password: newPassword });
+      if (error) {
+        return { success: false, message: error.message };
       }
-
-      // Verificar si el token no ha expirado
-      const now = new Date();
-      const expiry = new Date(user.resetTokenExpiry);
-      if (now > expiry) {
-        return { success: false, message: 'Token expirado. Solicita un nuevo restablecimiento' };
-      }
-
-      // Hash de la nueva contraseña
-      const saltRounds = 10;
-      const passwordHash = await bcrypt.hash(newPassword, saltRounds);
-
-      // Actualizar usuario
-      user.passwordHash = passwordHash;
-      user.resetToken = undefined;
-      user.resetTokenExpiry = undefined;
-      user.migrationNeeded = false; // Limpiar flag de migración
-      user.lastLogin = new Date().toISOString();
-
-      const updatedUsers = existingUsers.map(u => u.id === user.id ? user : u);
-      localStorage.setItem('delicias_users', JSON.stringify(updatedUsers));
-
-      // Login automático después del reset
-      saveUser(user);
-      setAuthState({
-        user,
-        isAuthenticated: true,
-        isLoading: false,
-      });
-
       return { success: true, message: 'Contraseña restablecida exitosamente' };
     } catch (error) {
       console.error('Error resetting password:', error);
       return { success: false, message: 'Error al restablecer contraseña' };
     }
   };
-  const updateUserInfo = (updatedBusinessInfo: BusinessForm): Promise<{ success: boolean; message: string }> => {
-    return new Promise((resolve) => {
-      try {
-        if (!authState.user) {
-          resolve({ success: false, message: 'Usuario no autenticado' });
-          return;
-        }
-
-        const updatedUser = {
-          ...authState.user,
-          businessInfo: updatedBusinessInfo,
-        };
-
-        // Actualizar en todos los usuarios almacenados
-        const existingUsers = getStoredUsers();
-        const updatedUsers = existingUsers.map(u => 
-          u.id === updatedUser.id ? updatedUser : u
-        );
-        localStorage.setItem('delicias_users', JSON.stringify(updatedUsers));
-
-        // Guardar usuario actual
-        saveUser(updatedUser);
-        setAuthState(prev => ({
-          ...prev,
-          user: updatedUser,
-        }));
-
-        resolve({ success: true, message: 'Datos actualizados correctamente' });
-      } catch (error) {
-        console.error('Error updating user info:', error);
-        resolve({ success: false, message: 'Error al actualizar datos' });
-      }
-    });
-  };
-
-  // Funciones auxiliares
-  const getStoredUsers = (): User[] => {
-    if (typeof window === 'undefined') return [];
-    
+  const updateUserInfo = async (updatedBusinessInfo: BusinessForm): Promise<{ success: boolean; message: string }> => {
     try {
-      const users = localStorage.getItem('delicias_users');
-      return users ? JSON.parse(users) : [];
-    } catch {
-      return [];
+      if (!authState.user) {
+        return { success: false, message: 'Usuario no autenticado' };
+      }
+      const { error } = await supabase
+        .from('users')
+        .update({ businessInfo: updatedBusinessInfo })
+        .eq('id', authState.user.id);
+      if (error) {
+        return { success: false, message: error.message };
+      }
+      setAuthState(prev => ({
+        ...prev,
+        user: {
+          ...prev.user!,
+          businessInfo: updatedBusinessInfo,
+        },
+      }));
+      return { success: true, message: 'Datos actualizados correctamente' };
+    } catch (error) {
+      console.error('Error updating user info:', error);
+      return { success: false, message: 'Error al actualizar datos' };
     }
-  };
-
-  const saveUsers = (users: User[]) => {
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('delicias_users', JSON.stringify(users));
-    }
-  };
-
-  const saveUser = (user: User) => {
-    if (typeof window === 'undefined') return;
-    localStorage.setItem('delicias_user', JSON.stringify(user));
-  };
-
-  const generateUserId = (): string => {
-    return Date.now().toString(36) + Math.random().toString(36).substr(2);
-  };
-
-  const generateResetToken = (): string => {
-    return Array.from(crypto.getRandomValues(new Uint8Array(32)))
-      .map(b => b.toString(16).padStart(2, '0'))
-      .join('');
   };
 
   return {
