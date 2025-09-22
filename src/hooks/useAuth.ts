@@ -54,6 +54,7 @@ export function useAuth() {
         .insert({
           id: data.user?.id,
           email,
+          name: businessInfo.contacto,
           businessInfo,
           created_at: new Date().toISOString(),
           last_login: new Date().toISOString(),
