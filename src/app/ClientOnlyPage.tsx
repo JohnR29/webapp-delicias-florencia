@@ -7,6 +7,12 @@ interface AnimatedComunaBadgeProps {
 }
 
 function AnimatedComunaBadge({ nombre, delay = 0 }: AnimatedComunaBadgeProps) {
+  // Abre el tooltip del mapa al hacer click/tap/enter
+  const handleClick = () => {
+    if (typeof window !== 'undefined' && (window as any).openComunaTooltip) {
+      (window as any).openComunaTooltip(nombre);
+    }
+  };
   return (
     <button
       type="button"
@@ -15,6 +21,9 @@ function AnimatedComunaBadge({ nombre, delay = 0 }: AnimatedComunaBadgeProps) {
         hover:bg-accent-200 hover:ring-2 hover:ring-accent-400 focus:bg-accent-200 focus:ring-2 focus:ring-accent-400`
       }
       style={{ touchAction: 'manipulation', transitionDelay: `${delay}ms` }}
+      onClick={handleClick}
+      onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') handleClick(); }}
+      tabIndex={0}
     >
       <span
         className="absolute left-2 top-1/2 -translate-y-1/2 text-lg"
@@ -194,7 +203,12 @@ export default function ClientOnlyPage() {
       <MobileCartBar
         cartState={cartState}
         cumpleMinimoMayorista={cumpleMinimoMayorista}
-        onOpenCart={() => setIsMobileCartOpen(true)}
+        onOpenCart={() => {
+          const el = document.getElementById('cotizar');
+          if (el) {
+            el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          }
+        }}
         productosSeleccionados={productosSeleccionados}
         clearCart={clearCart}
       />

@@ -62,7 +62,7 @@ const CoverageMap: React.FC<CoverageMapProps> = ({ className = '' }) => {
     const map = L.map(mapRef.current, {
       scrollWheelZoom: false,
       attributionControl: true
-    }).setView(centro, 12);
+    }).setView(centro, 17);
 
     mapInstanceRef.current = map;
 
@@ -182,9 +182,11 @@ const CoverageMap: React.FC<CoverageMapProps> = ({ className = '' }) => {
         console.log('Mapa cargado exitosamente');
 
         // Detectar si es móvil para ajustar el tamaño del ícono
+        // Guardar referencias a los círculos para interacción externa
+        (window as any).__comunaCircleRefs = {};
         Object.entries(COMUNAS_COORDS).forEach(([nombre, { lat, lng }]) => {
           if (COMUNAS_PERMITIDAS.includes(nombre)) {
-            L.circleMarker([lat, lng], {
+            const circle = L.circleMarker([lat, lng], {
               radius: 10,
               color: '#ff6600',
               fillColor: '#fff7e6',
@@ -193,8 +195,27 @@ const CoverageMap: React.FC<CoverageMapProps> = ({ className = '' }) => {
             })
               .addTo(map)
               .bindTooltip(nombre, { direction: 'top', offset: [0, -6] });
+            (window as any).__comunaCircleRefs[nombre] = circle;
           }
         });
+
+        // Función global para abrir el tooltip de una comuna
+        // Guardar referencia al último tooltip abierto
+        let lastTooltip: L.CircleMarker | null = null;
+        (window as any).openComunaTooltip = (nombre: string) => {
+          // Cerrar el anterior si existe
+          if (lastTooltip) lastTooltip.closeTooltip();
+          const ref = (window as any).__comunaCircleRefs?.[nombre];
+          if (ref) {
+            ref.openTooltip();
+            map.panTo(ref.getLatLng());
+            lastTooltip = ref;
+            // Cerrar automáticamente después de 2 segundos
+            setTimeout(() => {
+              if (lastTooltip === ref) ref.closeTooltip();
+            }, 2000);
+          }
+        };
 
       } catch (error) {
         console.error('Error cargando datos del mapa:', error);
