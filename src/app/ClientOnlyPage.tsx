@@ -1,4 +1,34 @@
- 'use client';
+
+"use client";
+// Badge animado para comuna
+interface AnimatedComunaBadgeProps {
+  nombre: string;
+  delay?: number;
+}
+
+function AnimatedComunaBadge({ nombre, delay = 0 }: AnimatedComunaBadgeProps) {
+  return (
+    <button
+      type="button"
+      className={
+        `relative inline-flex items-center px-4 py-2 rounded-full bg-accent-100 border border-accent-300 text-accent-800 font-semibold text-sm shadow-sm transition-all overflow-hidden min-w-[110px] group
+        hover:bg-accent-200 hover:ring-2 hover:ring-accent-400 focus:bg-accent-200 focus:ring-2 focus:ring-accent-400`
+      }
+      style={{ touchAction: 'manipulation', transitionDelay: `${delay}ms` }}
+    >
+      <span
+        className="absolute left-2 top-1/2 -translate-y-1/2 text-lg"
+        style={{ willChange: 'transform' }}
+      >🚚</span>
+      <span
+        className="block w-full text-center"
+        style={{ minWidth: 60, marginLeft: 32 }}
+      >
+        {nombre}
+      </span>
+    </button>
+  );
+}
 
 import ClientHeader from '@/components/ClientHeader';
 import Banner from '@/components/Banner';
@@ -10,7 +40,8 @@ import ClientScrollToCart from '@/components/ClientScrollToCart';
 import MobileCartBar from '@/components/MobileCartBar';
 import { useCart } from '@/hooks/useCart';
 import { saboresData, saboresUnicos } from '@/data/productos';
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
+
 
 export default function ClientOnlyPage() {
   const [isMobileCartOpen, setIsMobileCartOpen] = useState(false);
@@ -73,32 +104,13 @@ export default function ClientOnlyPage() {
             </div>
             <div className="flex flex-col justify-center animate-fade-in" style={{ animationDelay: '0.1s' }}>
               <h3 className="text-2xl font-semibold mb-4 text-primary-700">Cobertura actual</h3>
-              <div className="grid grid-cols-2 gap-4 mb-4 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-2">
-                <div className="bg-accent-50 border-2 border-accent-200 rounded-2xl p-4 flex items-center shadow-md hover:shadow-lg transition-shadow group">
-                  <span className="bg-accent-100 rounded-full p-2 mr-3 flex items-center justify-center">
-                    <span className="text-3xl">🚚</span>
-                  </span>
-                  <span className="font-semibold text-lg text-accent-800">San Bernardo</span>
-                </div>
-                  <div className="bg-accent-50 border-2 border-accent-200 rounded-2xl p-4 flex items-center shadow-md hover:shadow-lg transition-shadow group">
-                    <span className="bg-accent-100 rounded-full p-2 mr-3 flex items-center justify-center">
-                      <span className="text-3xl">🚚</span>
-                    </span>
-                    <span className="font-semibold text-lg text-accent-800">La Pintana</span>
-                </div>
-                <div className="bg-accent-50 border-2 border-accent-200 rounded-2xl p-4 flex items-center shadow-md hover:shadow-lg transition-shadow group">
-                    <span className="bg-accent-100 rounded-full p-2 mr-3 flex items-center justify-center">
-                      <span className="text-3xl">🚚</span>
-                    </span>
-                    <span className="font-semibold text-lg text-accent-800">El Bosque</span>
-                </div>
-                <div className="bg-accent-50 border-2 border-accent-200 rounded-2xl p-4 flex items-center shadow-md hover:shadow-lg transition-shadow group">
-                    <span className="bg-accent-100 rounded-full p-2 mr-3 flex items-center justify-center">
-                      <span className="text-3xl">🚚</span>
-                    </span>
-                    <span className="font-semibold text-lg text-accent-800">La Cisterna</span>
-                </div>
+              <div className="flex flex-wrap gap-3 justify-center mb-4">
+                {['San Bernardo', 'La Pintana', 'El Bosque', 'La Cisterna'].map((comuna, idx) => (
+                  <AnimatedComunaBadge key={comuna} nombre={comuna} delay={idx * 100} />
+                ))}
               </div>
+
+
               <p className="text-gray-500 text-sm text-center">¿Tu comuna no aparece? <span className="text-primary-600 font-semibold">¡Contáctanos</span> para evaluar nuevas rutas!</p>
             </div>
           </div>
