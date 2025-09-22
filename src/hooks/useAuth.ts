@@ -17,45 +17,6 @@ export function useAuth() {
     isLoading: true,
   });
 
-  // Función para migrar usuarios existentes sin passwordHash
-  const migrateUsersIfNeeded = () => {
-    if (typeof window === 'undefined') return;
-    
-    try {
-      const existingUsers = getStoredUsers();
-      let needsMigration = false;
-      
-      const migratedUsers = existingUsers.map(user => {
-        // Si el usuario no tiene passwordHash, necesita migración
-        if (!user.passwordHash) {
-          needsMigration = true;
-          // No crear contraseña temporal, forzar uso de forgot password
-          return {
-            ...user,
-            passwordHash: 'MIGRATION_REQUIRED', // Valor especial que forzará reset
-            migrationNeeded: true
-          };
-        }
-        return user;
-      });
-
-      if (needsMigration) {
-        saveUsers(migratedUsers);
-        
-        // Si hay un usuario actual logueado y necesita migración, marcarlo
-        const currentUser = localStorage.getItem('delicias_user');
-        if (currentUser) {
-          const user = JSON.parse(currentUser);
-          const migratedUser = migratedUsers.find(u => u.id === user.id);
-          if (migratedUser && migratedUser.migrationNeeded) {
-            localStorage.setItem('delicias_user', JSON.stringify(migratedUser));
-          }
-        }
-      }
-    } catch (error) {
-      console.error('Error durante la migración de usuarios:', error);
-    }
-  };
 
   // Cargar usuario autenticado desde Supabase al iniciar
   useEffect(() => {

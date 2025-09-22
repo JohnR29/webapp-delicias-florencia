@@ -34,6 +34,7 @@ export default function AuthModal({ isOpen, onClose, defaultMode = 'login' }: Au
     direccion: ''
   });
   const [errors, setErrors] = useState<string>('');
+  const [successMsg, setSuccessMsg] = useState<string>('');
 
   const { login, register } = useAuth();
 
@@ -88,6 +89,7 @@ export default function AuthModal({ isOpen, onClose, defaultMode = 'login' }: Au
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrors('');
+    setSuccessMsg('');
 
     if (!validateEmail(email)) {
       setErrors('Por favor ingresa un email válido');
@@ -114,12 +116,19 @@ export default function AuthModal({ isOpen, onClose, defaultMode = 'login' }: Au
       }
 
       if (result.success) {
-        console.log('Login exitoso, cerrando modal');
-        resetForm();
-        // Pequeño delay para asegurar que el estado se actualice antes de cerrar
-        setTimeout(() => {
-          onClose();
-        }, 100);
+        if (mode === 'register') {
+          setSuccessMsg('Registro exitoso. Revisa tu correo para confirmar tu cuenta.');
+          resetForm();
+          setTimeout(() => {
+            setSuccessMsg('');
+            onClose();
+          }, 3000);
+        } else {
+          resetForm();
+          setTimeout(() => {
+            onClose();
+          }, 100);
+        }
       } else {
         setErrors(result.message);
       }
@@ -299,7 +308,15 @@ export default function AuthModal({ isOpen, onClose, defaultMode = 'login' }: Au
               </>
             )}
 
-            {/* Error message */}
+
+            {/* Mensaje de éxito */}
+            {successMsg && (
+              <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+                <p className="text-green-700 text-sm">{successMsg}</p>
+              </div>
+            )}
+
+            {/* Mensaje de error */}
             {errors && (
               <div className="bg-red-50 border border-red-200 rounded-lg p-3">
                 <p className="text-red-600 text-sm">{errors}</p>
