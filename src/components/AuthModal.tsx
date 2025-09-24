@@ -110,9 +110,25 @@ export default function AuthModal({ isOpen, onClose, defaultMode = 'login' }: Au
     try {
       let result;
       if (mode === 'login') {
-        result = await login(email, password, businessData);
+        // Recuperar businessInfo de localStorage si existe
+        let businessInfoToSend = businessData;
+        try {
+          const stored = localStorage.getItem('pendingBusinessInfo');
+          if (stored) {
+            businessInfoToSend = JSON.parse(stored);
+          }
+        } catch {}
+        result = await login(email, password, businessInfoToSend);
+        // Si el login fue exitoso, limpiar localStorage
+        if (result.success) {
+          localStorage.removeItem('pendingBusinessInfo');
+        }
       } else {
         result = await register(email, password, businessData);
+        // Guardar businessInfo en localStorage para el primer login
+        if (result.success) {
+          localStorage.setItem('pendingBusinessInfo', JSON.stringify(businessData));
+        }
       }
 
       if (result.success) {
