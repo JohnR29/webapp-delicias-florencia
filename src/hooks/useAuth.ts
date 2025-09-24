@@ -48,31 +48,7 @@ export function useAuth() {
       if (error) {
         return { success: false, message: error.message };
       }
-      // Insertar datos adicionales en la tabla users
-      const { error: insertError } = await supabase
-        .from('users')
-        .insert({
-          id: data.user?.id,
-          email,
-          name: businessInfo.contacto,
-          businessInfo,
-          created_at: new Date().toISOString(),
-          last_login: new Date().toISOString(),
-        });
-      if (insertError) {
-        return { success: false, message: insertError.message };
-      }
-      setAuthState({
-        user: {
-          id: data.user?.id,
-          email,
-          businessInfo,
-          createdAt: new Date().toISOString(),
-          lastLogin: new Date().toISOString(),
-        } as User,
-        isAuthenticated: true,
-        isLoading: false,
-      });
+      // No insertamos en la tabla users aquí, solo después de login
       return { success: true, message: 'Registro exitoso. Revisa tu correo para confirmar tu cuenta.' };
     } catch (error) {
       console.error('Error during registration:', error);
@@ -81,7 +57,7 @@ export function useAuth() {
   };
 
   // Función para login con Supabase
-  const login = async (email: string, password: string): Promise<{ success: boolean; message: string }> => {
+  const login = async (email: string, password: string, businessInfo?: BusinessForm): Promise<{ success: boolean; message: string }> => {
     try {
       const { data, error } = await supabase.auth.signInWithPassword({ email, password });
       if (error || !data.user) {
@@ -91,10 +67,39 @@ export function useAuth() {
       const { data: userData, error: userError } = await supabase
         .from('users')
         .select('*')
-        .eq('email', email)
+        .eq('id', data.user.id)
         .single();
+      // Si el usuario no existe en la tabla users, lo insertamos ahora
       if (userError || !userData) {
-        return { success: false, message: userError?.message || 'No se encontró el usuario' };
+        if (businessInfo) {
+          const { error: insertError } = await supabase
+            .from('users')
+            .insert({
+              id: data.user.id,
+              email,
+              name: businessInfo.contacto,
+              businessInfo,
+              created_at: new Date().toISOString(),
+              last_login: new Date().toISOString(),
+            });
+          if (insertError) {
+            return { success: false, message: insertError.message };
+          }
+          // Buscar de nuevo los datos
+          const { data: newUserData } = await supabase
+            .from('users')
+            .select('*')
+            .eq('id', data.user.id)
+            .single();
+          setAuthState({
+            user: newUserData,
+            isAuthenticated: true,
+            isLoading: false,
+          });
+          return { success: true, message: 'Login exitoso' };
+        } else {
+          return { success: false, message: 'No se encontró el usuario y no se proporcionó información de negocio.' };
+        }
       }
       // Actualizar last_login
       await supabase

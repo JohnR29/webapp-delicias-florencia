@@ -110,7 +110,7 @@ export default function AuthModal({ isOpen, onClose, defaultMode = 'login' }: Au
     try {
       let result;
       if (mode === 'login') {
-        result = await login(email, password);
+        result = await login(email, password, businessData);
       } else {
         result = await register(email, password, businessData);
       }
