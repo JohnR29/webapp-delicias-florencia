@@ -306,13 +306,13 @@ const ContactForm: React.FC<ContactFormProps> = ({ cartState, productosSeleccion
   <h3 className="text-2xl font-bold text-gray-800 mb-6">Completar Pedido</h3>
       
       {/* Sección de usuario autenticado */}
-      {finalAuthState.isAuthenticated && finalAuthState.user ? (
+      {auth.isAuthenticated && auth.user ? (
         <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
           <div className="flex justify-between items-start">
             <div>
-              <h4 className="font-medium text-green-800">¡Hola {finalAuthState.user.businessInfo.contacto}!</h4>
-              <p className="text-sm text-green-600">{finalAuthState.user.businessInfo.negocio}</p>
-              <p className="text-sm text-green-600">{finalAuthState.user.email}</p>
+              <h4 className="font-medium text-green-800">¡Hola {auth.user.businessInfo.contacto}!</h4>
+              <p className="text-sm text-green-600">{auth.user.businessInfo.negocio}</p>
+              <p className="text-sm text-green-600">{auth.user.email}</p>
             </div>
             <button
               onClick={handleLogout}
@@ -323,7 +323,6 @@ const ContactForm: React.FC<ContactFormProps> = ({ cartState, productosSeleccion
           </div>
         </div>
       ) : (
-        /* Sección para usuarios no autenticados */
         <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
           <h4 className="font-medium text-blue-800 mb-2">¿Ya tienes cuenta?</h4>
           <p className="text-sm text-blue-600 mb-3">
