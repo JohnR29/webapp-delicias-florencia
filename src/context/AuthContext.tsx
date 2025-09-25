@@ -10,6 +10,8 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<{ error: any } | void>;
   register: (email: string, password: string) => Promise<{ error: any } | void>;
   logout: () => Promise<void>;
+  requestPasswordReset: (email: string) => Promise<{ error: any } | void>;
+  resetPassword: (token: string, newPassword: string) => Promise<{ error: any } | void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -49,6 +51,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return { error };
   };
 
+
   const logout = async () => {
     setLoading(true);
     await supabase.auth.signOut();
@@ -56,8 +59,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setLoading(false);
   };
 
+  const requestPasswordReset = async (email: string) => {
+    const { error } = await supabase.auth.resetPasswordForEmail(email);
+    return { error };
+  };
+
+  const resetPassword = async (_token: string, newPassword: string) => {
+    // Supabase v2: updateUser uses the current session's access token automatically
+    const { error } = await supabase.auth.updateUser({ password: newPassword });
+    return { error };
+  };
+
   return (
-    <AuthContext.Provider value={{ user, isAuthenticated: !!user, loading, login, register, logout }}>
+    <AuthContext.Provider value={{ user, isAuthenticated: !!user, loading, login, register, logout, requestPasswordReset, resetPassword }}>
       {children}
     </AuthContext.Provider>
   );
