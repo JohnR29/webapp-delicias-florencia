@@ -85,13 +85,13 @@ export default function ClientOnlyPage() {
       <ClientHeader />
       <Banner />
       {/* Hero Section */}
-      <section id="inicio" className="py-16 lg:py-24">
+      <section id="inicio" className="py-8 lg:py-16">
         <div className="container mx-auto px-4">
-          <div className="text-center mb-16 animate-fade-in">
+          <div className="text-center mb-8 animate-fade-in">
             <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-gray-800 mb-6">
               Tu Socio Comercial en Repostería
             </h2>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto mb-8 leading-relaxed">
+            <p className="text-xl text-gray-600 max-w-3xl mx-auto mb-4 leading-relaxed">
               Amplia tu oferta con nuestras tortas artesanales de alta rotación y excelente margen
             </p>
             <div className="flex flex-wrap justify-center gap-4 text-sm text-gray-600">
@@ -112,9 +112,9 @@ export default function ClientOnlyPage() {
         </div>
       </section>
       {/* Coverage Information */}
-      <section id="cobertura" className="py-16 bg-white">
+      <section id="cobertura" className="py-8 bg-white">
         <div className="container mx-auto px-4">
-          <div className="text-center mb-12 animate-fade-in">
+          <div className="text-center mb-6 animate-fade-in">
             <h2 className="text-3xl md:text-4xl font-bold text-gray-800 mb-4">
               Zonas de Distribución
             </h2>
@@ -122,7 +122,7 @@ export default function ClientOnlyPage() {
               Rutas de entrega programadas para tu negocio
             </p>
           </div>
-          <div className="grid lg:grid-cols-2 gap-8 mb-12">
+          <div className="grid lg:grid-cols-2 gap-8 mb-6">
             <div className="animate-fade-in">
               <ClientCoverageMap className="h-96 shadow-lg" />
             </div>
@@ -140,10 +140,16 @@ export default function ClientOnlyPage() {
           </div>
         </div>
       </section>
-      {/* Product Catalog */}
-      <section id="catalogo" className="py-16">
+      {/* Pricing Tiers */}
+      <section id="precios" className="py-8 bg-white">
         <div className="container mx-auto px-4">
-          <div className="text-center mb-12 animate-fade-in">
+          <PricingTiers tierActual={tierActual} unidadesHastaSiguienteTier={unidadesHastaSiguienteTier} />
+        </div>
+      </section>
+      {/* Product Catalog */}
+      <section id="catalogo" className="py-8">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-6 animate-fade-in">
             <h2 className="text-3xl md:text-4xl font-bold text-gray-800 mb-4">Catálogo de Tortas</h2>
             <p className="text-lg text-gray-600">Elige los sabores y formatos para tu negocio</p>
           </div>
@@ -161,21 +167,11 @@ export default function ClientOnlyPage() {
           </div>
         </div>
       </section>
-      {/* Pricing Tiers */}
-      <section id="precios" className="py-16 bg-white">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-12 animate-fade-in">
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-800 mb-4">Precios Mayoristas</h2>
-            <p className="text-lg text-gray-600">A mayor volumen, mejor precio por unidad</p>
-          </div>
-          <PricingTiers tierActual={tierActual} unidadesHastaSiguienteTier={unidadesHastaSiguienteTier} />
-        </div>
-      </section>
 
       {/* Contact Form */}
-      <section id="cotizar" className="py-16">
+      <section id="cotizar" className="py-8">
         <div className="container mx-auto px-4">
-          <div className="text-center mb-12 animate-fade-in">
+          <div className="text-center mb-6 animate-fade-in">
             <h2 className="text-3xl md:text-4xl font-bold text-gray-800 mb-4">Solicita tu Cotización</h2>
             <p className="text-lg text-gray-600">Completa el formulario y te contactaremos a la brevedad</p>
           </div>
@@ -190,9 +186,9 @@ export default function ClientOnlyPage() {
         </div>
       </section>
   {/* Footer */}
-  <footer className="bg-gray-900 text-white py-8 mt-16">
+  <footer className="bg-gray-900 text-white py-6 mt-8">
         <div className="container mx-auto px-4">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-4">
             <div className="text-center md:text-left animate-fade-in">
               <h4 className="font-semibold mb-4">Contacto</h4>
               <p>Email: <a href="mailto:johnrojas297@gmail.com" className="underline">johnrojas297@gmail.com</a></p>

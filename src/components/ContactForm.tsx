@@ -40,6 +40,7 @@ const ContactForm: React.FC<ContactFormProps> = ({ cartState, productosSeleccion
     if (selectedAddress) {
       setFormData(prev => ({
         ...prev,
+        negocio: selectedAddress.negocio || '',
         contacto: selectedAddress.contacto || '',
         telefono: selectedAddress.telefono || '',
         tipo: (['Almacén', 'Minimarket', 'Pastelería', 'Cafetería', 'Otro'].includes(selectedAddress.tipo)
@@ -47,7 +48,6 @@ const ContactForm: React.FC<ContactFormProps> = ({ cartState, productosSeleccion
           : 'Almacén') as BusinessForm['tipo'],
         comuna: selectedAddress.comuna || '',
         direccion: selectedAddress.direccion || '',
-        // negocio: '', // No autocompletar nombre de negocio desde dirección
       }));
     }
   }, [selectedAddress]);
@@ -191,41 +191,8 @@ const ContactForm: React.FC<ContactFormProps> = ({ cartState, productosSeleccion
   };
 
   return (
-    <div className="bg-white rounded-xl shadow-lg p-6 flex flex-row">
-      {/* Botones de gestión de direcciones (solo si logeado) */}
-      <div className="flex flex-col gap-3 items-center mr-6 mt-2">
-        <button
-          type="button"
-          className="w-10 h-10 flex items-center justify-center rounded-full bg-primary-600 text-white text-2xl shadow hover:bg-primary-700 transition"
-          title="Agregar dirección"
-          onClick={() => {
-            if (!auth.isAuthenticated) {
-              alert('Debes iniciar sesión para agregar una dirección.');
-              return;
-            }
-            setShowAddAddress(true);
-          }}
-        >
-          +
-        </button>
-        <button
-          type="button"
-          className="w-10 h-10 flex items-center justify-center rounded-full bg-gray-200 text-primary-700 text-xl shadow hover:bg-gray-300 transition"
-          title="Ver direcciones guardadas"
-          onClick={() => {
-            if (!auth.isAuthenticated) {
-              alert('Debes iniciar sesión para ver tus direcciones guardadas.');
-              return;
-            }
-            setShowListAddress(true);
-          }}
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 5.25h16.5m-16.5 4.5h16.5m-16.5 4.5h16.5m-16.5 4.5h16.5" />
-          </svg>
-        </button>
-      </div>
-      <div className="flex-1">
+    <div className="bg-white rounded-xl shadow-lg p-3 sm:p-6 flex flex-col max-w-full overflow-x-auto">
+      <div className="flex-1 min-w-0">
   <h3 className="text-2xl font-bold text-gray-800 mb-6">Completar Pedido</h3>
       
       {/* Sección de usuario autenticado */}
@@ -234,7 +201,7 @@ const ContactForm: React.FC<ContactFormProps> = ({ cartState, productosSeleccion
           <div className="flex justify-between items-start">
             <div>
               <h4 className="font-medium text-green-800">
-                ¡Hola {auth.user.email || 'usuario'}!
+                ¡Hola {auth.user.user_metadata?.display_name || auth.user.email || 'usuario'}!
               </h4>
             </div>
             <button
@@ -274,7 +241,40 @@ const ContactForm: React.FC<ContactFormProps> = ({ cartState, productosSeleccion
         </div>
       )}
       
-      <form onSubmit={handleSubmit} className="space-y-4">
+      {/* Botones de gestión de direcciones (solo si logeado) */}
+      <div className="flex flex-row gap-3 justify-center md:justify-start items-center mb-4">
+        <button
+          type="button"
+          className="w-10 h-10 flex items-center justify-center rounded-full bg-primary-600 text-white text-2xl shadow hover:bg-primary-700 transition"
+          title="Agregar dirección"
+          onClick={() => {
+            if (!auth.isAuthenticated) {
+              alert('Debes iniciar sesión para agregar una dirección.');
+              return;
+            }
+            setShowAddAddress(true);
+          }}
+        >
+          +
+        </button>
+        <button
+          type="button"
+          className="w-10 h-10 flex items-center justify-center rounded-full bg-gray-200 text-primary-700 text-xl shadow hover:bg-gray-300 transition"
+          title="Ver direcciones guardadas"
+          onClick={() => {
+            if (!auth.isAuthenticated) {
+              alert('Debes iniciar sesión para ver tus direcciones guardadas.');
+              return;
+            }
+            setShowListAddress(true);
+          }}
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 5.25h16.5m-16.5 4.5h16.5m-16.5 4.5h16.5m-16.5 4.5h16.5" />
+          </svg>
+        </button>
+      </div>
+      <form onSubmit={handleSubmit} className="space-y-4 w-full max-w-full">
         {/* Nombre del negocio */}
         <div>
           <label htmlFor="negocio" className="block text-sm font-medium text-gray-700 mb-1">
@@ -425,46 +425,54 @@ const ContactForm: React.FC<ContactFormProps> = ({ cartState, productosSeleccion
         onClose={() => setShowAuthModal(false)}
         defaultMode={authModalMode}
       />
-      {/* Modal para agregar dirección */}
-  {showAddAddress && (
+      {/* Modal para agregar dirección (solo alta) */}
+      {showAddAddress && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
           <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-md relative animate-fade-in">
             <button className="absolute top-2 right-2 text-gray-500 hover:text-gray-700 text-2xl" onClick={() => setShowAddAddress(false)}>&times;</button>
             <h4 className="text-lg font-bold mb-4">Agregar nueva dirección</h4>
-            {/* AddressManager solo para agregar */}
-            <AddressManager onSelect={undefined} />
+            <AddressManager onSelect={addr => {
+              setShowAddAddress(false);
+              if (addr) {
+                setFormData(prev => ({
+                  ...prev,
+                  negocio: addr.negocio || '',
+                  contacto: addr.contacto || '',
+                  telefono: addr.telefono || '',
+                  tipo: (['Almacén', 'Minimarket', 'Pastelería', 'Cafetería', 'Otro'].includes(addr.tipo)
+                    ? (addr.tipo as BusinessForm['tipo'])
+                    : 'Almacén'),
+                  comuna: addr.comuna || '',
+                  direccion: addr.direccion || '',
+                }));
+              }
+            }} onlyAdd />
           </div>
         </div>
       )}
 
-      {/* Modal para seleccionar dirección */}
+      {/* Modal para seleccionar y administrar direcciones */}
       {showListAddress && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
           <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-md relative animate-fade-in">
             <button className="absolute top-2 right-2 text-gray-500 hover:text-gray-700 text-2xl" onClick={() => setShowListAddress(false)}>&times;</button>
-            <h4 className="text-lg font-bold mb-4">Seleccionar dirección guardada</h4>
-            <div className="space-y-2">
-              {addresses.length === 0 && <div className="text-gray-500">No tienes direcciones guardadas.</div>}
-              {addresses.map(addr => (
-                <div key={addr.id} className="flex items-center justify-between bg-gray-50 border rounded p-3 cursor-pointer hover:bg-primary-50" onClick={() => {
-                  setShowListAddress(false);
-                  setFormData(prev => ({
-                    ...prev,
-                    contacto: addr.contacto || '',
-                    telefono: addr.telefono || '',
-                    tipo: (['Almacén', 'Minimarket', 'Pastelería', 'Cafetería', 'Otro'].includes(addr.tipo)
-                      ? addr.tipo
-                      : 'Almacén') as BusinessForm['tipo'],
-                    comuna: addr.comuna || '',
-                    direccion: addr.direccion || '',
-                  }));
-                }}>
-                  <div>
-                    <span className="font-semibold">{addr.nombre}</span> — {addr.direccion} ({addr.comuna})
-                  </div>
-                </div>
-              ))}
-            </div>
+            <h4 className="text-lg font-bold mb-4">Seleccionar o administrar direcciones</h4>
+            <AddressManager onSelect={addr => {
+              setShowListAddress(false);
+              if (addr) {
+                setFormData(prev => ({
+                  ...prev,
+                  negocio: addr.negocio || '',
+                  contacto: addr.contacto || '',
+                  telefono: addr.telefono || '',
+                  tipo: (['Almacén', 'Minimarket', 'Pastelería', 'Cafetería', 'Otro'].includes(addr.tipo)
+                    ? (addr.tipo as BusinessForm['tipo'])
+                    : 'Almacén'),
+                  comuna: addr.comuna || '',
+                  direccion: addr.direccion || '',
+                }));
+              }
+            }} />
           </div>
         </div>
       )}

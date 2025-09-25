@@ -5,6 +5,7 @@ export interface Address {
   id: string;
   user_id: string;
   nombre: string;
+  negocio: string;
   contacto: string;
   telefono: string;
   tipo: string;
