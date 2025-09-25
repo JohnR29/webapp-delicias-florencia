@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { Poppins, Dancing_Script } from 'next/font/google'
 import StructuredData from '@/components/StructuredData'
 import './globals.css'
+import { AuthProvider } from '@/context/AuthContext';
 
 const poppins = Poppins({
   subsets: ['latin'],
@@ -105,7 +106,9 @@ export default function RootLayout({
         <StructuredData />
       </head>
       <body className={`${poppins.className} antialiased`}>
-        {children}
+        <AuthProvider>
+          {children}
+        </AuthProvider>
       </body>
     </html>
   )

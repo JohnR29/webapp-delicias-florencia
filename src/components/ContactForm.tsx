@@ -62,94 +62,15 @@ const ContactForm: React.FC<ContactFormProps> = ({ cartState, productosSeleccion
     comuna: '',
     direccion: ''
   });
-  const [forceUpdate, setForceUpdate] = useState(0); // Para forzar re-renderización
-  const [localAuthState, setLocalAuthState] = useState({ isAuthenticated: false, user: null });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<Partial<Record<keyof BusinessForm, string>>>({});
 
-  // Escuchar cambios en localStorage para detectar login
+
+  // Autocompletar formulario si el usuario está logueado (solo useAuth)
   useEffect(() => {
-    const handleStorageChange = () => {
-      console.log('Storage changed, forcing update');
-      
-      // Leer directamente de localStorage cuando cambie
-      const savedUser = localStorage.getItem('delicias_user');
-      if (savedUser) {
-        try {
-          const userData = JSON.parse(savedUser);
-          console.log('📱 Detected user from localStorage:', userData.email);
-          setFormData(userData.businessInfo);
-          setLocalAuthState({ isAuthenticated: true, user: userData });
-        } catch (error) {
-          console.error('Error parsing user data:', error);
-          setLocalAuthState({ isAuthenticated: false, user: null });
-        }
-      } else {
-        console.log('📱 No user found in localStorage, clearing form');
-        setFormData({
-          negocio: '',
-          contacto: '',
-          telefono: '',
-          tipo: 'Almacén',
-          comuna: '',
-          direccion: ''
-        });
-        setLocalAuthState({ isAuthenticated: false, user: null });
-      }
-      
-      setForceUpdate(prev => prev + 1);
-    };
-
-    if (typeof window !== 'undefined') {
-      window.addEventListener('storage', handleStorageChange);
-      
-      // También escuchar cambios internos de localStorage
-      const originalSetItem = localStorage.setItem;
-      localStorage.setItem = function(key: string, value: string) {
-        originalSetItem.call(this, key, value);
-        if (key === 'delicias_user') {
-          setTimeout(handleStorageChange, 10);
-        }
-      };
-    }
-
-    return () => {
-      if (typeof window !== 'undefined') {
-        window.removeEventListener('storage', handleStorageChange);
-        // Restaurar métodos originales de localStorage si fueron modificados
-        if (typeof localStorage !== 'undefined') {
-          localStorage.setItem = Storage.prototype.setItem;
-          localStorage.removeItem = Storage.prototype.removeItem;
-        }
-      }
-    };
-  }, []);
-
-  // Autocompletar formulario si el usuario está logueado
-  useEffect(() => {
-    console.log('ContactForm useEffect triggered:', { isAuthenticated, user: !!user, forceUpdate });
-    
-    // Primero verificar localStorage directamente (más confiable)
-    const savedUser = localStorage.getItem('delicias_user');
-    if (savedUser) {
-      try {
-        const userData = JSON.parse(savedUser);
-        console.log('🔄 Using localStorage data for form:', userData.email);
-        setFormData(userData.businessInfo);
-        return; // Salir early si encontramos usuario en localStorage
-      } catch (error) {
-        console.error('Error parsing localStorage user:', error);
-      }
-    }
-    
-    // Fallback al hook useAuth solo si no hay datos en localStorage
-    if (isAuthenticated && user) {
-      console.log('🔄 Using useAuth data for form:', user.email);
-      setFormData(user.businessInfo);
-    } else {
-      console.log('🔄 Clearing form data - no user found');
-      // Limpiar formulario si no hay usuario logueado
+    // No autocompletar desde businessInfo, solo limpiar si no autenticado
+    if (!auth.isAuthenticated) {
       setFormData({
         negocio: '',
         contacto: '',
@@ -159,7 +80,7 @@ const ContactForm: React.FC<ContactFormProps> = ({ cartState, productosSeleccion
         direccion: ''
       });
     }
-  }, [isAuthenticated, user, forceUpdate]);
+  }, [auth.isAuthenticated, auth.user]);
 
   const comunasPermitidas = ['San Bernardo', 'La Pintana', 'El Bosque', 'La Cisterna'];
   const tiposNegocio = ['Almacén', 'Minimarket', 'Pastelería', 'Cafetería', 'Otro'];
@@ -203,9 +124,10 @@ const ContactForm: React.FC<ContactFormProps> = ({ cartState, productosSeleccion
     try {
       // Preparar datos para envío al API
       const requestData = {
-        businessInfo: formData,
+        formData,
         cart: cartState,
         products: productosSeleccionados,
+        userEmail: auth.user?.email || null,
         timestamp: new Date().toISOString()
       };
 
@@ -229,7 +151,7 @@ const ContactForm: React.FC<ContactFormProps> = ({ cartState, productosSeleccion
         }
         
         // Para usuarios NO autenticados: limpiar formulario 
-        if (!finalAuthState?.isAuthenticated) {
+        if (!auth.isAuthenticated) {
           setFormData({
             negocio: '',
             contacto: '',
@@ -254,17 +176,10 @@ const ContactForm: React.FC<ContactFormProps> = ({ cartState, productosSeleccion
 
   const isFormValid = cartState && cartState.totalCantidad >= 6;
   
-  // Usar estado local si está disponible, fallback a useAuth
-  const finalAuthState = localAuthState.user ? localAuthState : { isAuthenticated, user };
 
   // Función de logout personalizada que limpia todo
   const handleLogout = () => {
-    console.log('🚪 Cerrando sesión desde ContactForm...');
-    logout(); // Limpiar hook useAuth
-    setLocalAuthState({ isAuthenticated: false, user: null }); // Limpiar estado local
-    localStorage.removeItem('delicias_user'); // Limpiar localStorage
-    
-    // Limpiar el formulario
+    logout();
     setFormData({
       negocio: '',
       contacto: '',
@@ -273,8 +188,6 @@ const ContactForm: React.FC<ContactFormProps> = ({ cartState, productosSeleccion
       comuna: '',
       direccion: ''
     });
-    
-    console.log('✅ Sesión cerrada desde ContactForm');
   };
 
   return (
@@ -320,9 +233,9 @@ const ContactForm: React.FC<ContactFormProps> = ({ cartState, productosSeleccion
         <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
           <div className="flex justify-between items-start">
             <div>
-              <h4 className="font-medium text-green-800">¡Hola {auth.user.businessInfo.contacto}!</h4>
-              <p className="text-sm text-green-600">{auth.user.businessInfo.negocio}</p>
-              <p className="text-sm text-green-600">{auth.user.email}</p>
+              <h4 className="font-medium text-green-800">
+                ¡Hola {auth.user.email || 'usuario'}!
+              </h4>
             </div>
             <button
               onClick={handleLogout}

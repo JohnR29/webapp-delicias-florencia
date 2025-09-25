@@ -88,7 +88,8 @@ export default function AuthModal({ isOpen, onClose, defaultMode = 'login' }: Au
         result = await register(email, password);
       }
 
-      if (result.success) {
+      // Para login/register: éxito si NO hay error
+      if (result && !result.error) {
         if (mode === 'register') {
           setSuccessMsg('Registro exitoso. Revisa tu correo para confirmar tu cuenta.');
           resetForm();
@@ -97,14 +98,19 @@ export default function AuthModal({ isOpen, onClose, defaultMode = 'login' }: Au
             onClose();
           }, 3000);
         } else {
+          setSuccessMsg('¡Inicio de sesión exitoso!');
           resetForm();
-          alert('¡Inicio de sesión exitoso!');
           setTimeout(() => {
+            setSuccessMsg('');
             onClose();
-          }, 100);
+          }, 1200);
         }
       } else {
-        setErrors(result.message);
+        if (result && result.error) {
+          setErrors(result.error.message || 'Error al iniciar sesión');
+        } else {
+          setErrors('Error al iniciar sesión');
+        }
       }
     } catch (error) {
       setErrors('Error inesperado. Por favor intenta nuevamente.');
@@ -119,6 +125,15 @@ export default function AuthModal({ isOpen, onClose, defaultMode = 'login' }: Au
   };
 
   if (!isOpen) return null;
+
+  // Toast de éxito
+  const SuccessToast = () => (
+    successMsg ? (
+      <div className="fixed top-6 left-1/2 -translate-x-1/2 z-50 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg animate-fade-in">
+        {successMsg}
+      </div>
+    ) : null
+  );
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999] p-4" style={{ minHeight: '100vh' }}>
