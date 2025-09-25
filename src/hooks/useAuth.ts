@@ -42,7 +42,7 @@ export function useAuth() {
   }, []);
 
   // Función para registrar usuario con Supabase
-  const register = async (email: string, password: string, businessInfo: BusinessForm): Promise<{ success: boolean; message: string }> => {
+  const register = async (email: string, password: string): Promise<{ success: boolean; message: string }> => {
     try {
       const { data, error } = await supabase.auth.signUp({ email, password });
       if (error) {
@@ -57,57 +57,27 @@ export function useAuth() {
   };
 
   // Función para login con Supabase
-  const login = async (email: string, password: string, businessInfo?: BusinessForm): Promise<{ success: boolean; message: string }> => {
+  const login = async (email: string, password: string): Promise<{ success: boolean; message: string }> => {
     try {
       const { data, error } = await supabase.auth.signInWithPassword({ email, password });
       if (error || !data.user) {
         return { success: false, message: error?.message || 'Email o contraseña incorrectos' };
       }
       // Buscar datos adicionales en la tabla users
-      const { data: userData, error: userError } = await supabase
+      const { data: userData } = await supabase
         .from('users')
         .select('*')
         .eq('id', data.user.id)
         .single();
-      // Si el usuario no existe en la tabla users, lo insertamos ahora
-      if (userError || !userData) {
-        if (businessInfo) {
-          const { error: insertError } = await supabase
-            .from('users')
-            .insert({
-              id: data.user.id,
-              email,
-              name: businessInfo.contacto,
-              businessInfo,
-              created_at: new Date().toISOString(),
-              last_login: new Date().toISOString(),
-            });
-          if (insertError) {
-            return { success: false, message: insertError.message };
-          }
-          // Buscar de nuevo los datos
-          const { data: newUserData } = await supabase
-            .from('users')
-            .select('*')
-            .eq('id', data.user.id)
-            .single();
-          setAuthState({
-            user: newUserData,
-            isAuthenticated: true,
-            isLoading: false,
-          });
-          return { success: true, message: 'Login exitoso' };
-        } else {
-          return { success: false, message: 'No se encontró el usuario y no se proporcionó información de negocio.' };
-        }
+      // Actualizar last_login si existe el usuario
+      if (userData) {
+        await supabase
+          .from('users')
+          .update({ last_login: new Date().toISOString() })
+          .eq('id', userData.id);
       }
-      // Actualizar last_login
-      await supabase
-        .from('users')
-        .update({ last_login: new Date().toISOString() })
-        .eq('id', userData.id);
       setAuthState({
-        user: userData,
+        user: userData || null,
         isAuthenticated: true,
         isLoading: false,
       });

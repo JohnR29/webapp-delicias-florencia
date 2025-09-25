@@ -39,6 +39,7 @@ function AnimatedComunaBadge({ nombre, delay = 0 }: AnimatedComunaBadgeProps) {
   );
 }
 
+
 import ClientHeader from '@/components/ClientHeader';
 import Banner from '@/components/Banner';
 import ClientCoverageMap from '@/components/ClientCoverageMap';
@@ -50,10 +51,14 @@ import MobileCartBar from '@/components/MobileCartBar';
 import { useCart } from '@/hooks/useCart';
 import { saboresData, saboresUnicos } from '@/data/productos';
 import { useState, useEffect, useRef } from 'react';
+import AddressManager from '@/components/AddressManager';
+
+import { Address } from '@/hooks/useAddresses';
 
 
 export default function ClientOnlyPage() {
   const [isMobileCartOpen, setIsMobileCartOpen] = useState(false);
+  const [selectedAddress, setSelectedAddress] = useState<Address | null>(null);
   const {
     items,
     cartState,
@@ -64,6 +69,16 @@ export default function ClientOnlyPage() {
     tierActual,
     productosSeleccionados
   } = useCart(saboresData);
+
+  // Handler para autocompletar el formulario con la dirección seleccionada
+  const handleSelectAddress = (address: Address) => {
+    setSelectedAddress(address);
+    // Scroll al formulario de cotización
+    const el = document.getElementById('cotizar');
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
 
   return (
     <main className="min-h-screen bg-gradient-to-br from-primary-50 via-white to-secondary-50">
@@ -156,6 +171,7 @@ export default function ClientOnlyPage() {
           <PricingTiers tierActual={tierActual} unidadesHastaSiguienteTier={unidadesHastaSiguienteTier} />
         </div>
       </section>
+
       {/* Contact Form */}
       <section id="cotizar" className="py-16">
         <div className="container mx-auto px-4">
@@ -168,6 +184,7 @@ export default function ClientOnlyPage() {
               cartState={cartState}
               productosSeleccionados={productosSeleccionados}
               clearCart={clearCart}
+              selectedAddress={selectedAddress}
             />
           </div>
         </div>

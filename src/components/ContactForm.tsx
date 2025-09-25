@@ -5,6 +5,9 @@ import { BusinessForm } from '@/lib/types';
 import { useAuth } from '@/hooks/useAuth';
 import AuthModal from '@/components/AuthModal';
 
+import { Address, useAddresses } from '@/hooks/useAddresses';
+import AddressManager from '@/components/AddressManager';
+
 interface ContactFormProps {
   cartState?: {
     total12oz: number;
@@ -20,9 +23,34 @@ interface ContactFormProps {
     cantidad: number;
   }>;
   clearCart?: () => void;
+  selectedAddress?: Address | null;
 }
 
-const ContactForm: React.FC<ContactFormProps> = ({ cartState, productosSeleccionados = [], clearCart }) => {
+const ContactForm: React.FC<ContactFormProps> = ({ cartState, productosSeleccionados = [], clearCart, selectedAddress }) => {
+  // Estado para mostrar modales de direcciones
+  const [showAddAddress, setShowAddAddress] = useState(false);
+  const [showListAddress, setShowListAddress] = useState(false);
+  // Obtener direcciones del usuario
+  // Solo obtener userId para direcciones, pero no redeclarar user/isAuthenticated
+  const auth = useAuth();
+  const userId = auth.user?.id || null;
+  const { addresses, fetchAddresses } = useAddresses(userId);
+  // Autocompletar formulario si se selecciona una dirección desde AddressManager
+  useEffect(() => {
+    if (selectedAddress) {
+      setFormData(prev => ({
+        ...prev,
+        contacto: selectedAddress.contacto || '',
+        telefono: selectedAddress.telefono || '',
+        tipo: (['Almacén', 'Minimarket', 'Pastelería', 'Cafetería', 'Otro'].includes(selectedAddress.tipo)
+          ? selectedAddress.tipo
+          : 'Almacén') as BusinessForm['tipo'],
+        comuna: selectedAddress.comuna || '',
+        direccion: selectedAddress.direccion || '',
+        // negocio: '', // No autocompletar nombre de negocio desde dirección
+      }));
+    }
+  }, [selectedAddress]);
   const { user, isAuthenticated, logout } = useAuth();
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [authModalMode, setAuthModalMode] = useState<'login' | 'register'>('login');
@@ -250,8 +278,32 @@ const ContactForm: React.FC<ContactFormProps> = ({ cartState, productosSeleccion
   };
 
   return (
-    <div className="bg-white rounded-xl shadow-lg p-6">
-      <h3 className="text-2xl font-bold text-gray-800 mb-6">Completar Pedido</h3>
+    <div className="bg-white rounded-xl shadow-lg p-6 flex flex-row">
+      {/* Botones de gestión de direcciones (solo si logeado) */}
+  {auth.isAuthenticated && (
+        <div className="flex flex-col gap-3 items-center mr-6 mt-2">
+          <button
+            type="button"
+            className="w-10 h-10 flex items-center justify-center rounded-full bg-primary-600 text-white text-2xl shadow hover:bg-primary-700 transition"
+            title="Agregar dirección"
+            onClick={() => setShowAddAddress(true)}
+          >
+            +
+          </button>
+          <button
+            type="button"
+            className="w-10 h-10 flex items-center justify-center rounded-full bg-gray-200 text-primary-700 text-xl shadow hover:bg-gray-300 transition"
+            title="Ver direcciones guardadas"
+            onClick={() => setShowListAddress(true)}
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 5.25h16.5m-16.5 4.5h16.5m-16.5 4.5h16.5m-16.5 4.5h16.5" />
+            </svg>
+          </button>
+        </div>
+      )}
+      <div className="flex-1">
+  <h3 className="text-2xl font-bold text-gray-800 mb-6">Completar Pedido</h3>
       
       {/* Sección de usuario autenticado */}
       {finalAuthState.isAuthenticated && finalAuthState.user ? (
@@ -451,6 +503,50 @@ const ContactForm: React.FC<ContactFormProps> = ({ cartState, productosSeleccion
         onClose={() => setShowAuthModal(false)}
         defaultMode={authModalMode}
       />
+      {/* Modal para agregar dirección */}
+  {showAddAddress && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
+          <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-md relative animate-fade-in">
+            <button className="absolute top-2 right-2 text-gray-500 hover:text-gray-700 text-2xl" onClick={() => setShowAddAddress(false)}>&times;</button>
+            <h4 className="text-lg font-bold mb-4">Agregar nueva dirección</h4>
+            {/* AddressManager solo para agregar */}
+            <AddressManager onSelect={undefined} />
+          </div>
+        </div>
+      )}
+
+      {/* Modal para seleccionar dirección */}
+      {showListAddress && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
+          <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-md relative animate-fade-in">
+            <button className="absolute top-2 right-2 text-gray-500 hover:text-gray-700 text-2xl" onClick={() => setShowListAddress(false)}>&times;</button>
+            <h4 className="text-lg font-bold mb-4">Seleccionar dirección guardada</h4>
+            <div className="space-y-2">
+              {addresses.length === 0 && <div className="text-gray-500">No tienes direcciones guardadas.</div>}
+              {addresses.map(addr => (
+                <div key={addr.id} className="flex items-center justify-between bg-gray-50 border rounded p-3 cursor-pointer hover:bg-primary-50" onClick={() => {
+                  setShowListAddress(false);
+                  setFormData(prev => ({
+                    ...prev,
+                    contacto: addr.contacto || '',
+                    telefono: addr.telefono || '',
+                    tipo: (['Almacén', 'Minimarket', 'Pastelería', 'Cafetería', 'Otro'].includes(addr.tipo)
+                      ? addr.tipo
+                      : 'Almacén') as BusinessForm['tipo'],
+                    comuna: addr.comuna || '',
+                    direccion: addr.direccion || '',
+                  }));
+                }}>
+                  <div>
+                    <span className="font-semibold">{addr.nombre}</span> — {addr.direccion} ({addr.comuna})
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+      </div>
     </div>
   );
 };
