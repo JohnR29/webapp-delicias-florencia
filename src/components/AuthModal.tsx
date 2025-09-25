@@ -25,6 +25,7 @@ export default function AuthModal({ isOpen, onClose, defaultMode = 'login' }: Au
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showForgotPassword, setShowForgotPassword] = useState(false);
+
   // Eliminamos businessData del flujo de registro/login
   const [errors, setErrors] = useState<string>('');
   const [successMsg, setSuccessMsg] = useState<string>('');
@@ -38,14 +39,6 @@ export default function AuthModal({ isOpen, onClose, defaultMode = 'login' }: Au
     setEmail('');
     setPassword('');
     setConfirmPassword('');
-    setBusinessData({
-      negocio: '',
-      contacto: '',
-      telefono: '',
-      tipo: 'Almacén',
-      comuna: '',
-      direccion: ''
-    });
     setErrors('');
   };
 
