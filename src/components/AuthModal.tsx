@@ -25,14 +25,8 @@ export default function AuthModal({ isOpen, onClose, defaultMode = 'login' }: Au
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showForgotPassword, setShowForgotPassword] = useState(false);
-  const [businessData, setBusinessData] = useState<BusinessForm>({
-    negocio: '',
-    contacto: '',
-    telefono: '',
-    tipo: 'Almacén',
-    comuna: '',
-    direccion: ''
-  });
+
+  // Eliminamos businessData del flujo de registro/login
   const [errors, setErrors] = useState<string>('');
   const [successMsg, setSuccessMsg] = useState<string>('');
 
@@ -45,14 +39,6 @@ export default function AuthModal({ isOpen, onClose, defaultMode = 'login' }: Au
     setEmail('');
     setPassword('');
     setConfirmPassword('');
-    setBusinessData({
-      negocio: '',
-      contacto: '',
-      telefono: '',
-      tipo: 'Almacén',
-      comuna: '',
-      direccion: ''
-    });
     setErrors('');
   };
 
@@ -74,17 +60,7 @@ export default function AuthModal({ isOpen, onClose, defaultMode = 'login' }: Au
     return true;
   };
 
-  const validateBusinessData = (): boolean => {
-    if (mode === 'login') return true;
-    
-    return (
-      businessData.negocio.trim() !== '' &&
-      businessData.contacto.trim() !== '' &&
-      businessData.telefono.trim() !== '' &&
-      businessData.comuna !== '' &&
-      businessData.direccion.trim() !== ''
-    );
-  };
+  // Eliminamos validación de businessData
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -100,10 +76,7 @@ export default function AuthModal({ isOpen, onClose, defaultMode = 'login' }: Au
       return;
     }
 
-    if (mode === 'register' && !validateBusinessData()) {
-      setErrors('Por favor completa todos los campos');
-      return;
-    }
+    // Ya no validamos datos de negocio en el registro
 
     setIsSubmitting(true);
 
@@ -112,10 +85,11 @@ export default function AuthModal({ isOpen, onClose, defaultMode = 'login' }: Au
       if (mode === 'login') {
         result = await login(email, password);
       } else {
-        result = await register(email, password, businessData);
+        result = await register(email, password);
       }
 
-      if (result.success) {
+      // Para login/register: éxito si NO hay error
+      if (result && !result.error) {
         if (mode === 'register') {
           setSuccessMsg('Registro exitoso. Revisa tu correo para confirmar tu cuenta.');
           resetForm();
@@ -124,13 +98,19 @@ export default function AuthModal({ isOpen, onClose, defaultMode = 'login' }: Au
             onClose();
           }, 3000);
         } else {
+          setSuccessMsg('¡Inicio de sesión exitoso!');
           resetForm();
           setTimeout(() => {
+            setSuccessMsg('');
             onClose();
-          }, 100);
+          }, 1200);
         }
       } else {
-        setErrors(result.message);
+        if (result && result.error) {
+          setErrors(result.error.message || 'Error al iniciar sesión');
+        } else {
+          setErrors('Error al iniciar sesión');
+        }
       }
     } catch (error) {
       setErrors('Error inesperado. Por favor intenta nuevamente.');
@@ -145,6 +125,15 @@ export default function AuthModal({ isOpen, onClose, defaultMode = 'login' }: Au
   };
 
   if (!isOpen) return null;
+
+  // Toast de éxito
+  const SuccessToast = () => (
+    successMsg ? (
+      <div className="fixed top-6 left-1/2 -translate-x-1/2 z-50 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg animate-fade-in">
+        {successMsg}
+      </div>
+    ) : null
+  );
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999] p-4" style={{ minHeight: '100vh' }}>
@@ -214,99 +203,7 @@ export default function AuthModal({ isOpen, onClose, defaultMode = 'login' }: Au
               </div>
             )}
 
-            {/* Campos adicionales para registro */}
-            {mode === 'register' && (
-              <>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Nombre del negocio <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    value={businessData.negocio}
-                    onChange={(e) => setBusinessData(prev => ({ ...prev, negocio: e.target.value }))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-                    placeholder="Ej: Almacén Los Robles"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Persona de contacto <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    value={businessData.contacto}
-                    onChange={(e) => setBusinessData(prev => ({ ...prev, contacto: e.target.value }))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-                    placeholder="Nombre del encargado"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Teléfono <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="tel"
-                    value={businessData.telefono}
-                    onChange={(e) => setBusinessData(prev => ({ ...prev, telefono: e.target.value }))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-                    placeholder="+56 9 ..."
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Tipo de negocio <span className="text-red-500">*</span>
-                  </label>
-                  <select
-                    value={businessData.tipo}
-                    onChange={(e) => setBusinessData(prev => ({ ...prev, tipo: e.target.value as BusinessForm['tipo'] }))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-                    required
-                  >
-                    {tiposNegocio.map(tipo => (
-                      <option key={tipo} value={tipo}>{tipo}</option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Comuna <span className="text-red-500">*</span>
-                  </label>
-                  <select
-                    value={businessData.comuna}
-                    onChange={(e) => setBusinessData(prev => ({ ...prev, comuna: e.target.value }))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-                    required
-                  >
-                    <option value="" disabled>Selecciona...</option>
-                    {comunasPermitidas.map(comuna => (
-                      <option key={comuna} value={comuna}>{comuna}</option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Dirección <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    value={businessData.direccion}
-                    onChange={(e) => setBusinessData(prev => ({ ...prev, direccion: e.target.value }))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-                    placeholder="Dirección completa del local"
-                    required
-                  />
-                </div>
-              </>
-            )}
+            {/* Ya no hay campos adicionales para registro */}
 
 
             {/* Mensaje de éxito */}

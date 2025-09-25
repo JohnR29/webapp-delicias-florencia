@@ -5,6 +5,9 @@ import { BusinessForm } from '@/lib/types';
 import { useAuth } from '@/hooks/useAuth';
 import AuthModal from '@/components/AuthModal';
 
+import { Address, useAddresses } from '@/hooks/useAddresses';
+import AddressManager from '@/components/AddressManager';
+
 interface ContactFormProps {
   cartState?: {
     total12oz: number;
@@ -20,9 +23,34 @@ interface ContactFormProps {
     cantidad: number;
   }>;
   clearCart?: () => void;
+  selectedAddress?: Address | null;
 }
 
-const ContactForm: React.FC<ContactFormProps> = ({ cartState, productosSeleccionados = [], clearCart }) => {
+const ContactForm: React.FC<ContactFormProps> = ({ cartState, productosSeleccionados = [], clearCart, selectedAddress }) => {
+  // Estado para mostrar modales de direcciones
+  const [showAddAddress, setShowAddAddress] = useState(false);
+  const [showListAddress, setShowListAddress] = useState(false);
+  // Obtener direcciones del usuario
+  // Solo obtener userId para direcciones, pero no redeclarar user/isAuthenticated
+  const auth = useAuth();
+  const userId = auth.user?.id || null;
+  const { addresses, fetchAddresses } = useAddresses(userId);
+  // Autocompletar formulario si se selecciona una dirección desde AddressManager
+  useEffect(() => {
+    if (selectedAddress) {
+      setFormData(prev => ({
+        ...prev,
+        negocio: selectedAddress.negocio || '',
+        contacto: selectedAddress.contacto || '',
+        telefono: selectedAddress.telefono || '',
+        tipo: (['Almacén', 'Minimarket', 'Pastelería', 'Cafetería', 'Otro'].includes(selectedAddress.tipo)
+          ? selectedAddress.tipo
+          : 'Almacén') as BusinessForm['tipo'],
+        comuna: selectedAddress.comuna || '',
+        direccion: selectedAddress.direccion || '',
+      }));
+    }
+  }, [selectedAddress]);
   const { user, isAuthenticated, logout } = useAuth();
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [authModalMode, setAuthModalMode] = useState<'login' | 'register'>('login');
@@ -34,94 +62,15 @@ const ContactForm: React.FC<ContactFormProps> = ({ cartState, productosSeleccion
     comuna: '',
     direccion: ''
   });
-  const [forceUpdate, setForceUpdate] = useState(0); // Para forzar re-renderización
-  const [localAuthState, setLocalAuthState] = useState({ isAuthenticated: false, user: null });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<Partial<Record<keyof BusinessForm, string>>>({});
 
-  // Escuchar cambios en localStorage para detectar login
+
+  // Autocompletar formulario si el usuario está logueado (solo useAuth)
   useEffect(() => {
-    const handleStorageChange = () => {
-      console.log('Storage changed, forcing update');
-      
-      // Leer directamente de localStorage cuando cambie
-      const savedUser = localStorage.getItem('delicias_user');
-      if (savedUser) {
-        try {
-          const userData = JSON.parse(savedUser);
-          console.log('📱 Detected user from localStorage:', userData.email);
-          setFormData(userData.businessInfo);
-          setLocalAuthState({ isAuthenticated: true, user: userData });
-        } catch (error) {
-          console.error('Error parsing user data:', error);
-          setLocalAuthState({ isAuthenticated: false, user: null });
-        }
-      } else {
-        console.log('📱 No user found in localStorage, clearing form');
-        setFormData({
-          negocio: '',
-          contacto: '',
-          telefono: '',
-          tipo: 'Almacén',
-          comuna: '',
-          direccion: ''
-        });
-        setLocalAuthState({ isAuthenticated: false, user: null });
-      }
-      
-      setForceUpdate(prev => prev + 1);
-    };
-
-    if (typeof window !== 'undefined') {
-      window.addEventListener('storage', handleStorageChange);
-      
-      // También escuchar cambios internos de localStorage
-      const originalSetItem = localStorage.setItem;
-      localStorage.setItem = function(key: string, value: string) {
-        originalSetItem.call(this, key, value);
-        if (key === 'delicias_user') {
-          setTimeout(handleStorageChange, 10);
-        }
-      };
-    }
-
-    return () => {
-      if (typeof window !== 'undefined') {
-        window.removeEventListener('storage', handleStorageChange);
-        // Restaurar métodos originales de localStorage si fueron modificados
-        if (typeof localStorage !== 'undefined') {
-          localStorage.setItem = Storage.prototype.setItem;
-          localStorage.removeItem = Storage.prototype.removeItem;
-        }
-      }
-    };
-  }, []);
-
-  // Autocompletar formulario si el usuario está logueado
-  useEffect(() => {
-    console.log('ContactForm useEffect triggered:', { isAuthenticated, user: !!user, forceUpdate });
-    
-    // Primero verificar localStorage directamente (más confiable)
-    const savedUser = localStorage.getItem('delicias_user');
-    if (savedUser) {
-      try {
-        const userData = JSON.parse(savedUser);
-        console.log('🔄 Using localStorage data for form:', userData.email);
-        setFormData(userData.businessInfo);
-        return; // Salir early si encontramos usuario en localStorage
-      } catch (error) {
-        console.error('Error parsing localStorage user:', error);
-      }
-    }
-    
-    // Fallback al hook useAuth solo si no hay datos en localStorage
-    if (isAuthenticated && user) {
-      console.log('🔄 Using useAuth data for form:', user.email);
-      setFormData(user.businessInfo);
-    } else {
-      console.log('🔄 Clearing form data - no user found');
-      // Limpiar formulario si no hay usuario logueado
+    // No autocompletar desde businessInfo, solo limpiar si no autenticado
+    if (!auth.isAuthenticated) {
       setFormData({
         negocio: '',
         contacto: '',
@@ -131,7 +80,7 @@ const ContactForm: React.FC<ContactFormProps> = ({ cartState, productosSeleccion
         direccion: ''
       });
     }
-  }, [isAuthenticated, user, forceUpdate]);
+  }, [auth.isAuthenticated, auth.user]);
 
   const comunasPermitidas = ['San Bernardo', 'La Pintana', 'El Bosque', 'La Cisterna'];
   const tiposNegocio = ['Almacén', 'Minimarket', 'Pastelería', 'Cafetería', 'Otro'];
@@ -175,9 +124,10 @@ const ContactForm: React.FC<ContactFormProps> = ({ cartState, productosSeleccion
     try {
       // Preparar datos para envío al API
       const requestData = {
-        businessInfo: formData,
+        formData,
         cart: cartState,
         products: productosSeleccionados,
+        userEmail: auth.user?.email || null,
         timestamp: new Date().toISOString()
       };
 
@@ -201,7 +151,7 @@ const ContactForm: React.FC<ContactFormProps> = ({ cartState, productosSeleccion
         }
         
         // Para usuarios NO autenticados: limpiar formulario 
-        if (!finalAuthState?.isAuthenticated) {
+        if (!auth.isAuthenticated) {
           setFormData({
             negocio: '',
             contacto: '',
@@ -226,17 +176,10 @@ const ContactForm: React.FC<ContactFormProps> = ({ cartState, productosSeleccion
 
   const isFormValid = cartState && cartState.totalCantidad >= 6;
   
-  // Usar estado local si está disponible, fallback a useAuth
-  const finalAuthState = localAuthState.user ? localAuthState : { isAuthenticated, user };
 
   // Función de logout personalizada que limpia todo
   const handleLogout = () => {
-    console.log('🚪 Cerrando sesión desde ContactForm...');
-    logout(); // Limpiar hook useAuth
-    setLocalAuthState({ isAuthenticated: false, user: null }); // Limpiar estado local
-    localStorage.removeItem('delicias_user'); // Limpiar localStorage
-    
-    // Limpiar el formulario
+    logout();
     setFormData({
       negocio: '',
       contacto: '',
@@ -245,22 +188,21 @@ const ContactForm: React.FC<ContactFormProps> = ({ cartState, productosSeleccion
       comuna: '',
       direccion: ''
     });
-    
-    console.log('✅ Sesión cerrada desde ContactForm');
   };
 
   return (
-    <div className="bg-white rounded-xl shadow-lg p-6">
-      <h3 className="text-2xl font-bold text-gray-800 mb-6">Completar Pedido</h3>
+    <div className="bg-white rounded-xl shadow-lg p-3 sm:p-6 flex flex-col max-w-full overflow-x-auto">
+      <div className="flex-1 min-w-0">
+  <h3 className="text-2xl font-bold text-gray-800 mb-6">Completar Pedido</h3>
       
       {/* Sección de usuario autenticado */}
-      {finalAuthState.isAuthenticated && finalAuthState.user ? (
+      {auth.isAuthenticated && auth.user ? (
         <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
           <div className="flex justify-between items-start">
             <div>
-              <h4 className="font-medium text-green-800">¡Hola {finalAuthState.user.businessInfo.contacto}!</h4>
-              <p className="text-sm text-green-600">{finalAuthState.user.businessInfo.negocio}</p>
-              <p className="text-sm text-green-600">{finalAuthState.user.email}</p>
+              <h4 className="font-medium text-green-800">
+                ¡Hola {auth.user.user_metadata?.display_name || auth.user.email || 'usuario'}!
+              </h4>
             </div>
             <button
               onClick={handleLogout}
@@ -271,7 +213,6 @@ const ContactForm: React.FC<ContactFormProps> = ({ cartState, productosSeleccion
           </div>
         </div>
       ) : (
-        /* Sección para usuarios no autenticados */
         <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
           <h4 className="font-medium text-blue-800 mb-2">¿Ya tienes cuenta?</h4>
           <p className="text-sm text-blue-600 mb-3">
@@ -300,7 +241,40 @@ const ContactForm: React.FC<ContactFormProps> = ({ cartState, productosSeleccion
         </div>
       )}
       
-      <form onSubmit={handleSubmit} className="space-y-4">
+      {/* Botones de gestión de direcciones (solo si logeado) */}
+      <div className="flex flex-row gap-3 justify-center md:justify-start items-center mb-4">
+        <button
+          type="button"
+          className="w-10 h-10 flex items-center justify-center rounded-full bg-primary-600 text-white text-2xl shadow hover:bg-primary-700 transition"
+          title="Agregar dirección"
+          onClick={() => {
+            if (!auth.isAuthenticated) {
+              alert('Debes iniciar sesión para agregar una dirección.');
+              return;
+            }
+            setShowAddAddress(true);
+          }}
+        >
+          +
+        </button>
+        <button
+          type="button"
+          className="w-10 h-10 flex items-center justify-center rounded-full bg-gray-200 text-primary-700 text-xl shadow hover:bg-gray-300 transition"
+          title="Ver direcciones guardadas"
+          onClick={() => {
+            if (!auth.isAuthenticated) {
+              alert('Debes iniciar sesión para ver tus direcciones guardadas.');
+              return;
+            }
+            setShowListAddress(true);
+          }}
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 5.25h16.5m-16.5 4.5h16.5m-16.5 4.5h16.5m-16.5 4.5h16.5" />
+          </svg>
+        </button>
+      </div>
+      <form onSubmit={handleSubmit} className="space-y-4 w-full max-w-full">
         {/* Nombre del negocio */}
         <div>
           <label htmlFor="negocio" className="block text-sm font-medium text-gray-700 mb-1">
@@ -451,6 +425,58 @@ const ContactForm: React.FC<ContactFormProps> = ({ cartState, productosSeleccion
         onClose={() => setShowAuthModal(false)}
         defaultMode={authModalMode}
       />
+      {/* Modal para agregar dirección (solo alta) */}
+      {showAddAddress && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
+          <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-md relative animate-fade-in">
+            <button className="absolute top-2 right-2 text-gray-500 hover:text-gray-700 text-2xl" onClick={() => setShowAddAddress(false)}>&times;</button>
+            <h4 className="text-lg font-bold mb-4">Agregar nueva dirección</h4>
+            <AddressManager onSelect={addr => {
+              setShowAddAddress(false);
+              if (addr) {
+                setFormData(prev => ({
+                  ...prev,
+                  negocio: addr.negocio || '',
+                  contacto: addr.contacto || '',
+                  telefono: addr.telefono || '',
+                  tipo: (['Almacén', 'Minimarket', 'Pastelería', 'Cafetería', 'Otro'].includes(addr.tipo)
+                    ? (addr.tipo as BusinessForm['tipo'])
+                    : 'Almacén'),
+                  comuna: addr.comuna || '',
+                  direccion: addr.direccion || '',
+                }));
+              }
+            }} onlyAdd />
+          </div>
+        </div>
+      )}
+
+      {/* Modal para seleccionar y administrar direcciones */}
+      {showListAddress && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
+          <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-md relative animate-fade-in">
+            <button className="absolute top-2 right-2 text-gray-500 hover:text-gray-700 text-2xl" onClick={() => setShowListAddress(false)}>&times;</button>
+            <h4 className="text-lg font-bold mb-4">Seleccionar o administrar direcciones</h4>
+            <AddressManager onSelect={addr => {
+              setShowListAddress(false);
+              if (addr) {
+                setFormData(prev => ({
+                  ...prev,
+                  negocio: addr.negocio || '',
+                  contacto: addr.contacto || '',
+                  telefono: addr.telefono || '',
+                  tipo: (['Almacén', 'Minimarket', 'Pastelería', 'Cafetería', 'Otro'].includes(addr.tipo)
+                    ? (addr.tipo as BusinessForm['tipo'])
+                    : 'Almacén'),
+                  comuna: addr.comuna || '',
+                  direccion: addr.direccion || '',
+                }));
+              }
+            }} />
+          </div>
+        </div>
+      )}
+      </div>
     </div>
   );
 };

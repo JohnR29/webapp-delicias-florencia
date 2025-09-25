@@ -154,7 +154,7 @@ const Header = () => {
             <li>
               {finalAuthState.isAuthenticated && finalAuthState.user ? (
                 <div className="flex items-center space-x-2">
-                  <span className="text-xs lg:text-sm text-gray-600">Hola, {finalAuthState.user.businessInfo.contacto}</span>
+                  <span className="text-xs lg:text-sm text-gray-600">Hola, {finalAuthState.user.email || 'usuario'}</span>
                   <button
                     onClick={handleLogout}
                     className="text-xs lg:text-sm text-gray-500 hover:text-gray-700 underline"
@@ -235,7 +235,7 @@ const Header = () => {
             <li>
               {finalAuthState.isAuthenticated && finalAuthState.user ? (
                 <div className="flex flex-col space-y-2 pt-2 border-t border-gray-200">
-                  <span className="text-sm text-gray-600">Hola, {finalAuthState.user.businessInfo.contacto}</span>
+                  <span className="text-sm text-gray-600">Hola, {finalAuthState.user.email || 'usuario'}</span>
                   <button
                     onClick={() => {
                       handleLogout();

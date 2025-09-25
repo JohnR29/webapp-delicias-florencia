@@ -53,11 +53,11 @@ export default function ForgotPasswordModal({ isOpen, onClose }: ForgotPasswordM
 
     try {
       const result = await requestPasswordReset(email);
-      if (result.success) {
-        setMessage(result.message);
+      if (result && !result.error) {
+        setMessage('Si el email existe, recibirás instrucciones para restablecer tu contraseña.');
         setStep('reset');
       } else {
-        setErrors(result.message);
+        setErrors(result && result.error ? result.error.message : 'Error al solicitar restablecimiento');
       }
     } catch (error) {
       setErrors('Error inesperado. Por favor intenta nuevamente.');
@@ -90,13 +90,13 @@ export default function ForgotPasswordModal({ isOpen, onClose }: ForgotPasswordM
 
     try {
       const result = await resetPassword(token, newPassword);
-      if (result.success) {
+      if (result && !result.error) {
         setMessage('¡Contraseña restablecida exitosamente! Ya puedes iniciar sesión.');
         setTimeout(() => {
           handleClose();
         }, 2000);
       } else {
-        setErrors(result.message);
+        setErrors(result && result.error ? result.error.message : 'Error al restablecer contraseña');
       }
     } catch (error) {
       setErrors('Error inesperado. Por favor intenta nuevamente.');
