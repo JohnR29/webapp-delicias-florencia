@@ -98,6 +98,7 @@ export default function AuthModal({ isOpen, onClose, defaultMode = 'login' }: Au
           }, 3000);
         } else {
           resetForm();
+          alert('¡Inicio de sesión exitoso!');
           setTimeout(() => {
             onClose();
           }, 100);

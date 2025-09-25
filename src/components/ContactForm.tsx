@@ -280,28 +280,38 @@ const ContactForm: React.FC<ContactFormProps> = ({ cartState, productosSeleccion
   return (
     <div className="bg-white rounded-xl shadow-lg p-6 flex flex-row">
       {/* Botones de gestión de direcciones (solo si logeado) */}
-  {auth.isAuthenticated && (
-        <div className="flex flex-col gap-3 items-center mr-6 mt-2">
-          <button
-            type="button"
-            className="w-10 h-10 flex items-center justify-center rounded-full bg-primary-600 text-white text-2xl shadow hover:bg-primary-700 transition"
-            title="Agregar dirección"
-            onClick={() => setShowAddAddress(true)}
-          >
-            +
-          </button>
-          <button
-            type="button"
-            className="w-10 h-10 flex items-center justify-center rounded-full bg-gray-200 text-primary-700 text-xl shadow hover:bg-gray-300 transition"
-            title="Ver direcciones guardadas"
-            onClick={() => setShowListAddress(true)}
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 5.25h16.5m-16.5 4.5h16.5m-16.5 4.5h16.5m-16.5 4.5h16.5" />
-            </svg>
-          </button>
-        </div>
-      )}
+      <div className="flex flex-col gap-3 items-center mr-6 mt-2">
+        <button
+          type="button"
+          className="w-10 h-10 flex items-center justify-center rounded-full bg-primary-600 text-white text-2xl shadow hover:bg-primary-700 transition"
+          title="Agregar dirección"
+          onClick={() => {
+            if (!auth.isAuthenticated) {
+              alert('Debes iniciar sesión para agregar una dirección.');
+              return;
+            }
+            setShowAddAddress(true);
+          }}
+        >
+          +
+        </button>
+        <button
+          type="button"
+          className="w-10 h-10 flex items-center justify-center rounded-full bg-gray-200 text-primary-700 text-xl shadow hover:bg-gray-300 transition"
+          title="Ver direcciones guardadas"
+          onClick={() => {
+            if (!auth.isAuthenticated) {
+              alert('Debes iniciar sesión para ver tus direcciones guardadas.');
+              return;
+            }
+            setShowListAddress(true);
+          }}
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 5.25h16.5m-16.5 4.5h16.5m-16.5 4.5h16.5m-16.5 4.5h16.5" />
+          </svg>
+        </button>
+      </div>
       <div className="flex-1">
   <h3 className="text-2xl font-bold text-gray-800 mb-6">Completar Pedido</h3>
       
