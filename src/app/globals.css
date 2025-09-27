@@ -124,6 +124,7 @@ body {
 
 .leaflet-container {
   font-family: inherit !important;
+  z-index: 10 !important; /* Asegura que el mapa esté por debajo del modal */
 }
 
 /* Focus styles for accessibility */

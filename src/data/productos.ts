@@ -12,7 +12,7 @@ export const saboresData: Product[] = [
     formato: '12oz',
     precio: 1500, // Precio base, se calcula dinámicamente
     ingredientes: ['Bizcocho Blanco', 'Tres tipos de leche', 'Crema Chantilly'],
-    imagen: '/images/tres-leches.png',
+    imagen: '/images/tres-leches.jpg',
     descripcion: 'Deliciosa torta empapada en tres tipos de leche, coronada con crema chantilly. Alto margen y rotación'
   },
   {
@@ -50,7 +50,7 @@ export const saboresData: Product[] = [
     formato: '9oz',
     precio: 1250,
     ingredientes: ['Bizcocho Blanco', 'Tres tipos de leche', 'Crema Chantilly'],
-    imagen: '/images/tres-leches.png',
+    imagen: '/images/tres-leches.jpg',
     descripcion: 'Deliciosa torta empapada en tres tipos de leche, coronada con crema chantilly. Alto margen y rotación'
   },
   {
@@ -88,7 +88,7 @@ export const saboresUnicos = [
     key: 'tres-leches',
     nombre: 'Tres Leches',
     ingredientes: ['Bizcocho Blanco', 'Tres tipos de leche', 'Crema Chantilly'],
-    imagen: '/images/tres-leches.png',
+    imagen: '/images/tres-leches.jpg',
     descripcion: 'Deliciosa torta empapada en tres tipos de leche, coronada con crema chantilly. Alto margen y rotación'
   },
   {
