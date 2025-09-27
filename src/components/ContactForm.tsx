@@ -124,10 +124,11 @@ const ContactForm: React.FC<ContactFormProps> = ({ cartState, productosSeleccion
     try {
       // Preparar datos para envío al API
       const requestData = {
-        formData,
+        businessInfo: formData,
         cart: cartState,
         products: productosSeleccionados,
         userEmail: auth.user?.email || null,
+        user_id: auth.user?.id || null,
         timestamp: new Date().toISOString()
       };
 
