@@ -27,14 +27,27 @@ export async function POST(request: NextRequest) {
 
     // Insertar pedido en la tabla orders
     // Preparar datos mínimos para el pedido
-    const orderUserId = body.user_id || body.userEmail || null;
+    // Si no hay user_id, usar el correo de contacto como identificador
+    let orderUserId = body.user_id || body.userEmail || null;
+    if (!orderUserId && businessInfo && businessInfo.correo) {
+      orderUserId = businessInfo.correo;
+    }
     const orderTotals = cart ? {
       totalCantidad: cart.totalCantidad,
       totalMonto: cart.totalMonto
     } : {};
+    // Simplificar productos: solo nombre, formato y cantidad
+    const simpleProducts = Array.isArray(products)
+      ? products.map(p => ({
+          nombre: p.producto?.nombre?.replace(/\s*\(.*\)/, '').trim() || '',
+          formato: p.producto?.formato || '',
+          cantidad: p.cantidad || 0
+        }))
+      : [];
+
     const orderDataToSave = {
       businessInfo,
-      products,
+      products: simpleProducts,
       totals: orderTotals
     };
     const { data: orderData, error: orderError } = await supabase
