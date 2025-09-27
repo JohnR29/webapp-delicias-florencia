@@ -13,6 +13,7 @@ interface AuthModalProps {
 
 export default function AuthModal({ isOpen, onClose, defaultMode = 'login' }: AuthModalProps) {
   const [mode, setMode] = useState<'login' | 'register'>(defaultMode);
+  const [nombre, setNombre] = useState('');
   
   // Sincronizar mode cuando cambie defaultMode
   useEffect(() => {
@@ -36,10 +37,11 @@ export default function AuthModal({ isOpen, onClose, defaultMode = 'login' }: Au
   const tiposNegocio = ['Almacén', 'Minimarket', 'Pastelería', 'Cafetería', 'Otro'];
 
   const resetForm = () => {
-    setEmail('');
-    setPassword('');
-    setConfirmPassword('');
-    setErrors('');
+  setEmail('');
+  setPassword('');
+  setConfirmPassword('');
+  setNombre('');
+  setErrors('');
   };
 
   const validateEmail = (email: string): boolean => {
@@ -76,7 +78,10 @@ export default function AuthModal({ isOpen, onClose, defaultMode = 'login' }: Au
       return;
     }
 
-    // Ya no validamos datos de negocio en el registro
+    if (mode === 'register' && nombre.trim().length < 2) {
+      setErrors('Por favor ingresa tu nombre (mínimo 2 caracteres)');
+      return;
+    }
 
     setIsSubmitting(true);
 
@@ -85,7 +90,7 @@ export default function AuthModal({ isOpen, onClose, defaultMode = 'login' }: Au
       if (mode === 'login') {
         result = await login(email, password);
       } else {
-        result = await register(email, password);
+        result = await register(email, password, nombre);
       }
 
       // Para login/register: éxito si NO hay error
@@ -136,7 +141,7 @@ export default function AuthModal({ isOpen, onClose, defaultMode = 'login' }: Au
   );
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999] p-4" style={{ minHeight: '100vh' }}>
+  <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[99999] p-4" style={{ minHeight: '100vh', zIndex: 99999 }}>
       <div className="bg-white rounded-2xl shadow-xl max-w-md w-full max-h-[85vh] overflow-y-auto relative" style={{ top: 'auto', left: 'auto', transform: 'none' }}>
         <div className="p-6">
           {/* Header */}
@@ -154,6 +159,24 @@ export default function AuthModal({ isOpen, onClose, defaultMode = 'login' }: Au
 
           {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-4">
+            {/* Nombre (solo en registro) */}
+            {mode === 'register' && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Nombre <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  value={nombre}
+                  onChange={(e) => setNombre(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                  placeholder="Tu nombre"
+                  required
+                  minLength={2}
+                />
+              </div>
+            )}
+
             {/* Email */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -202,9 +225,6 @@ export default function AuthModal({ isOpen, onClose, defaultMode = 'login' }: Au
                 />
               </div>
             )}
-
-            {/* Ya no hay campos adicionales para registro */}
-
 
             {/* Mensaje de éxito */}
             {successMsg && (

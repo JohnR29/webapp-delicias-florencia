@@ -171,10 +171,6 @@ export default function ClientOnlyPage() {
       {/* Contact Form */}
       <section id="cotizar" className="py-8">
         <div className="container mx-auto px-4">
-          <div className="text-center mb-6 animate-fade-in">
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-800 mb-4">Solicita tu Cotización</h2>
-            <p className="text-lg text-gray-600">Completa el formulario y te contactaremos a la brevedad</p>
-          </div>
           <div className="max-w-2xl mx-auto animate-fade-in">
             <ClientContactForm
               cartState={cartState}

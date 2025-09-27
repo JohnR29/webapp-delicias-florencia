@@ -54,39 +54,36 @@ const ContactForm: React.FC<ContactFormProps> = ({ cartState, productosSeleccion
   const { user, isAuthenticated, logout } = useAuth();
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [authModalMode, setAuthModalMode] = useState<'login' | 'register'>('login');
-  const [formData, setFormData] = useState<BusinessForm>({
+  const [formData, setFormData] = useState<BusinessForm & { correo: string }>({
     negocio: '',
     contacto: '',
     telefono: '',
     tipo: 'Almacén',
     comuna: '',
-    direccion: ''
+    direccion: '',
+    correo: ''
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [errors, setErrors] = useState<Partial<Record<keyof BusinessForm, string>>>({});
+  type ContactFormFields = BusinessForm & { correo: string };
+  const [errors, setErrors] = useState<Partial<Record<keyof ContactFormFields, string>>>({});
 
 
-  // Autocompletar formulario si el usuario está logueado (solo useAuth)
+  // Autocompletar correo si el usuario está autenticado
   useEffect(() => {
-    // No autocompletar desde businessInfo, solo limpiar si no autenticado
-    if (!auth.isAuthenticated) {
-      setFormData({
-        negocio: '',
-        contacto: '',
-        telefono: '',
-        tipo: 'Almacén',
-        comuna: '',
-        direccion: ''
-      });
-    }
+    setFormData(prev => ({
+      ...prev,
+      correo: auth.isAuthenticated && auth.user && typeof auth.user.email === 'string'
+        ? auth.user.email
+        : ''
+    }));
   }, [auth.isAuthenticated, auth.user]);
 
   const comunasPermitidas = ['San Bernardo', 'La Pintana', 'El Bosque', 'La Cisterna'];
   const tiposNegocio = ['Almacén', 'Minimarket', 'Pastelería', 'Cafetería', 'Otro'];
 
   const validateForm = (): boolean => {
-    const newErrors: Partial<Record<keyof BusinessForm, string>> = {};
+    const newErrors: Partial<Record<keyof (BusinessForm & { correo: string }), string>> = {};
 
     if (!formData.negocio.trim()) newErrors.negocio = 'El nombre del negocio es requerido';
     if (!formData.contacto.trim()) newErrors.contacto = 'La persona de contacto es requerida';
@@ -94,10 +91,15 @@ const ContactForm: React.FC<ContactFormProps> = ({ cartState, productosSeleccion
     if (!formData.tipo) newErrors.tipo = 'El tipo de negocio es requerido';
     if (!formData.comuna) newErrors.comuna = 'La comuna es requerida';
     if (!formData.direccion.trim()) newErrors.direccion = 'La dirección es requerida';
+    if (!formData.correo.trim()) newErrors.correo = 'El correo es requerido';
 
     // Validación de teléfono básica
     if (formData.telefono && !/^[\+]?[0-9\s\-\(\)]{8,}$/.test(formData.telefono)) {
       newErrors.telefono = 'Formato de teléfono inválido';
+    }
+    // Validación de correo básica
+    if (formData.correo && !/^\S+@\S+\.\S+$/.test(formData.correo)) {
+      newErrors.correo = 'Formato de correo inválido';
     }
 
     setErrors(newErrors);
@@ -124,10 +126,11 @@ const ContactForm: React.FC<ContactFormProps> = ({ cartState, productosSeleccion
     try {
       // Preparar datos para envío al API
       const requestData = {
-        formData,
+        businessInfo: { ...formData },
         cart: cartState,
         products: productosSeleccionados,
-        userEmail: auth.user?.email || null,
+        userEmail: formData.correo || auth.user?.email || null,
+        user_id: auth.user?.id || null,
         timestamp: new Date().toISOString()
       };
 
@@ -158,7 +161,8 @@ const ContactForm: React.FC<ContactFormProps> = ({ cartState, productosSeleccion
             telefono: '',
             tipo: 'Almacén',
             comuna: '',
-            direccion: ''
+            direccion: '',
+            correo: ''
           });
         }
         // Para usuarios autenticados: mantener los datos del formulario
@@ -186,7 +190,8 @@ const ContactForm: React.FC<ContactFormProps> = ({ cartState, productosSeleccion
       telefono: '',
       tipo: 'Almacén',
       comuna: '',
-      direccion: ''
+      direccion: '',
+      correo: ''
     });
   };
 
@@ -293,6 +298,26 @@ const ContactForm: React.FC<ContactFormProps> = ({ cartState, productosSeleccion
             autoComplete="organization"
           />
           {errors.negocio && <p className="text-red-500 text-xs mt-1">{errors.negocio}</p>}
+        </div>
+        {/* Correo de contacto */}
+        <div>
+          <label htmlFor="correo" className="block text-sm font-medium text-gray-700 mb-1">
+            Correo electrónico <span className="text-red-500">*</span>
+          </label>
+          <input
+            type="email"
+            id="correo"
+            name="correo"
+            value={formData.correo}
+            onChange={handleInputChange}
+            className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 ${
+              errors.correo ? 'border-red-500' : 'border-gray-300'
+            }`}
+            placeholder="Ej: contacto@negocio.cl"
+            autoComplete="email"
+            disabled={auth.isAuthenticated}
+          />
+          {errors.correo && <p className="text-red-500 text-xs mt-1">{errors.correo}</p>}
         </div>
 
         {/* Persona de contacto */}

@@ -58,7 +58,7 @@ export default function StructuredData() {
           "@type": "Product",
           "name": "Torta Tres Leches 12oz",
           "description": "Deliciosa torta empapada en tres tipos de leche, coronada con crema chantilly",
-          "image": "https://deliciasflorencia.cl/images/tres-leches.png",
+          "image": "https://deliciasflorencia.cl/images/tres-leches.jpg",
           "offers": {
             "@type": "Offer",
             "price": "1500-1700",

@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import nodemailer from 'nodemailer';
-import fs from 'fs';
-import path from 'path';
+import { createClient } from '@supabase/supabase-js';
 
 export async function POST(request: NextRequest) {
   try {
@@ -21,20 +20,51 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    // Generar número de pedido secuencial en formato #0001
-    const now = new Date();
-    const orderNumberFile = path.resolve(process.cwd(), 'order-seq.txt');
-    let orderSeq = 1;
-    try {
-      if (fs.existsSync(orderNumberFile)) {
-        const last = parseInt(fs.readFileSync(orderNumberFile, 'utf8'), 10);
-        if (!isNaN(last)) orderSeq = last + 1;
-      }
-      fs.writeFileSync(orderNumberFile, String(orderSeq));
-    } catch (e) {
-      // Si hay error, igual seguimos con el número calculado
+    // Guardar pedido en Supabase y obtener el número de pedido
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+    const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+    const supabase = createClient(supabaseUrl, supabaseKey);
+
+    // Insertar pedido en la tabla orders
+    // Preparar datos mínimos para el pedido
+    // Si no hay user_id, usar el correo de contacto como identificador
+    let orderUserId = body.user_id || body.userEmail || null;
+    if (!orderUserId && businessInfo && businessInfo.correo) {
+      orderUserId = businessInfo.correo;
     }
-    const orderNumber = `#${String(orderSeq).padStart(4, '0')}`;
+    const orderTotals = cart ? {
+      totalCantidad: cart.totalCantidad,
+      totalMonto: cart.totalMonto
+    } : {};
+    // Simplificar productos: solo nombre, formato y cantidad
+    const simpleProducts = Array.isArray(products)
+      ? products.map(p => ({
+          nombre: p.producto?.nombre?.replace(/\s*\(.*\)/, '').trim() || '',
+          formato: p.producto?.formato || '',
+          cantidad: p.cantidad || 0
+        }))
+      : [];
+
+    const orderDataToSave = {
+      businessInfo,
+      products: simpleProducts,
+      totals: orderTotals
+    };
+    const { data: orderData, error: orderError } = await supabase
+      .from('orders')
+      .insert([
+        {
+          user_id: orderUserId,
+          order_data: orderDataToSave
+        }
+      ])
+      .select('id')
+      .single();
+    if (orderError || !orderData) {
+      return NextResponse.json({ success: false, message: 'Error al guardar el pedido en la base de datos', error: orderError?.message }, { status: 500 });
+    }
+    const orderNumber = `#${String(orderData.id).padStart(4, '0')}`;
+    const now = new Date();
 
     // Agrupar productos por formato y calcular subtotales
     const formatos = ['12oz', '9oz'];
@@ -72,16 +102,20 @@ export async function POST(request: NextRequest) {
 
     const totalPedido = cart && cart.totalMonto ? cart.totalMonto : 0;
 
+    if (!businessInfo || !businessInfo.negocio) {
+      return NextResponse.json({ success: false, message: 'Faltan datos del negocio en el pedido.' }, { status: 400 });
+    }
+
     const emailContent = `
 N° de Pedido: ${orderNumber}
 
 INFORMACIÓN DEL NEGOCIO:
-• Nombre del negocio: ${businessInfo.negocio}
-• Persona de contacto: ${businessInfo.contacto}
-• Teléfono: ${businessInfo.telefono}
-• Tipo de negocio: ${businessInfo.tipo}
-• Comuna: ${businessInfo.comuna}
-• Dirección: ${businessInfo.direccion}
+• Nombre del negocio: ${businessInfo.negocio || ''}
+• Persona de contacto: ${businessInfo.contacto || ''}
+• Teléfono: ${businessInfo.telefono || ''}
+• Tipo de negocio: ${businessInfo.tipo || ''}
+• Comuna: ${businessInfo.comuna || ''}
+• Dirección: ${businessInfo.direccion || ''}
 
 ${pedidoDetalle ? `DETALLE DEL PEDIDO:\n${pedidoDetalle}` : ''}
                        TOTAL: $${totalPedido.toLocaleString('es-CL')}

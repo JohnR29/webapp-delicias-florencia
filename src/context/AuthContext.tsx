@@ -8,7 +8,7 @@ interface AuthContextType {
   isAuthenticated: boolean;
   loading: boolean;
   login: (email: string, password: string) => Promise<{ error: any } | void>;
-  register: (email: string, password: string) => Promise<{ error: any } | void>;
+  register: (email: string, password: string, nombre?: string) => Promise<{ error: any } | void>;
   logout: () => Promise<void>;
   requestPasswordReset: (email: string) => Promise<{ error: any } | void>;
   resetPassword: (token: string, newPassword: string) => Promise<{ error: any } | void>;
@@ -44,9 +44,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return { error };
   };
 
-  const register = async (email: string, password: string) => {
+  const register = async (email: string, password: string, nombre?: string) => {
     setLoading(true);
-    const { error } = await supabase.auth.signUp({ email, password });
+    // Registrar usuario en Supabase Auth
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: {
+          nombre: nombre || '',
+        },
+      },
+    });
     setLoading(false);
     return { error };
   };
