@@ -72,20 +72,25 @@ export default function PricingTiers({ tierActual, unidadesHastaSiguienteTier }:
           <p className="text-lg text-gray-600 max-w-2xl mx-auto mb-6">
             Descuentos progresivos por volumen. Mejores precios para socios comerciales frecuentes.
           </p>
-          <div className="flex justify-center items-center space-x-6 text-sm">
-            <div className="flex items-center space-x-2">
-              <div className="w-6 h-6 bg-primary-500 rounded-full flex items-center justify-center">
-                <span className="text-white text-xs font-bold">12</span>
+              {/* Imágenes alineadas con las tablas, sin nombres y con mínimo espaciado */}
+              <div className="grid grid-cols-2 gap-2 sm:gap-4 lg:gap-6 max-w-5xl mx-auto">
+                <div className="flex justify-center">
+                  <img
+                    src="/images/vaso-12oz.png"
+                    alt="Formato 12oz"
+                    className="h-[110px] w-auto drop-shadow-lg transition-transform duration-300 ease-in-out hover:scale-110 hover:drop-shadow-2xl"
+                    loading="lazy"
+                  />
+                </div>
+                <div className="flex justify-center">
+                  <img
+                    src="/images/vaso-9oz.png"
+                    alt="Formato 9oz"
+                    className="h-[110px] w-auto drop-shadow-lg transition-transform duration-300 ease-in-out hover:scale-110 hover:drop-shadow-2xl"
+                    loading="lazy"
+                  />
+                </div>
               </div>
-              <span className="text-gray-600">Formato 12oz - Premium</span>
-            </div>
-            <div className="flex items-center space-x-2">
-              <div className="w-6 h-6 bg-secondary-500 rounded-full flex items-center justify-center">
-                <span className="text-white text-xs font-bold">9</span>
-              </div>
-              <span className="text-gray-600">Formato 9oz - Personal</span>
-            </div>
-          </div>
         </div>
 
         {/* Tarjetas de precios por formato */}
@@ -195,75 +200,6 @@ export default function PricingTiers({ tierActual, unidadesHastaSiguienteTier }:
           </div>
         </div>
 
-        {/* Tabla de comparación para pantallas grandes */}
-        <div className="hidden xl:block mt-12">
-          <div className="bg-white rounded-xl shadow-lg overflow-hidden">
-            <div className="bg-gradient-to-r from-gray-50 to-gray-100 px-6 py-4">
-              <h3 className="text-lg font-semibold text-gray-800 text-center">
-                Tabla de Comparación Rápida
-              </h3>
-            </div>
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Tramo de Volumen
-                    </th>
-                    <th className="px-6 py-3 text-center text-xs font-medium text-primary-600 uppercase tracking-wider">
-                      Formato 12oz
-                    </th>
-                    <th className="px-6 py-3 text-center text-xs font-medium text-secondary-600 uppercase tracking-wider">
-                      Formato 9oz
-                    </th>
-                    <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Ahorro vs Tramo 1
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {[0, 1, 2].map((index) => (
-                    <tr key={index} className={index === 2 ? 'bg-green-50' : ''}>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm font-medium text-gray-900">
-                          {tramos12oz[index].titulo}
-                        </div>
-                        <div className="text-sm text-gray-500">
-                          {tramos12oz[index].rango}
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-center">
-                        <div className="text-lg font-bold text-primary-600">
-                          ${tramos12oz[index].precio.toLocaleString('es-CL')}
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-center">
-                        <div className="text-lg font-bold text-secondary-600">
-                          ${tramos9oz[index].precio.toLocaleString('es-CL')}
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-center">
-                        {index === 0 ? (
-                          <span className="text-gray-400">Base</span>
-                        ) : (
-                          <div className="text-sm">
-                            <div className="text-green-600 font-medium">
-                              12oz: ${(tramos12oz[0].precio - tramos12oz[index].precio).toLocaleString('es-CL')}
-                            </div>
-                            <div className="text-green-600 font-medium">
-                              9oz: ${(tramos9oz[0].precio - tramos9oz[index].precio).toLocaleString('es-CL')}
-                            </div>
-                          </div>
-                        )}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-
         {/* Nota sobre pedido mínimo */}
         <div className="mt-12 text-center">
           <div className="inline-flex items-center space-x-2 bg-accent-100 px-6 py-3 rounded-full">
@@ -272,13 +208,6 @@ export default function PricingTiers({ tierActual, unidadesHastaSiguienteTier }:
               Pedido mínimo: {PRICING_CONFIG.MINIMO_PEDIDO} unidades (puedes combinar sabores y formatos)
             </span>
           </div>
-        </div>
-
-        {/* Social proof */}
-        <div className="mt-8 text-center">
-          <p className="text-gray-600 text-sm">
-            Más del 80% de nuestros socios eligen pedidos de {PRICING_CONFIG.UMBRAL_TIER2}+ unidades
-          </p>
         </div>
       </div>
     </section>

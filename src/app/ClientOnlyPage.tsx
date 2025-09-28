@@ -198,7 +198,7 @@ export default function ClientOnlyPage() {
               </div>
             </div>
             <div className="text-center animate-fade-in" style={{ animationDelay: '0.3s' }}>
-              <p>&copy; 2024 Delicias Florencia. Todos los derechos reservados.</p>
+              <p>&copy; 2025 Delicias Florencia. Todos los derechos reservados.</p>
             </div>
           </div>
         </div>
