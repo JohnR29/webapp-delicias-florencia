@@ -135,8 +135,8 @@ export default function ForgotPasswordModal({ isOpen, onClose }: ForgotPasswordM
                 <h4 className="font-semibold text-blue-800 mb-2">📋 Instrucciones:</h4>
                 <ol className="text-blue-700 text-sm space-y-1 list-decimal list-inside">
                   <li>Revisa tu bandeja de entrada</li>
-                  <li>Busca el correo de "Delicias Florencia"</li>
-                  <li>Haz clic en "Restablecer contraseña"</li>
+                  <li>Busca el correo de &ldquo;Delicias Florencia&rdquo;</li>
+                  <li>Haz clic en &ldquo;Restablecer contraseña&rdquo;</li>
                   <li>Crea tu nueva contraseña</li>
                 </ol>
               </div>

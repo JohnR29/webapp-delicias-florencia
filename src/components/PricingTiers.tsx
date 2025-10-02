@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import { PRICING_CONFIG } from '@/lib/types';
 
 interface PricingTiersProps {
@@ -75,19 +76,23 @@ export default function PricingTiers({ tierActual, unidadesHastaSiguienteTier }:
           {/* Imágenes alineadas con las tablas, sin nombres y con mínimo espaciado */}
           <div className="grid grid-cols-2 gap-2 sm:gap-4 lg:gap-6 max-w-5xl mx-auto">
             <div className="flex justify-center">
-              <img
+              <Image
                 src="/images/vaso-12oz.png"
                 alt="Formato 12oz"
+                width={120}
+                height={160}
                 className="h-[160px] w-auto drop-shadow-lg"
-                loading="lazy"
+                priority={false}
               />
             </div>
             <div className="flex justify-center">
-              <img
+              <Image
                 src="/images/vaso-9oz.png"
                 alt="Formato 9oz"
+                width={120}
+                height={160}
                 className="h-[160px] w-auto drop-shadow-lg"
-                loading="lazy"
+                priority={false}
               />
             </div>
           </div>
