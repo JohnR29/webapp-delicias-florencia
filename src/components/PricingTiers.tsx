@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import { PRICING_CONFIG } from '@/lib/types';
 
 interface PricingTiersProps {
@@ -63,8 +64,8 @@ export default function PricingTiers({ tierActual, unidadesHastaSiguienteTier }:
   ];
 
   return (
-    <section className="py-16 bg-gradient-to-br from-gray-50 to-white">
-      <div className="container mx-auto px-4">
+  <section className="py-16 bg-gradient-to-br from-gray-50 to-white">
+  <div className="container mx-auto px-4">
         <div className="text-center mb-12">
           <h2 className="text-3xl md:text-4xl font-bold text-gray-800 mb-4">
             Precios Mayoristas
@@ -72,25 +73,29 @@ export default function PricingTiers({ tierActual, unidadesHastaSiguienteTier }:
           <p className="text-lg text-gray-600 max-w-2xl mx-auto mb-6">
             Descuentos progresivos por volumen. Mejores precios para socios comerciales frecuentes.
           </p>
-              {/* Imágenes alineadas con las tablas, sin nombres y con mínimo espaciado */}
-              <div className="grid grid-cols-2 gap-2 sm:gap-4 lg:gap-6 max-w-5xl mx-auto">
-                <div className="flex justify-center">
-                  <img
-                    src="/images/vaso-12oz.png"
-                    alt="Formato 12oz"
-                    className="h-[110px] w-auto drop-shadow-lg transition-transform duration-300 ease-in-out hover:scale-110 hover:drop-shadow-2xl"
-                    loading="lazy"
-                  />
-                </div>
-                <div className="flex justify-center">
-                  <img
-                    src="/images/vaso-9oz.png"
-                    alt="Formato 9oz"
-                    className="h-[110px] w-auto drop-shadow-lg transition-transform duration-300 ease-in-out hover:scale-110 hover:drop-shadow-2xl"
-                    loading="lazy"
-                  />
-                </div>
-              </div>
+          {/* Imágenes alineadas con las tablas, sin nombres y con mínimo espaciado */}
+          <div className="grid grid-cols-2 gap-2 sm:gap-4 lg:gap-6 max-w-5xl mx-auto">
+            <div className="flex justify-center">
+              <Image
+                src="/images/vaso-12oz.png"
+                alt="Formato 12oz"
+                width={120}
+                height={160}
+                className="h-[160px] w-auto drop-shadow-lg"
+                priority={false}
+              />
+            </div>
+            <div className="flex justify-center">
+              <Image
+                src="/images/vaso-9oz.png"
+                alt="Formato 9oz"
+                width={120}
+                height={160}
+                className="h-[160px] w-auto drop-shadow-lg"
+                priority={false}
+              />
+            </div>
+          </div>
         </div>
 
         {/* Tarjetas de precios por formato */}
@@ -129,11 +134,7 @@ export default function PricingTiers({ tierActual, unidadesHastaSiguienteTier }:
                         )}
                       </div>
                       <p className="text-xs sm:text-sm text-gray-600">{rango}</p>
-                      {tramos12oz[index].ahorro && (
-                        <p className="text-xs text-green-600 font-semibold mt-1 hidden sm:block">
-                          ¡Ahorras ${tramos12oz[index].ahorro?.toLocaleString('es-CL')}!
-                        </p>
-                      )}
+                      {/* Ahorro removido */}
                     </div>
                     <div className="text-right ml-1">
                       <div className="text-lg sm:text-xl lg:text-2xl font-bold text-primary-600">
@@ -181,11 +182,7 @@ export default function PricingTiers({ tierActual, unidadesHastaSiguienteTier }:
                         )}
                       </div>
                       <p className="text-xs sm:text-sm text-gray-600">{rango}</p>
-                      {tramos9oz[index].ahorro && (
-                        <p className="text-xs text-green-600 font-semibold mt-1 hidden sm:block">
-                          ¡Ahorras ${tramos9oz[index].ahorro?.toLocaleString('es-CL')}!
-                        </p>
-                      )}
+                      {/* Ahorro removido */}
                     </div>
                     <div className="text-right ml-1">
                       <div className="text-lg sm:text-xl lg:text-2xl font-bold text-secondary-600">
@@ -200,6 +197,12 @@ export default function PricingTiers({ tierActual, unidadesHastaSiguienteTier }:
           </div>
         </div>
 
+        {/* Aviso de IVA debajo de las tablas */}
+        <div className="mt-8 mb-4 text-center">
+          <span className="inline-block bg-yellow-100 text-yellow-800 text-2xl font-bold px-8 py-4 rounded-full">
+            Los precios mostrados <b>NO INCLUYEN IVA</b>
+          </span>
+        </div>
         {/* Nota sobre pedido mínimo */}
         <div className="mt-12 text-center">
           <div className="inline-flex items-center space-x-2 bg-accent-100 px-6 py-3 rounded-full">

@@ -1,98 +1,260 @@
-### 🚀 Build y despliegue en producción
+# Delicias Florencia - Wholesale WebApp
 
-1. Compila el proyecto:
-   ```sh
-   npm run build
-   ```
+## 🍰 Artisan Cake Wholesale WebApp
 
-2. Inicia el servidor en modo producción:
-   ```sh
-   npm start
-   ```
+Next.js TypeScript mobile-first web application for **Delicias
+Florencia**, a wholesale distributor of artisan cakes. This app enables
+business customers to browse products, manage orders, and interact with
+the distribution system efficiently.
 
-3. Asegúrate de tener el archivo `.env.local` con las variables de entorno necesarias (ver ejemplo en el repositorio).
+------------------------------------------------------------------------
 
-4. Para servidores cloud/VPS, configura el proceso con PM2, Docker o similar para mantener el servicio activo.
-# Delicias Florencia - Next.js Migration
+## ✅ Features
 
-## 🍰 Mobile-First Wholesale Cake Distributor WebApp
+### 🛒 Shopping Cart System
 
-A modern Next.js TypeScript application for Delicias Florencia's wholesale cake distribution business.
+-   **Product catalog**: 3 cake flavors (Tres Leches, Selva Negra, Oreo)
+    in 12oz and 9oz formats
+-   **Smart cart**: Quantity management with minimum wholesale
+    validation
+-   **Dynamic pricing**: 3-tier pricing system based on order volume
+-   **Mobile floating bar**: Cart summary always visible on mobile
+    devices
+-   **Persistence**: Cart state maintained during session
 
-### 🚀 Features (In Development)
-- **Product Catalog**: 4 cake flavors in 12oz/9oz formats
-- **Dynamic Pricing**: 3-tier wholesale pricing system
-- **Shopping Cart**: Mobile-optimized quantity controls  
-- **Business Forms**: Contact and order request forms
-- **Coverage Map**: Interactive delivery zones
-- **Mobile-First**: Touch-optimized responsive design
+### 💰 Wholesale Pricing System
 
-### 📋 Prerequisites
-Before running this project, you need:
-- **Node.js** (v18 or higher) - [Download here](https://nodejs.org/)
-- **npm** (comes with Node.js)
+-   **Tier 1** (6-14 units): \$1,700 (12oz) / \$1,500 (9oz)
+-   **Tier 2** (15-19 units): \$1,600 (12oz) / \$1,400 (9oz)
+-   **Tier 3** (20+ units): \$1,500 (12oz) / \$1,250 (9oz)
+-   **Clear visualization**: Indicators for savings and next discount
+-   **Minimum order**: 6 units total
 
-### 🛠️ Getting Started
+### 🗺️ Interactive Coverage Map
 
-1. **Install Node.js** (if not already installed)
-2. **Install dependencies**:
-   ```bash
-   npm install
-   ```
+-   **Leaflet map**: Interactive zone display
+-   **GeoJSON integration**: Local commune data
+-   **Tooltips**: Detailed information per commune
+-   **Coverage**: San Bernardo, La Pintana, El Bosque, La Cisterna
 
-3. **Run development server**:
-   ```bash
-   npm run dev
-   ```
+### ✉️ Business Order System
 
-4. **Open** [http://localhost:3000](http://localhost:3000) in your browser
+-   **Contact form**: Collects full commercial information
+-   **Automatic email sending**: Order confirmation with details
+-   **Nodemailer integration**: Reliable transactional emails
+-   **Database storage**: Order history using Supabase
 
-### 📱 Mobile Optimization Features
-- Touch-friendly controls (44px minimum touch targets)
-- Smooth animations and transitions
-- Optimized fonts and images
-- Progressive Web App ready
-- Responsive grid layouts
+### 🔐 Authentication System
 
-### 🎨 Design System
-- **Primary**: `#d33939` (Brand red)
-- **Secondary**: `#db2777` (Pink accent)  
-- **Accent**: `#f59e0b` (Gold highlights)
-- **Fonts**: Poppins (body), Dancing Script (headings)
+-   **Sign-up & login**: Full Supabase authentication
+-   **Address management**: Full CRUD for business addresses
+-   **Password recovery**: Token-based email system
+-   **Persistent session**: Maintains login between visits
 
-### 📦 Tech Stack
-- **Framework**: Next.js 14 with App Router
-- **Language**: TypeScript
-- **Styling**: Tailwind CSS
-- **Fonts**: Google Fonts (optimized)
-- **Development**: ESLint + Prettier
+### 📱 Mobile-First Design
 
-### 🚧 Migration Status
-- [x] Project structure created
-- [x] Basic configuration set up
-- [x] Mobile-first CSS framework  
-- [ ] Product catalog components
-- [ ] Pricing system logic
-- [ ] Shopping cart functionality
-- [ ] Business contact forms
-- [ ] Interactive coverage map
+-   Fully responsive for all devices
+-   Touch-friendly buttons (≥44px)
+-   Smooth CSS animations and transitions
+-   Progressive Web App ready (manifest.json + service worker)
 
-### 📞 Original Features to Migrate
-From the existing vanilla JS application:
-- Dynamic pricing calculator (3 tiers)
-- Product selection with format options
-- Order summary and validation
-- Email integration for commercial requests
-- Geographic coverage map with GeoJSON
-- Mobile-optimized navigation
+------------------------------------------------------------------------
 
-### 🎯 Next Steps
-1. Install Node.js and dependencies
-2. Migrate product data structure
-3. Create React components for catalog
-4. Implement cart state management
-5. Add form handling and validation
-6. Integrate mapping functionality
+## 🏗️ Technical Architecture
 
----
+### Frontend
+
+-   **Next.js 14**: App Router with Server/Client components
+-   **TypeScript**: Strict typing throughout the application
+-   **Tailwind CSS**: Consistent design with custom theme
+-   **React Hooks & Context API**: Global and component state management
+
+### Backend & APIs
+
+-   **API Routes**: Next.js endpoints for emails and orders
+-   **Supabase**: PostgreSQL database with authentication
+-   **Nodemailer**: Transactional email service
+-   **Edge Runtime**: Optimized performance
+
+### Mapping & GeoData
+
+-   **React Leaflet**: Interactive, responsive maps
+-   **GeoJSON**: Geographical data for communes
+-   **Turf.js**: Geospatial processing
+
+### State & Persistence
+
+-   **Custom hooks**: `useCart`, `useAuth`, `useAddresses`
+-   **Local state**: React `useState` / `useReducer`
+-   **Database**: PostgreSQL via Supabase
+-   **Real-time updates**: Supabase subscriptions
+
+------------------------------------------------------------------------
+
+## 📦 Project Structure
+
+    src/
+    ├── app/
+    │   ├── api/
+    │   │   ├── send-email/
+    │   │   ├── send-order/
+    │   │   └── send-password-reset/
+    │   ├── layout.tsx
+    │   ├── page.tsx
+    │   └── globals.css
+    ├── components/
+    │   ├── AuthModal.tsx
+    │   ├── CartSummaryBar.tsx
+    │   ├── ContactForm.tsx
+    │   ├── CoverageMap.tsx
+    │   ├── MobileCartBar.tsx
+    │   ├── PricingTiers.tsx
+    │   ├── ProductCard.tsx
+    │   └── ...
+    ├── context/
+    │   └── AuthContext.tsx
+    ├── data/
+    │   └── productos.ts
+    ├── hooks/
+    │   ├── useAuth.ts
+    │   ├── useCart.ts
+    │   └── useAddresses.ts
+    └── lib/
+        ├── types.ts
+        └── supabaseClient.ts
+
+------------------------------------------------------------------------
+
+## 🚀 Installation & Setup
+
+### Prerequisites
+
+-   Node.js 18+
+-   npm or yarn
+-   Supabase account
+-   SMTP credentials (Gmail recommended)
+
+### Environment Variables
+
+Create `.env.local`:
+
+``` env
+# Supabase
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
+
+# Email (Gmail)
+EMAIL_USER=your_email@gmail.com
+EMAIL_PASSWORD=your_app_password
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_USER=your_email@gmail.com
+SMTP_PASS=your_app_password
+```
+
+### Commands
+
+``` bash
+# Install dependencies
+npm install
+
+# Development mode
+npm run dev
+
+# Build for production
+npm run build
+
+# Start production server
+npm start
+```
+
+------------------------------------------------------------------------
+
+## 🎨 Design System
+
+### Colors
+
+-   **Primary**: `#d33939` (Corporate Red)
+-   **Secondary**: `#db2777` (Accent Pink)
+-   **Accent**: `#f59e0b` (Highlight Gold)
+-   **Gradients**: Smooth combinations of primary colors
+
+### Typography
+
+-   **Headings**: Dancing Script (elegant script)
+-   **Body**: Poppins (modern sans-serif)
+-   **Weights**: 300, 400, 500, 600, 700
+
+### Components
+
+-   **Cards**: Rounded corners, soft shadows
+-   **Buttons**: Hover/active states, touch feedback
+-   **Forms**: Visual validation, clear messages
+-   **Animations**: Fade-in, slide-up, smooth bounce
+
+------------------------------------------------------------------------
+
+## 📊 Data Models
+
+### Product
+
+``` typescript
+interface Product {
+  key: string; 
+  nombre: string;
+  formato: '12oz' | '9oz';
+  precio: number;
+  ingredientes: string[];
+  imagen: string;
+  descripcion?: string;
+}
+```
+
+### Cart
+
+``` typescript
+interface CartState {
+  items: Record<string, number>;
+  total12oz: number;
+  total9oz: number;
+  totalCantidad: number;
+  totalMonto: number;
+}
+```
+
+### BusinessForm
+
+``` typescript
+interface BusinessForm {
+  negocio: string;
+  contacto: string;
+  telefono: string;
+  tipo: 'Almacén' | 'Minimarket' | 'Pastelería' | 'Cafetería' | 'Otro';
+  comuna: string;
+  direccion: string;
+}
+```
+
+------------------------------------------------------------------------
+
+## 🔧 APIs & Services
+
+### POST /api/send-email
+
+Processes and sends orders via email: - Validates commercial data -
+Generates order number - Stores order in database - Sends styled email
+
+### POST /api/send-order
+
+Stores orders in Supabase: - Associates with user (optional) - JSON
+structured data - Returns order ID
+
+### POST /api/send-password-reset
+
+Password recovery system: - Generates unique tokens - Styled HTML
+emails - Tokens expire in 1 hour
+
+------------------------------------------------------------------------
+
 *Built for Delicias Florencia wholesale distribution*
