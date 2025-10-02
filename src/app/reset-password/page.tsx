@@ -2,7 +2,7 @@
 
 import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { createClient } from '@supabase/supabase-js';
+import { supabase } from '@/lib/supabaseClient';
 
 function ResetPasswordForm() {
   const [newPassword, setNewPassword] = useState('');
@@ -15,27 +15,62 @@ function ResetPasswordForm() {
   const searchParams = useSearchParams();
   const router = useRouter();
 
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  );
-
   useEffect(() => {
-    const accessToken = searchParams.get('access_token');
-    const refreshToken = searchParams.get('refresh_token');
-    const type = searchParams.get('type');
+    const handlePasswordReset = async () => {
+      try {
+        // Obtener los parámetros de la URL según documentación de Supabase
+        const accessToken = searchParams.get('access_token');
+        const refreshToken = searchParams.get('refresh_token');
+        const type = searchParams.get('type');
+        
+        console.log('🔍 Password Reset Debug:');
+        console.log('📍 URL:', window.location.href);
+        console.log('📋 Params:', { 
+          hasAccessToken: !!accessToken, 
+          hasRefreshToken: !!refreshToken, 
+          type 
+        });
 
-    if (type === 'recovery' && accessToken && refreshToken) {
-      setIsValidToken(true);
-      supabase.auth.setSession({
-        access_token: accessToken,
-        refresh_token: refreshToken
-      });
-    } else {
-      setIsValidToken(false);
-      setErrors('Enlace de recuperación inválido o expirado.');
-    }
-  }, [searchParams, supabase.auth]);
+        // Supabase resetPasswordForEmail envía access_token y refresh_token
+        if (accessToken && refreshToken && type === 'recovery') {
+          console.log('✅ Valid reset tokens found');
+          
+          // Establecer la sesión con los tokens
+          const { data, error } = await supabase.auth.setSession({
+            access_token: accessToken,
+            refresh_token: refreshToken
+          });
+          
+          if (error) {
+            console.error('❌ Session error:', error);
+            setIsValidToken(false);
+            setErrors('Error al validar el enlace de recuperación.');
+            return;
+          }
+          
+          if (data.session) {
+            console.log('✅ Session established successfully');
+            setIsValidToken(true);
+          } else {
+            console.log('❌ No session created');
+            setIsValidToken(false);
+            setErrors('Error al establecer la sesión.');
+          }
+        } else {
+          console.log('❌ Missing required parameters');
+          setIsValidToken(false);
+          setErrors('Enlace de recuperación inválido o expirado. Por favor, solicita un nuevo enlace.');
+        }
+
+      } catch (error) {
+        console.error('💥 Unexpected error:', error);
+        setIsValidToken(false);
+        setErrors('Error inesperado al validar el enlace.');
+      }
+    };
+
+    handlePasswordReset();
+  }, [searchParams]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -55,17 +90,30 @@ function ResetPasswordForm() {
     setIsSubmitting(true);
 
     try {
+      console.log('🔄 Attempting to update password...');
+      
+      // Verificar que tenemos una sesión válida
+      const { data: sessionData } = await supabase.auth.getSession();
+      if (!sessionData?.session) {
+        console.error('❌ No valid session when trying to update password');
+        setErrors('Sesión expirada. Por favor, solicita un nuevo enlace de recuperación.');
+        return;
+      }
+
       const { error } = await supabase.auth.updateUser({
         password: newPassword
       });
 
       if (!error) {
+        console.log('✅ Password updated successfully');
         setMessage('¡Contraseña restablecida exitosamente! Redirigiendo...');
         setTimeout(() => router.push('/'), 2000);
       } else {
+        console.error('❌ Password update error:', error);
         setErrors(error.message || 'Error al restablecer contraseña');
       }
     } catch (error) {
+      console.error('💥 Unexpected error updating password:', error);
       setErrors('Error inesperado. Por favor intenta nuevamente.');
     } finally {
       setIsSubmitting(false);
