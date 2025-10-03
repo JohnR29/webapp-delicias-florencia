@@ -3,6 +3,34 @@
 
 import { useRouter, useSearchParams } from 'next/navigation';
 
+// Componente separado para el detector de tokens de reset
+function PasswordResetDetector() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
+  // TEMPORAL: Detector de parámetros de reset password
+  useEffect(() => {
+    const accessToken = searchParams.get('access_token');
+    const refreshToken = searchParams.get('refresh_token'); 
+    const type = searchParams.get('type');
+    
+    if (accessToken && refreshToken && type === 'recovery') {
+      console.log('🚨 RESET TOKENS DETECTED ON HOME PAGE!');
+      console.log('Redirecting to reset-password page...');
+      
+      // Redirigir a la página correcta con los parámetros
+      const params = new URLSearchParams();
+      params.set('access_token', accessToken);
+      params.set('refresh_token', refreshToken);
+      params.set('type', type);
+      
+      router.push(`/reset-password?${params.toString()}`);
+    }
+  }, [searchParams, router]);
+
+  return null; // Este componente no renderiza nada
+}
+
 // Badge animado para comuna
 interface AnimatedComunaBadgeProps {
   nombre: string;
@@ -53,7 +81,7 @@ import ClientScrollToCart from '@/components/ClientScrollToCart';
 import MobileCartBar from '@/components/MobileCartBar';
 import { useCart } from '@/hooks/useCart';
 import { saboresData, saboresUnicos } from '@/data/productos';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, Suspense } from 'react';
 import AddressManager from '@/components/AddressManager';
 
 import { Address } from '@/hooks/useAddresses';
@@ -62,29 +90,6 @@ import { Address } from '@/hooks/useAddresses';
 export default function ClientOnlyPage() {
   const [isMobileCartOpen, setIsMobileCartOpen] = useState(false);
   const [selectedAddress, setSelectedAddress] = useState<Address | null>(null);
-  
-  const router = useRouter();
-  const searchParams = useSearchParams();
-
-  // TEMPORAL: Detector de parámetros de reset password
-  useEffect(() => {
-    const accessToken = searchParams.get('access_token');
-    const refreshToken = searchParams.get('refresh_token'); 
-    const type = searchParams.get('type');
-    
-    if (accessToken && refreshToken && type === 'recovery') {
-      console.log('🚨 RESET TOKENS DETECTED ON HOME PAGE!');
-      console.log('Redirecting to reset-password page...');
-      
-      // Redirigir a la página correcta con los parámetros
-      const params = new URLSearchParams();
-      params.set('access_token', accessToken);
-      params.set('refresh_token', refreshToken);
-      params.set('type', type);
-      
-      router.push(`/reset-password?${params.toString()}`);
-    }
-  }, [searchParams, router]);
   const {
     items,
     cartState,
@@ -108,6 +113,11 @@ export default function ClientOnlyPage() {
 
   return (
     <main className="min-h-screen bg-gradient-to-br from-primary-50 via-white to-secondary-50">
+      {/* Detector de tokens de reset password */}
+      <Suspense fallback={null}>
+        <PasswordResetDetector />
+      </Suspense>
+      
       <ClientHeader />
       <Banner />
       {/* Hero Section */}
