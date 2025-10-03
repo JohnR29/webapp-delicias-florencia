@@ -173,18 +173,44 @@ function ResetPasswordForm() {
   }
 
   if (!isValidToken) {
+    const isExpiredToken = errors.includes('expirado') || errors.includes('expired');
+    
     return (
       <div className="bg-white rounded-2xl shadow-xl p-6">
         <div className="text-center">
-          <div className="text-red-500 text-4xl mb-4">⚠️</div>
-          <h2 className="text-xl font-bold text-gray-800 mb-4">Enlace no válido</h2>
+          <div className="text-red-500 text-4xl mb-4">
+            {isExpiredToken ? '⏰' : '⚠️'}
+          </div>
+          <h2 className="text-xl font-bold text-gray-800 mb-4">
+            {isExpiredToken ? 'Enlace Expirado' : 'Enlace no válido'}
+          </h2>
           <p className="text-gray-600 mb-6">{errors}</p>
-          <button
-            onClick={() => router.push('/')}
-            className="w-full bg-primary-600 hover:bg-primary-700 text-white font-medium py-3 px-4 rounded-lg transition-colors"
-          >
-            Volver al inicio
-          </button>
+          
+          {isExpiredToken && (
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6 text-left">
+              <h4 className="font-semibold text-blue-800 mb-2">💡 ¿Qué puedo hacer?</h4>
+              <ul className="text-blue-700 text-sm space-y-1 list-disc list-inside">
+                <li>Los enlaces expiran rápidamente por seguridad</li>
+                <li>Solicita un nuevo enlace desde la página principal</li>
+                <li>Haz clic inmediatamente cuando recibas el correo</li>
+              </ul>
+            </div>
+          )}
+          
+          <div className="flex gap-3">
+            <button
+              onClick={() => router.push('/?show-login=true')}
+              className="flex-1 py-3 px-4 bg-primary-600 hover:bg-primary-700 text-white font-medium rounded-lg transition-colors"
+            >
+              {isExpiredToken ? 'Solicitar Nuevo Enlace' : 'Volver e Intentar'}
+            </button>
+            <button
+              onClick={() => router.push('/')}
+              className="flex-1 py-3 px-4 border border-gray-300 text-gray-600 hover:bg-gray-50 font-medium rounded-lg transition-colors"
+            >
+              Ir al Inicio
+            </button>
+          </div>
         </div>
       </div>
     );

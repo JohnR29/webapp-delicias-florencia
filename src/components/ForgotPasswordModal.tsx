@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/lib/supabaseClient';
 
 interface ForgotPasswordModalProps {
   isOpen: boolean;
@@ -9,19 +10,25 @@ interface ForgotPasswordModalProps {
 }
 
 export default function ForgotPasswordModal({ isOpen, onClose }: ForgotPasswordModalProps) {
+  const [step, setStep] = useState<'email' | 'code' | 'password'>('email');
   const [email, setEmail] = useState('');
+  const [code, setCode] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [message, setMessage] = useState('');
   const [errors, setErrors] = useState('');
-  const [emailSent, setEmailSent] = useState(false);
 
   const { requestPasswordReset } = useAuth();
 
   const resetForm = () => {
+    setStep('email');
     setEmail('');
+    setCode('');
+    setNewPassword('');
+    setConfirmPassword('');
     setMessage('');
     setErrors('');
-    setEmailSent(false);
   };
 
   const handleClose = () => {
@@ -33,7 +40,7 @@ export default function ForgotPasswordModal({ isOpen, onClose }: ForgotPasswordM
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleEmailSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrors('');
     setMessage('');
@@ -46,12 +53,89 @@ export default function ForgotPasswordModal({ isOpen, onClose }: ForgotPasswordM
     setIsSubmitting(true);
 
     try {
-      const result = await requestPasswordReset(email);
-      if (result && !result.error) {
-        setMessage('Hemos enviado un enlace de recuperación a tu correo. Revisa tu bandeja de entrada (y spam) y haz clic en el enlace para restablecer tu contraseña.');
-        setEmailSent(true);
+      // Usar la API de Supabase para envío de OTP por email
+      const { error } = await supabase.auth.signInWithOtp({
+        email: email.trim(),
+        options: {
+          shouldCreateUser: false // Solo para usuarios existentes
+        }
+      });
+
+      if (!error) {
+        setMessage('Hemos enviado un código de 6 dígitos a tu email. Revisa tu bandeja de entrada.');
+        setStep('code');
       } else {
-        setErrors(result && result.error ? result.error.message : 'Error al solicitar restablecimiento');
+        setErrors('Error al enviar código. Verifica que el email esté registrado.');
+      }
+    } catch (error) {
+      setErrors('Error inesperado. Por favor intenta nuevamente.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleCodeSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setErrors('');
+    setMessage('');
+
+    if (code.length !== 6) {
+      setErrors('El código debe tener 6 dígitos');
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      // Verificar el código OTP
+      const { data, error } = await supabase.auth.verifyOtp({
+        email: email.trim(),
+        token: code.trim(),
+        type: 'email'
+      });
+
+      if (!error && data?.session) {
+        setMessage('¡Código verificado! Ahora ingresa tu nueva contraseña.');
+        setStep('password');
+      } else {
+        setErrors('Código inválido o expirado. Verifica que lo hayas ingresado correctamente.');
+      }
+    } catch (error) {
+      setErrors('Error inesperado. Por favor intenta nuevamente.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handlePasswordSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setErrors('');
+    setMessage('');
+
+    if (newPassword.length < 6) {
+      setErrors('La contraseña debe tener al menos 6 caracteres');
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      setErrors('Las contraseñas no coinciden');
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      const { error } = await supabase.auth.updateUser({
+        password: newPassword
+      });
+
+      if (!error) {
+        setMessage('¡Contraseña restablecida exitosamente!');
+        setTimeout(() => {
+          handleClose();
+        }, 2000);
+      } else {
+        setErrors(error.message || 'Error al restablecer contraseña');
       }
     } catch (error) {
       setErrors('Error inesperado. Por favor intenta nuevamente.');
@@ -80,13 +164,12 @@ export default function ForgotPasswordModal({ isOpen, onClose }: ForgotPasswordM
             </button>
           </div>
 
-          {!emailSent ? (
+          {step === 'email' && (
             /* Step 1: Request Email */
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={handleEmailSubmit} className="space-y-4">
               <div className="text-sm text-gray-600 mb-4">
-                Ingresa tu email y te enviaremos un enlace seguro para restablecer tu contraseña.
+                Te enviaremos un código de 6 dígitos a tu email para restablecer tu contraseña.
               </div>
-
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Email registrado <span className="text-red-500">*</span>
@@ -116,51 +199,138 @@ export default function ForgotPasswordModal({ isOpen, onClose }: ForgotPasswordM
                     : 'bg-primary-600 hover:bg-primary-700 text-white'
                 }`}
               >
-                {isSubmitting ? 'Enviando...' : 'Enviar Enlace de Recuperación'}
+                {isSubmitting ? 'Enviando código...' : 'Enviar Código de 6 Dígitos'}
               </button>
             </form>
-          ) : (
-            /* Step 2: Email Sent Confirmation */
-            <div className="text-center space-y-4">
-              <div className="text-green-500 text-5xl mb-4">📧</div>
-              <h3 className="text-lg font-semibold text-gray-800 mb-2">
-                ¡Correo enviado!
-              </h3>
-              
-              <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                <p className="text-green-700 text-sm">{message}</p>
+          )}
+
+          {step === 'code' && (
+            /* Step 2: Enter Code */
+            <form onSubmit={handleCodeSubmit} className="space-y-4">
+              <div className="text-center mb-4">
+                <div className="text-blue-500 text-4xl mb-2">�</div>
+                <p className="text-sm text-gray-600">
+                  Hemos enviado un código de 6 dígitos a <strong>{email}</strong>
+                </p>
               </div>
 
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-left">
-                <h4 className="font-semibold text-blue-800 mb-2">📋 Instrucciones:</h4>
-                <ol className="text-blue-700 text-sm space-y-1 list-decimal list-inside">
-                  <li>Revisa tu bandeja de entrada</li>
-                  <li>Busca el correo de &ldquo;Delicias Florencia&rdquo;</li>
-                  <li>Haz clic en &ldquo;Restablecer contraseña&rdquo;</li>
-                  <li>Crea tu nueva contraseña</li>
-                </ol>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Código de 6 dígitos <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  value={code}
+                  onChange={(e) => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-center text-2xl font-mono tracking-widest"
+                  placeholder="123456"
+                  maxLength={6}
+                  required
+                />
+                <p className="text-xs text-gray-500 mt-1 text-center">
+                  Revisa tu email y copia el código de 6 dígitos
+                </p>
               </div>
 
-              <div className="text-xs text-gray-500 space-y-1">
-                <p>💡 No encuentras el correo? Revisa tu carpeta de spam</p>
-                <p>⏰ El enlace expira en 1 hora por seguridad</p>
-              </div>
+              {message && (
+                <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+                  <p className="text-green-600 text-sm">{message}</p>
+                </div>
+              )}
 
-              <div className="flex gap-3 pt-4">
+              {errors && (
+                <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+                  <p className="text-red-600 text-sm">{errors}</p>
+                </div>
+              )}
+
+              <div className="flex gap-3">
                 <button
-                  onClick={() => setEmailSent(false)}
-                  className="flex-1 py-2 px-4 border border-gray-300 text-gray-600 rounded-lg hover:bg-gray-50 transition-colors"
+                  type="button"
+                  onClick={() => setStep('email')}
+                  className="flex-1 py-3 px-4 border border-gray-300 text-gray-600 rounded-lg hover:bg-gray-50 transition-colors"
                 >
-                  Enviar Nuevo Correo
+                  ← Cambiar Email
                 </button>
                 <button
-                  onClick={handleClose}
-                  className="flex-1 py-2 px-4 bg-primary-600 hover:bg-primary-700 text-white rounded-lg transition-colors"
+                  type="submit"
+                  disabled={isSubmitting || code.length !== 6}
+                  className={`flex-1 py-3 px-4 rounded-lg font-medium transition-colors ${
+                    isSubmitting || code.length !== 6
+                      ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                      : 'bg-primary-600 hover:bg-primary-700 text-white'
+                  }`}
                 >
-                  Cerrar
+                  {isSubmitting ? 'Verificando...' : 'Verificar Código'}
                 </button>
               </div>
-            </div>
+            </form>
+          )}
+
+          {step === 'password' && (
+            /* Step 3: Set New Password */
+            <form onSubmit={handlePasswordSubmit} className="space-y-4">
+              <div className="text-center mb-4">
+                <div className="text-green-500 text-4xl mb-2">🔐</div>
+                <p className="text-sm text-gray-600">
+                  ¡Código verificado! Ahora ingresa tu nueva contraseña
+                </p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Nueva contraseña <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="password"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                  placeholder="Mínimo 6 caracteres"
+                  minLength={6}
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Confirmar contraseña <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                  placeholder="Repite tu nueva contraseña"
+                  minLength={6}
+                  required
+                />
+              </div>
+
+              {message && (
+                <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+                  <p className="text-green-600 text-sm">{message}</p>
+                </div>
+              )}
+
+              {errors && (
+                <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+                  <p className="text-red-600 text-sm">{errors}</p>
+                </div>
+              )}
+
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className={`w-full py-3 px-4 rounded-lg font-medium transition-colors ${
+                  isSubmitting
+                    ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                    : 'bg-primary-600 hover:bg-primary-700 text-white'
+                }`}
+              >
+                {isSubmitting ? 'Cambiando...' : 'Cambiar Contraseña'}
+              </button>
+            </form>
           )}
         </div>
       </div>
