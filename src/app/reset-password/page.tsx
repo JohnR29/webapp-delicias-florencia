@@ -23,12 +23,24 @@ function ResetPasswordForm() {
         const refreshToken = searchParams.get('refresh_token');
         const type = searchParams.get('type');
         
-        console.log('🔍 Password Reset Debug:');
-        console.log('📍 URL:', window.location.href);
-        console.log('📋 Params:', { 
+        console.log('🔍 PASSWORD RESET DEBUG - DETAILED:');
+        console.log('📍 Full URL:', window.location.href);
+        console.log('� URL Search:', window.location.search);
+        console.log('🎯 All available params:');
+        
+        // Mostrar TODOS los parámetros disponibles
+        const allParams = new URLSearchParams(window.location.search);
+        console.log('📝 All URL params:');
+        allParams.forEach((value, key) => {
+          console.log(`  ${key}: ${value.substring(0, 20)}... (${value.length} chars)`);
+        });
+        
+        console.log('📋 Specific params:', { 
           hasAccessToken: !!accessToken, 
           hasRefreshToken: !!refreshToken, 
-          type 
+          type,
+          accessTokenLength: accessToken?.length || 0,
+          refreshTokenLength: refreshToken?.length || 0
         });
 
         // Supabase resetPasswordForEmail envía access_token y refresh_token
@@ -57,7 +69,16 @@ function ResetPasswordForm() {
             setErrors('Error al establecer la sesión.');
           }
         } else {
-          console.log('❌ Missing required parameters');
+          console.log('❌ MISSING REQUIRED PARAMETERS:');
+          console.log('  - access_token present:', !!accessToken);
+          console.log('  - refresh_token present:', !!refreshToken);
+          console.log('  - type value:', type);
+          console.log('  - type is recovery:', type === 'recovery');
+          
+          if (!accessToken) console.log('  🚨 Missing access_token');
+          if (!refreshToken) console.log('  🚨 Missing refresh_token');
+          if (type !== 'recovery') console.log('  🚨 Type is not "recovery":', type);
+          
           setIsValidToken(false);
           setErrors('Enlace de recuperación inválido o expirado. Por favor, solicita un nuevo enlace.');
         }

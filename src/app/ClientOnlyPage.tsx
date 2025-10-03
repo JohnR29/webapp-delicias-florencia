@@ -10,13 +10,23 @@ function PasswordResetDetector() {
 
   // TEMPORAL: Detector de parámetros de reset password
   useEffect(() => {
+    console.log('🔍 HOME PAGE - Checking for reset tokens...');
+    console.log('📍 Current URL:', window.location.href);
+    
     const accessToken = searchParams.get('access_token');
     const refreshToken = searchParams.get('refresh_token'); 
     const type = searchParams.get('type');
     
+    console.log('📋 Found params:', {
+      hasAccessToken: !!accessToken,
+      hasRefreshToken: !!refreshToken,
+      type,
+      allParamsCount: Array.from(searchParams.keys()).length
+    });
+    
     if (accessToken && refreshToken && type === 'recovery') {
       console.log('🚨 RESET TOKENS DETECTED ON HOME PAGE!');
-      console.log('Redirecting to reset-password page...');
+      console.log('✅ Redirecting to reset-password page...');
       
       // Redirigir a la página correcta con los parámetros
       const params = new URLSearchParams();
@@ -25,6 +35,8 @@ function PasswordResetDetector() {
       params.set('type', type);
       
       router.push(`/reset-password?${params.toString()}`);
+    } else {
+      console.log('ℹ️ No reset tokens found on home page');
     }
   }, [searchParams, router]);
 
