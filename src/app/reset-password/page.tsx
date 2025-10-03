@@ -79,8 +79,28 @@ function ResetPasswordForm() {
           if (!refreshToken) console.log('  🚨 Missing refresh_token');
           if (type !== 'recovery') console.log('  🚨 Type is not "recovery":', type);
           
+          // Revisar si hay errores de Supabase en el hash
+          if (window.location.hash && window.location.hash.includes('error=')) {
+            const hashParams = new URLSearchParams(window.location.hash.substring(1));
+            const error = hashParams.get('error');
+            const errorCode = hashParams.get('error_code');
+            const errorDescription = hashParams.get('error_description');
+            
+            console.log('🚨 SUPABASE ERROR DETECTED:');
+            console.log('  - error:', error);
+            console.log('  - error_code:', errorCode);
+            console.log('  - error_description:', errorDescription);
+            
+            if (errorCode === 'otp_expired') {
+              setErrors('El enlace de recuperación ha expirado. Por favor, solicita un nuevo enlace.');
+            } else {
+              setErrors('Error en el enlace de recuperación. Por favor, solicita un nuevo enlace.');
+            }
+          } else {
+            setErrors('Enlace de recuperación inválido o expirado. Por favor, solicita un nuevo enlace.');
+          }
+          
           setIsValidToken(false);
-          setErrors('Enlace de recuperación inválido o expirado. Por favor, solicita un nuevo enlace.');
         }
 
       } catch (error) {
