@@ -1,11 +1,14 @@
-# Template de Email para Supabase - Recuperación de Contraseña
+# Template de Email para Supabase - Códigos de 6 Dígitos
 
 ## 📧 Configuración en Supabase Dashboard
 
-### Ubicación
-1. Ve a tu proyecto en [Supabase Dashboard](https://app.supabase.com)
-2. Navega a **Authentication** → **Settings** → **Email Templates**
-3. Busca la sección **"Reset Password"** o **"Recovery"**
+⚠️ **IMPORTANTE**: Configurar el template de **"Recovery"** NO "Magic Link"
+
+### Pasos de Configuración
+1. Ve a [Supabase Dashboard](https://app.supabase.com) → Tu proyecto
+2. **Authentication** → **Settings** → **Email Templates**
+3. Busca **"Recovery / Reset Password"** (NO "Magic Link")
+4. Reemplaza con el template de abajo
 
 ### Template HTML Completo
 
@@ -232,10 +235,13 @@ Si prefieres un template más simple, puedes usar esta versión:
 - Ve a https://app.supabase.com
 - Selecciona tu proyecto **webapp-delicias-florencia**
 
-### 2. Configurar Template
+### 2. Configurar Template de Recovery
 - **Authentication** → **Settings** → **Email Templates**
-- Busca **"Recovery / Reset Password"**
+- Busca **"Recovery / Reset Password"** (NO "Magic Link")
 - Reemplaza el template existente con uno de los anteriores
+
+### 3. Configuración CRÍTICA
+⚠️ **MUY IMPORTANTE:** Asegúrate de que estás configurando el template de **"Recovery"** y NO el de **"Magic Link"**. Son templates diferentes en Supabase.
 
 ### 3. Variables Disponibles
 - `{{ .Token }}` - El código de 6 dígitos

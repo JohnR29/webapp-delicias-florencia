@@ -1,9 +1,6 @@
 
 "use client";
 
-// Ajustar el tamaño del mapa cuando la ventana cambie de tamaño
-// (el useEffect correspondiente debe ir después de declarar los refs)
-
 import { useEffect, useRef } from 'react';
 import L from 'leaflet';
 import * as turf from '@turf/turf';
