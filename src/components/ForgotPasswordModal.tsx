@@ -53,12 +53,9 @@ export default function ForgotPasswordModal({ isOpen, onClose }: ForgotPasswordM
     setIsSubmitting(true);
 
     try {
-      // Usar la API de Supabase para envío de OTP por email
-      const { error } = await supabase.auth.signInWithOtp({
-        email: email.trim(),
-        options: {
-          shouldCreateUser: false // Solo para usuarios existentes
-        }
+      // Usar resetPasswordForEmail para enviar código de recuperación
+      const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
+        redirectTo: `${window.location.origin}/reset-password`,
       });
 
       if (!error) {
@@ -87,11 +84,11 @@ export default function ForgotPasswordModal({ isOpen, onClose }: ForgotPasswordM
     setIsSubmitting(true);
 
     try {
-      // Verificar el código OTP
+      // Verificar el código OTP para recuperación de contraseña
       const { data, error } = await supabase.auth.verifyOtp({
         email: email.trim(),
         token: code.trim(),
-        type: 'email'
+        type: 'recovery'
       });
 
       if (!error && data?.session) {

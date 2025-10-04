@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { useAuth } from '@/hooks/useAuth';
 import AuthModal from '@/components/AuthModal';
+import { isAdminUser } from '@/lib/admin-config';
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -155,6 +156,14 @@ const Header = () => {
               {finalAuthState.isAuthenticated && finalAuthState.user ? (
                 <div className="flex items-center space-x-2">
                   <span className="text-xs lg:text-sm text-gray-600">Hola, {finalAuthState.user.email || 'usuario'}</span>
+                  {isAdminUser(finalAuthState.user.email) && (
+                    <a
+                      href="/admin"
+                      className="text-xs lg:text-sm text-primary-600 hover:text-primary-800 underline"
+                    >
+                      Admin
+                    </a>
+                  )}
                   <button
                     onClick={handleLogout}
                     className="text-xs lg:text-sm text-gray-500 hover:text-gray-700 underline"
@@ -236,6 +245,15 @@ const Header = () => {
               {finalAuthState.isAuthenticated && finalAuthState.user ? (
                 <div className="flex flex-col space-y-2 pt-2 border-t border-gray-200">
                   <span className="text-sm text-gray-600">Hola, {finalAuthState.user.email || 'usuario'}</span>
+                  {isAdminUser(finalAuthState.user.email) && (
+                    <a
+                      href="/admin"
+                      className="text-left text-sm text-primary-600 hover:text-primary-800 py-1"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      Panel de Administración
+                    </a>
+                  )}
                   <button
                     onClick={() => {
                       handleLogout();

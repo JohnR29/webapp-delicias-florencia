@@ -97,8 +97,7 @@ the distribution system efficiently.
     ├── app/
     │   ├── api/
     │   │   ├── send-email/
-    │   │   ├── send-order/
-    │   │   └── send-password-reset/
+    │   │   └── send-order/
     │   ├── layout.tsx
     │   ├── page.tsx
     │   └── globals.css
@@ -250,10 +249,7 @@ Generates order number - Stores order in database - Sends styled email
 Stores orders in Supabase: - Associates with user (optional) - JSON
 structured data - Returns order ID
 
-### POST /api/send-password-reset
 
-Password recovery system: - Generates unique tokens - Styled HTML
-emails - Tokens expire in 1 hour
 
 ------------------------------------------------------------------------
 
