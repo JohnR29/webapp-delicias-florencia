@@ -197,18 +197,12 @@ export default function PricingTiers({ tierActual, unidadesHastaSiguienteTier }:
           </div>
         </div>
 
-        {/* Aviso de IVA debajo de las tablas */}
-        <div className="mt-8 mb-4 text-center">
-          <span className="inline-block bg-yellow-100 text-yellow-800 text-2xl font-bold px-8 py-4 rounded-full">
-            Los precios mostrados <b>NO INCLUYEN IVA</b>
-          </span>
-        </div>
         {/* Nota sobre pedido mínimo */}
         <div className="mt-12 text-center">
           <div className="inline-flex items-center space-x-2 bg-accent-100 px-6 py-3 rounded-full">
-            <span className="text-accent-600">📦</span>
             <span className="text-accent-700 font-medium">
-              Pedido mínimo: {PRICING_CONFIG.MINIMO_PEDIDO} unidades (puedes combinar sabores y formatos)
+              📦 Pedido mínimo: {PRICING_CONFIG.MINIMO_PEDIDO} unidades <br />(Puedes combinar sabores y formatos) <br />
+              <strong>Los precios mostrados NO INCLUYEN IVA.</strong>
             </span>
           </div>
         </div>

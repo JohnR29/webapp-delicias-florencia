@@ -55,7 +55,10 @@ export async function POST(request: NextRequest) {
       .insert([
         {
           user_id: orderUserId,
-          order_data: orderDataToSave
+          order_data: orderDataToSave,
+          status: 'pending',
+          created_at: new Date().toISOString(),
+          customer_email: businessInfo.correo
         }
       ])
       .select('id')
@@ -126,8 +129,8 @@ Nota: Por favor confirmar disponibilidad y coordinar entrega.
 Pedido enviado desde: Sitio Web Delicias Florencia
     `;
 
-    // Configurar el email
-    const mailOptions = {
+    // Configurar el email para el administrador
+    const adminMailOptions = {
       from: process.env.EMAIL_USER,
       to: 'johnrojas297@gmail.com',
       subject: `Pedido ${orderNumber} - ${businessInfo.negocio}`,
@@ -135,8 +138,53 @@ Pedido enviado desde: Sitio Web Delicias Florencia
       html: emailContent.replace(/\n/g, '<br>'),
     };
 
-    // Enviar el email
-    await transporter.sendMail(mailOptions);
+    // Configurar el email de confirmación para el cliente
+    const clientEmailContent = `
+¡Hola ${businessInfo.contacto}!
+
+Hemos recibido tu pedido correctamente. Te confirmamos los detalles:
+
+N° de Pedido: ${orderNumber}
+
+INFORMACIÓN DEL NEGOCIO:
+• Nombre del negocio: ${businessInfo.negocio || ''}
+• Persona de contacto: ${businessInfo.contacto || ''}
+• Teléfono: ${businessInfo.telefono || ''}
+• Comuna: ${businessInfo.comuna || ''}
+• Dirección: ${businessInfo.direccion || ''}
+
+${pedidoDetalle ? `DETALLE DEL PEDIDO:\n${pedidoDetalle}` : ''}
+                       TOTAL: $${totalPedido.toLocaleString('es-CL')}
+
+Estado: PENDIENTE DE CONFIRMACIÓN
+
+Próximos pasos:
+• Revisaremos tu pedido y confirmaremos disponibilidad
+• Te enviaremos otro correo con la confirmación y fecha de despacho
+• Nuestras rutas de entrega son lunes y viernes
+• Coordinaremos contigo los detalles de la entrega
+
+¡Gracias por confiar en Delicias Florencia!
+
+Cualquier consulta, puedes responder este correo.
+
+---
+Delicias Florencia
+Sitio Web: https://deliciasflorencia.cl
+Fecha del pedido: ${now.toLocaleDateString('es-CL')}
+    `;
+
+    const clientMailOptions = {
+      from: process.env.EMAIL_USER,
+      to: businessInfo.correo,
+      subject: `Confirmación de Pedido ${orderNumber} - Delicias Florencia`,
+      text: clientEmailContent,
+      html: clientEmailContent.replace(/\n/g, '<br>'),
+    };
+
+    // Enviar ambos emails
+    await transporter.sendMail(adminMailOptions);
+    await transporter.sendMail(clientMailOptions);
 
     return NextResponse.json({ 
       success: true, 

@@ -146,7 +146,7 @@ const ContactForm: React.FC<ContactFormProps> = ({ cartState, productosSeleccion
       const result = await response.json();
 
       if (response.ok && result.success) {
-        alert('¡Pedido enviado correctamente! Nos pondremos en contacto contigo pronto.');
+        alert('¡Pedido enviado correctamente! Te enviamos un correo de confirmación con los detalles. Te contactaremos pronto para confirmar la fecha de despacho.');
         
         // Limpiar el carrito después del envío exitoso
         if (clearCart) {
