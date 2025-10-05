@@ -11,75 +11,6 @@ const Header = () => {
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [authModalMode, setAuthModalMode] = useState<'login' | 'register'>('login');
   const { user, isAuthenticated, logout } = useAuth();
-  const [forceUpdate, setForceUpdate] = useState(0);
-  const [localAuthState, setLocalAuthState] = useState({ isAuthenticated: false, user: null });
-
-  // Escuchar cambios en localStorage para actualizar estado de autenticación
-  useEffect(() => {
-    const checkAuthState = () => {
-      const savedUser = localStorage.getItem('delicias_user');
-      if (savedUser) {
-        try {
-          const userData = JSON.parse(savedUser);
-          setLocalAuthState({ isAuthenticated: true, user: userData });
-        } catch (error) {
-          console.error('Error parsing localStorage user:', error);
-          setLocalAuthState({ isAuthenticated: false, user: null });
-        }
-      } else {
-        setLocalAuthState({ isAuthenticated: false, user: null });
-      }
-    };
-
-    // Verificar al montar
-    checkAuthState();
-
-    const handleStorageChange = () => {
-      checkAuthState();
-      setForceUpdate(prev => prev + 1);
-    };
-
-    if (typeof window !== 'undefined') {
-      window.addEventListener('storage', handleStorageChange);
-      
-      // También escuchar cambios internos de localStorage
-      const originalSetItem = localStorage.setItem;
-      localStorage.setItem = function(key: string, value: string) {
-        originalSetItem.call(this, key, value);
-        if (key === 'delicias_user') {
-          setTimeout(handleStorageChange, 10);
-        }
-      };
-
-      const originalRemoveItem = localStorage.removeItem;
-      localStorage.removeItem = function(key: string) {
-        originalRemoveItem.call(this, key);
-        if (key === 'delicias_user') {
-          setTimeout(handleStorageChange, 10);
-        }
-      };
-    }
-
-    return () => {
-      if (typeof window !== 'undefined') {
-        window.removeEventListener('storage', handleStorageChange);
-        if (typeof localStorage !== 'undefined') {
-          localStorage.setItem = Storage.prototype.setItem;
-          localStorage.removeItem = Storage.prototype.removeItem;
-        }
-      }
-    };
-  }, []);
-
-  // Usar estado local si está disponible, fallback a useAuth
-  const finalAuthState = localAuthState.user ? localAuthState : { isAuthenticated, user };
-
-  // Función de logout personalizada que limpia todo
-  const handleLogout = () => {
-    logout(); // Limpiar hook useAuth
-    setLocalAuthState({ isAuthenticated: false, user: null }); // Limpiar estado local
-    localStorage.removeItem('delicias_user'); // Limpiar localStorage
-  };
 
   const scrollToSection = (sectionId: string) => {
     if (typeof window !== 'undefined') {
@@ -153,10 +84,10 @@ const Header = () => {
               </button>
             </li>
             <li>
-              {finalAuthState.isAuthenticated && finalAuthState.user ? (
+              {isAuthenticated && user ? (
                 <div className="flex items-center space-x-2">
-                  <span className="text-xs lg:text-sm text-gray-600">Hola, {finalAuthState.user.email || 'usuario'}</span>
-                  {isAdminUser(finalAuthState.user.email) && (
+                  <span className="text-xs lg:text-sm text-gray-600">Hola, {user.email || 'usuario'}</span>
+                  {isAdminUser(user.email) && (
                     <a
                       href="/admin"
                       className="text-xs lg:text-sm text-primary-600 hover:text-primary-800 underline"
@@ -165,7 +96,7 @@ const Header = () => {
                     </a>
                   )}
                   <button
-                    onClick={handleLogout}
+                    onClick={logout}
                     className="text-xs lg:text-sm text-gray-500 hover:text-gray-700 underline"
                   >
                     Salir
@@ -199,7 +130,7 @@ const Header = () => {
         </div>
 
         {/* Mobile Navigation */}
-        <div className={`md:hidden transition-all duration-300 overflow-hidden ${isMenuOpen ? 'max-h-96 pb-4' : 'max-h-0'}`}>
+        <div className={`md:hidden transition-all duration-300 overflow-hidden ${isMenuOpen ? 'max-h-screen pb-4' : 'max-h-0'}`}>
           <ul className="space-y-4 pt-4 border-t border-gray-200">
             <li>
               <button
@@ -241,29 +172,31 @@ const Header = () => {
                 Hacer Pedido
               </button>
             </li>
-            <li>
-              {finalAuthState.isAuthenticated && finalAuthState.user ? (
-                <div className="flex flex-col space-y-2 pt-2 border-t border-gray-200">
-                  <span className="text-sm text-gray-600">Hola, {finalAuthState.user.email || 'usuario'}</span>
-                  {isAdminUser(finalAuthState.user.email) && (
+            <li className="border-t border-gray-200 pt-4">
+              {isAuthenticated && user ? (
+                <>
+                  <div className="text-sm text-gray-600 py-2">Hola, {user.email || 'usuario'}</div>
+                  
+                  {isAdminUser(user.email) && (
                     <a
                       href="/admin"
-                      className="text-left text-sm text-primary-600 hover:text-primary-800 py-1"
+                      className="block text-sm text-primary-600 hover:text-primary-800 py-2"
                       onClick={() => setIsMenuOpen(false)}
                     >
                       Panel de Administración
                     </a>
                   )}
+                  
                   <button
                     onClick={() => {
-                      handleLogout();
+                      logout();
                       setIsMenuOpen(false);
                     }}
-                    className="text-left text-sm text-gray-500 hover:text-gray-700 underline"
+                    className="w-full text-left text-sm bg-red-50 text-red-600 hover:bg-red-100 hover:text-red-700 px-3 py-2 rounded-lg transition-colors border border-red-200 mt-2"
                   >
-                    Cerrar Sesión
+                    🚪 Cerrar Sesión
                   </button>
-                </div>
+                </>
               ) : (
                 <button
                   onClick={() => {
@@ -271,7 +204,7 @@ const Header = () => {
                     setShowAuthModal(true);
                     setIsMenuOpen(false);
                   }}
-                  className="block w-full text-left text-gray-700 hover:text-primary-600 border border-gray-300 px-3 py-2 rounded-lg transition-colors"
+                  className="block w-full text-left text-gray-700 hover:text-primary-600 border border-gray-300 px-3 py-2 rounded-lg transition-colors mt-2"
                 >
                   Iniciar Sesión
                 </button>

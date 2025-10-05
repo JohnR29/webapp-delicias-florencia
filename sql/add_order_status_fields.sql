@@ -25,3 +25,6 @@ COMMENT ON COLUMN orders.delivered_at IS 'Fecha y hora de entrega confirmada';
 
 -- Actualizar pedidos existentes para que tengan estado pending si no tienen estado
 UPDATE orders SET status = 'pending' WHERE status IS NULL;
+
+
+sadas

@@ -42,8 +42,9 @@ const AdminPanel: React.FC = () => {
   const [dispatchNotes, setDispatchNotes] = useState('');
   const [processing, setProcessing] = useState(false);
   const [filter, setFilter] = useState<'pending' | 'confirmed' | 'all'>('pending');
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, logout } = useAuth();
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -177,11 +178,18 @@ const AdminPanel: React.FC = () => {
         <div className="bg-white rounded-lg shadow-md">
           <div className="p-6 border-b border-gray-200">
             <div className="flex justify-between items-center">
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900">Panel de Administración</h1>
-                <p className="text-gray-600">Gestión de pedidos - Delicias Florencia</p>
+              <div className="flex-1 min-w-0">
+                <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Panel de Administración</h1>
+                <p className="text-sm sm:text-base text-gray-600">Gestión de pedidos - Delicias Florencia</p>
+                {user && (
+                  <p className="text-xs sm:text-sm text-gray-500 mt-1">
+                    Administrador: {user.email}
+                  </p>
+                )}
               </div>
-              <div className="flex gap-2">
+              
+              {/* Desktop Controls */}
+              <div className="hidden md:flex gap-2">
                 <select
                   value={filter}
                   onChange={(e) => setFilter(e.target.value as any)}
@@ -196,6 +204,87 @@ const AdminPanel: React.FC = () => {
                   className="px-4 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700 transition-colors"
                 >
                   Actualizar
+                </button>
+                <button
+                  onClick={() => window.location.href = '/'}
+                  className="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 transition-colors"
+                  title="Volver al sitio principal"
+                >
+                  Inicio
+                </button>
+                <button
+                  onClick={async () => {
+                    if (confirm('¿Estás seguro de que quieres cerrar sesión?')) {
+                      await logout();
+                      window.location.href = '/';
+                    }
+                  }}
+                  className="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors"
+                  title="Cerrar sesión"
+                >
+                  Cerrar Sesión
+                </button>
+              </div>
+
+              {/* Mobile Menu Button */}
+              <button
+                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                className="md:hidden flex flex-col items-center justify-center w-8 h-8 space-y-1"
+                aria-label="Abrir menú de opciones"
+                aria-expanded={isMobileMenuOpen}
+              >
+                <span className={`block w-6 h-0.5 bg-gray-700 transition-transform ${isMobileMenuOpen ? 'rotate-45 translate-y-1.5' : ''}`}></span>
+                <span className={`block w-6 h-0.5 bg-gray-700 transition-opacity ${isMobileMenuOpen ? 'opacity-0' : ''}`}></span>
+                <span className={`block w-6 h-0.5 bg-gray-700 transition-transform ${isMobileMenuOpen ? '-rotate-45 -translate-y-1.5' : ''}`}></span>
+              </button>
+            </div>
+
+            {/* Mobile Menu */}
+            <div className={`md:hidden transition-all duration-300 overflow-hidden ${isMobileMenuOpen ? 'max-h-96 pt-4' : 'max-h-0'}`}>
+              <div className="border-t border-gray-200 pt-4 space-y-3">
+                <div className="flex flex-col space-y-2">
+                  <label className="text-sm font-medium text-gray-700">Filtrar pedidos:</label>
+                  <select
+                    value={filter}
+                    onChange={(e) => setFilter(e.target.value as any)}
+                    className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  >
+                    <option value="pending">Pendientes</option>
+                    <option value="confirmed">Confirmados</option>
+                    <option value="all">Todos</option>
+                  </select>
+                </div>
+                
+                <button
+                  onClick={() => {
+                    fetchOrders();
+                    setIsMobileMenuOpen(false);
+                  }}
+                  className="w-full px-4 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700 transition-colors"
+                >
+                  Actualizar Pedidos
+                </button>
+                
+                <button
+                  onClick={() => {
+                    window.location.href = '/';
+                    setIsMobileMenuOpen(false);
+                  }}
+                  className="w-full px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 transition-colors"
+                >
+                  Volver al Inicio
+                </button>
+                
+                <button
+                  onClick={async () => {
+                    if (confirm('¿Estás seguro de que quieres cerrar sesión?')) {
+                      await logout();
+                      window.location.href = '/';
+                    }
+                  }}
+                  className="w-full px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors"
+                >
+                  Cerrar Sesión
                 </button>
               </div>
             </div>
