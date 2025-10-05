@@ -41,8 +41,10 @@ const AdminPanel: React.FC = () => {
   const [dispatchDate, setDispatchDate] = useState('');
   const [dispatchNotes, setDispatchNotes] = useState('');
   const [processing, setProcessing] = useState(false);
-  const [filter, setFilter] = useState<'pending' | 'confirmed' | 'all'>('pending');
+  const [filter, setFilter] = useState<'pending' | 'confirmed' | 'delivered' | 'all'>('pending');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [showDeliveryModal, setShowDeliveryModal] = useState(false);
+  const [deliveryNotes, setDeliveryNotes] = useState('');
 
   const { user, isAuthenticated, logout } = useAuth();
 
@@ -108,6 +110,46 @@ const AdminPanel: React.FC = () => {
     } catch (error) {
       console.error('Error confirming order:', error);
       alert('Error enviando confirmación');
+    } finally {
+      setProcessing(false);
+    }
+  };
+
+  const handleMarkAsDelivered = async () => {
+    if (!selectedOrder) {
+      alert('No hay pedido seleccionado');
+      return;
+    }
+
+    setProcessing(true);
+    try {
+      const response = await fetch('/api/confirm-order', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          orderId: selectedOrder.id,
+          status: 'delivered',
+          deliveryNotes: deliveryNotes,
+          adminUserId: user?.id
+        }),
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        alert('¡Pedido marcado como entregado exitosamente!');
+        setShowDeliveryModal(false);
+        setSelectedOrder(null);
+        setDeliveryNotes('');
+        fetchOrders(); // Recargar la lista
+      } else {
+        alert('Error marcando pedido como entregado: ' + result.message);
+      }
+    } catch (error) {
+      console.error('Error marking order as delivered:', error);
+      alert('Error actualizando estado del pedido');
     } finally {
       setProcessing(false);
     }
@@ -197,6 +239,7 @@ const AdminPanel: React.FC = () => {
                 >
                   <option value="pending">Pendientes</option>
                   <option value="confirmed">Confirmados</option>
+                  <option value="delivered">Entregados</option>
                   <option value="all">Todos</option>
                 </select>
                 <button
@@ -251,6 +294,7 @@ const AdminPanel: React.FC = () => {
                   >
                     <option value="pending">Pendientes</option>
                     <option value="confirmed">Confirmados</option>
+                    <option value="delivered">Entregados</option>
                     <option value="all">Todos</option>
                   </select>
                 </div>
@@ -298,7 +342,7 @@ const AdminPanel: React.FC = () => {
               </div>
             ) : orders.length === 0 ? (
               <div className="text-center py-8">
-                <p className="text-gray-500">No hay pedidos {filter === 'all' ? '' : filter === 'pending' ? 'pendientes' : 'confirmados'}</p>
+                <p className="text-gray-500">No hay pedidos {filter === 'all' ? '' : filter === 'pending' ? 'pendientes' : filter === 'confirmed' ? 'confirmados' : filter === 'delivered' ? 'entregados' : ''}</p>
               </div>
             ) : (
               <div className="overflow-x-auto">
@@ -368,6 +412,17 @@ const AdminPanel: React.FC = () => {
                               className="text-primary-600 hover:text-primary-900 mr-3"
                             >
                               Confirmar
+                            </button>
+                          )}
+                          {order.status === 'confirmed' && (
+                            <button
+                              onClick={() => {
+                                setSelectedOrder(order);
+                                setShowDeliveryModal(true);
+                              }}
+                              className="text-green-600 hover:text-green-900 mr-3"
+                            >
+                              Marcar como Entregado
                             </button>
                           )}
                           <button
@@ -454,6 +509,65 @@ const AdminPanel: React.FC = () => {
                 }`}
               >
                 {processing ? 'Procesando...' : 'Confirmar Pedido'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal para marcar como entregado */}
+      {showDeliveryModal && selectedOrder && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
+          <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-md">
+            <h3 className="text-lg font-bold mb-4">
+              Marcar como Entregado #{String(selectedOrder.id).padStart(4, '0')}
+            </h3>
+            
+            <div className="mb-4 p-3 bg-gray-50 rounded-lg">
+              <p><strong>Cliente:</strong> {selectedOrder.order_data?.businessInfo?.negocio}</p>
+              <p><strong>Contacto:</strong> {selectedOrder.order_data?.businessInfo?.contacto}</p>
+              <p><strong>Comuna:</strong> {selectedOrder.order_data?.businessInfo?.comuna}</p>
+              <p><strong>Total:</strong> ${selectedOrder.order_data?.totals?.totalMonto?.toLocaleString('es-CL')}</p>
+              {selectedOrder.dispatch_date && (
+                <p><strong>Fecha de Despacho:</strong> {new Date(selectedOrder.dispatch_date).toLocaleDateString('es-CL')}</p>
+              )}
+            </div>
+
+            <div className="mb-6">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Notas de Entrega (Opcional)
+              </label>
+              <textarea
+                value={deliveryNotes}
+                onChange={(e) => setDeliveryNotes(e.target.value)}
+                rows={3}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+                placeholder="Ej: Entregado en recepción, firmado por Juan Pérez, entrega satisfactoria..."
+              />
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => {
+                  setShowDeliveryModal(false);
+                  setSelectedOrder(null);
+                  setDeliveryNotes('');
+                }}
+                className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50"
+                disabled={processing}
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleMarkAsDelivered}
+                disabled={processing}
+                className={`flex-1 px-4 py-2 rounded-md text-white transition-colors ${
+                  processing
+                    ? 'bg-gray-400 cursor-not-allowed'
+                    : 'bg-green-600 hover:bg-green-700'
+                }`}
+              >
+                {processing ? 'Procesando...' : 'Marcar como Entregado'}
               </button>
             </div>
           </div>
