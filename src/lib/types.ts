@@ -50,6 +50,96 @@ export interface User {
   migrationNeeded?: boolean; // Para usuarios migrados
 }
 
+// Información personal del perfil de usuario
+export interface UserProfile {
+  id: string;
+  user_id: string;
+  nombre: string;
+  apellido: string;
+  telefono: string;
+  documento_identidad?: string;
+  tipo_documento?: 'RUT' | 'CI' | 'Pasaporte';
+  fecha_nacimiento?: string;
+  direccion_personal?: string;
+  comuna_personal?: string;
+  // Campos para socio distribuidor
+  es_punto_venta_publico: boolean;
+  nombre_comercial?: string;
+  descripcion_negocio?: string;
+  horario_atencion?: string;
+  permite_pedidos_directos: boolean;
+  telefono_negocio?: string;
+  email_negocio?: string;
+  // Campos de aprobación por admin
+  aprobado_por_admin: boolean;
+  fecha_aprobacion?: string;
+  aprobado_por_admin_id?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+// Datos completos del usuario (para formularios)
+export interface UserProfileForm {
+  nombre: string;
+  apellido: string;
+  telefono: string;
+  documento_identidad?: string;
+  tipo_documento?: 'RUT' | 'CI' | 'Pasaporte';
+  fecha_nacimiento?: string;
+  direccion_personal?: string;
+  comuna_personal?: string;
+  // Campos para socio distribuidor
+  es_punto_venta_publico: boolean;
+  nombre_comercial?: string;
+  descripcion_negocio?: string;
+  horario_atencion?: string;
+  permite_pedidos_directos: boolean;
+  telefono_negocio?: string;
+  email_negocio?: string;
+}
+
+// Información específica del socio distribuidor
+export interface SocioDistribuidor {
+  user_profile_id: string;
+  nombre_comercial: string;
+  descripcion_negocio?: string;
+  horario_atencion?: string;
+  permite_pedidos_directos: boolean;
+  telefono_negocio?: string;
+  email_negocio?: string;
+  activo: boolean;
+}
+
+// Socio distribuidor pendiente de aprobación (para admin)
+export interface SocioDistribuidorPendiente {
+  id: string;
+  user_id: string;
+  nombre: string;
+  apellido: string;
+  telefono: string;
+  nombre_comercial: string;
+  descripcion_negocio?: string;
+  horario_atencion?: string;
+  permite_pedidos_directos: boolean;
+  telefono_negocio?: string;
+  email_negocio?: string;
+  created_at: string;
+  updated_at: string;
+  // Información de dirección
+  direccion: string;
+  comuna: string;
+  negocio: string;
+  contacto: string;
+  tipo: string;
+}
+
+// Datos para aprobar/rechazar socio
+export interface AprobacionSocioData {
+  user_id: string;
+  aprobado: boolean;
+  admin_id: string;
+}
+
 export interface PricingTier {
   nombre: string;
   rango: string;

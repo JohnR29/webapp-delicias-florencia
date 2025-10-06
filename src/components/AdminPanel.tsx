@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { useAuth } from '@/hooks/useAuth';
 import { isAdminUser } from '@/lib/admin-config';
 
@@ -248,6 +249,12 @@ const AdminPanel: React.FC = () => {
                 >
                   Actualizar
                 </button>
+                <Link
+                  href="/admin/socios"
+                  className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
+                >
+                  🏪 Socios
+                </Link>
                 <button
                   onClick={() => window.location.href = '/'}
                   className="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 transition-colors"

@@ -11,6 +11,9 @@ export interface Address {
   tipo: string;
   comuna: string;
   direccion: string;
+  // Campos para punto de venta público
+  es_punto_venta_publico?: boolean;
+  visible_en_mapa?: boolean;
   created_at: string;
 }
 
