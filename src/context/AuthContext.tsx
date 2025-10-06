@@ -52,7 +52,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       password,
       options: {
         data: {
-          nombre: nombre || '',
+          display_name: nombre || '',
         },
       },
     });

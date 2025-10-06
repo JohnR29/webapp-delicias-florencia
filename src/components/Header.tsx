@@ -86,7 +86,7 @@ const Header = () => {
             <li>
               {isAuthenticated && user ? (
                 <div className="flex items-center space-x-2">
-                  <span className="text-xs lg:text-sm text-gray-600">Hola, {user.email || 'usuario'}</span>
+                  <span className="text-xs lg:text-sm text-gray-600">Hola, {user.user_metadata?.display_name || user.email || 'usuario'}</span>
                   {isAdminUser(user.email) && (
                     <a
                       href="/admin"
@@ -175,7 +175,7 @@ const Header = () => {
             <li className="border-t border-gray-200 pt-4">
               {isAuthenticated && user ? (
                 <>
-                  <div className="text-sm text-gray-600 py-2">Hola, {user.email || 'usuario'}</div>
+                  <div className="text-sm text-gray-600 py-2">Hola, {user.user_metadata?.display_name || user.email || 'usuario'}</div>
                   
                   {isAdminUser(user.email) && (
                     <a
