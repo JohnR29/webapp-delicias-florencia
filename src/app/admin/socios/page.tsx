@@ -64,7 +64,7 @@ export default function AdminSociosPage() {
           
           <h2 className="text-xl font-bold text-gray-900 mb-3">Funcionalidad Migrada</h2>
           <p className="text-gray-600 mb-4">
-            La gestión de socios se ha integrado al panel principal como <strong>"🏪 Puntos de Venta"</strong>.
+            La gestión de socios se ha integrado al panel principal como <strong>&quot;🏪 Puntos de Venta&quot;</strong>.
           </p>
           
           <div className="bg-blue-50 p-4 rounded-lg mb-6">

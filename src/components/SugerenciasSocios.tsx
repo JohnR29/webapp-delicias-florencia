@@ -136,7 +136,7 @@ const SugerenciasSocios: React.FC<SugerenciasSociosProps> = ({
           No encontramos puntos de venta en un radio de {radioKm} km de tu ubicación.
         </p>
         <p className="text-yellow-600 text-xs mt-2">
-          Puedes ver todos los puntos disponibles en la sección "Dónde Comprar".
+          Puedes ver todos los puntos disponibles en la sección &quot;Dónde Comprar&quot;.
         </p>
       </div>
     );

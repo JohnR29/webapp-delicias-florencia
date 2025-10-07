@@ -47,7 +47,7 @@ export function AdminPuntosVentaPanel() {
       setEstadisticas(stats);
     };
     cargarEstadisticas();
-  }, [todosPuntos]);
+  }, [todosPuntos, getEstadisticas]);
 
   // Obtener lista actual según pestaña activa
   const getPuntosActuales = () => {

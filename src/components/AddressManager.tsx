@@ -470,7 +470,7 @@ export default function AddressManager({ onSelect, onlyAdd = false, showTitle = 
                           Descripción del negocio
                         </p>
                         <p className="text-sm text-gray-600 italic ml-6">
-                          "{addr.descripcion_negocio}"
+                          &quot;{addr.descripcion_negocio}&quot;
                         </p>
                       </div>
                     )}

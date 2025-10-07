@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import { Address } from './useAddresses';
 
@@ -120,7 +120,7 @@ export function useAdminPuntosVenta() {
   };
 
   // Obtener todos los puntos de venta
-  const fetchTodosPuntos = async () => {
+  const fetchTodosPuntos = useCallback(async () => {
     setLoading(true);
     setError(null);
     
@@ -148,7 +148,7 @@ export function useAdminPuntosVenta() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   // Cambiar estado de punto de venta
   const cambiarEstadoPuntoVenta = async (
@@ -328,6 +328,7 @@ export function useAdminPuntosVenta() {
 
   useEffect(() => {
     fetchTodosPuntos();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return {

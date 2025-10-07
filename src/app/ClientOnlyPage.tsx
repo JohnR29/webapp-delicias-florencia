@@ -4,6 +4,7 @@ import ClientHeaderPublico from '@/components/ClientHeaderPublico';
 import Banner from '@/components/Banner';
 import { saboresUnicos } from '@/data/productos';
 import MapaDistribuidoresIndividual from '@/components/MapaDistribuidoresIndividual';
+import Image from 'next/image';
 import { useSociosDistribuidores } from '@/hooks/useSociosDistribuidores';
 
 export default function ClientOnlyPage() {
@@ -34,10 +35,11 @@ export default function ClientOnlyPage() {
                 key={sabor.nombre}
                 className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-xl transition-shadow duration-300 border border-gray-100"
               >
-                <div className="aspect-w-16 aspect-h-12 bg-gray-100">
-                  <img 
+                <div className="aspect-w-16 aspect-h-12 bg-gray-100 relative">
+                  <Image 
                     src={sabor.imagen} 
                     alt={sabor.nombre}
+                    fill
                     className="w-full h-48 object-cover"
                   />
                 </div>

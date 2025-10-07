@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/hooks/useAuth';
 import { isAdminUser } from '@/lib/admin-config';
@@ -52,13 +52,7 @@ const AdminPanel: React.FC = () => {
 
   const { user, isAuthenticated, logout } = useAuth();
 
-  useEffect(() => {
-    if (isAuthenticated && activeTab === 'pedidos') {
-      fetchOrders();
-    }
-  }, [isAuthenticated, filter, activeTab]);
-
-  const fetchOrders = async () => {
+  const fetchOrders = useCallback(async () => {
     try {
       setLoading(true);
       const statusParam = filter === 'all' ? '' : `?status=${filter}`;
@@ -76,7 +70,13 @@ const AdminPanel: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [filter]);
+
+  useEffect(() => {
+    if (isAuthenticated && activeTab === 'pedidos') {
+      fetchOrders();
+    }
+  }, [isAuthenticated, filter, activeTab, fetchOrders]);
 
   const handleConfirmOrder = async () => {
     if (!selectedOrder || !dispatchDate) {
