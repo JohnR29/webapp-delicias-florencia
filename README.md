@@ -51,6 +51,22 @@ the distribution system efficiently.
 -   **Password recovery**: Token-based email system
 -   **Persistent session**: Maintains login between visits
 
+### 🏢 Partner Distributor System
+
+-   **Public directory**: Cliente can become retail distribution partners
+-   **Admin approval**: Quality control before listing on map
+-   **Smart geolocation**: Automatic suggestions of nearest distributors
+-   **Interactive maps**: Google Maps integration with custom markers
+-   **Distance calculation**: Haversine formula for accurate proximity
+
+### 📍 Intelligent Location Features
+
+-   **Location permissions**: Graceful geolocation request handling
+-   **Nearby suggestions**: Shows 3 closest distributors automatically
+-   **Interactive maps**: Full Google Maps integration with navigation
+-   **Distance display**: Precise km calculations with 1 decimal precision
+-   **Address geocoding**: Automatic coordinate conversion for distributors
+
 ### 📱 Mobile-First Design
 
 -   Fully responsive for all devices

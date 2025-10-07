@@ -2,9 +2,11 @@
 
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
+import Link from 'next/link';
 import { useAuth } from '@/hooks/useAuth';
 import AuthModal from '@/components/AuthModal';
 import { isAdminUser } from '@/lib/admin-config';
+import { MapPin } from 'lucide-react';
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -76,17 +78,34 @@ const Header = () => {
               </button>
             </li>
             <li>
-              <button
-                onClick={() => scrollToSection('cotizar')}
-                className="bg-primary-600 hover:bg-primary-700 text-white px-3 py-2 lg:px-4 rounded-lg transition-colors text-sm lg:text-base"
+              <Link
+                href="/donde-comprar"
+                className="nav-link text-gray-700 hover:text-primary-600 transition-colors text-sm lg:text-base inline-flex items-center"
               >
-                Hacer Pedido
-              </button>
+                <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
+                </svg>
+                Dónde Comprar
+              </Link>
+            </li>
+            <li>
+              <Link
+                href="/mayorista"
+                className="bg-secondary-600 hover:bg-secondary-700 text-white px-3 py-2 lg:px-4 rounded-lg transition-colors text-sm lg:text-base"
+              >
+                Acceso Mayorista
+              </Link>
             </li>
             <li>
               {isAuthenticated && user ? (
                 <div className="flex items-center space-x-2">
                   <span className="text-xs lg:text-sm text-gray-600">Hola, {user.user_metadata?.display_name || user.email || 'usuario'}</span>
+                  <Link
+                    href="/perfil"
+                    className="text-xs lg:text-sm text-blue-600 hover:text-blue-800 underline"
+                  >
+                    Mi Perfil
+                  </Link>
                   {isAdminUser(user.email) && (
                     <a
                       href="/admin"
@@ -165,6 +184,14 @@ const Header = () => {
               </button>
             </li>
             <li>
+              <Link
+                href="/donde-comprar"
+                className="block w-full text-left py-2 text-gray-700 hover:text-primary-600 transition-colors"
+              >
+                Dónde Comprar
+              </Link>
+            </li>
+            <li>
               <button
                 onClick={() => scrollToSection('cotizar')}
                 className="block w-full text-left bg-primary-600 hover:bg-primary-700 text-white px-4 py-3 rounded-lg transition-colors"
@@ -176,6 +203,14 @@ const Header = () => {
               {isAuthenticated && user ? (
                 <>
                   <div className="text-sm text-gray-600 py-2">Hola, {user.user_metadata?.display_name || user.email || 'usuario'}</div>
+                  
+                  <Link
+                    href="/perfil"
+                    className="block text-sm text-blue-600 hover:text-blue-800 py-2"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    👤 Mi Perfil
+                  </Link>
                   
                   {isAdminUser(user.email) && (
                     <a

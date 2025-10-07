@@ -1,8 +1,11 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
+import Link from 'next/link';
 import { useAuth } from '@/hooks/useAuth';
 import { isAdminUser } from '@/lib/admin-config';
+import { AdminPuntosVentaPanel } from './AdminPuntosVentaPanel';
+import { AdminGestionSociosPanel } from './AdminGestionSociosPanel';
 
 interface Order {
   id: number;
@@ -34,6 +37,7 @@ interface Order {
 }
 
 const AdminPanel: React.FC = () => {
+  const [activeTab, setActiveTab] = useState<'pedidos' | 'puntos-venta' | 'socios'>('pedidos');
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
@@ -48,13 +52,7 @@ const AdminPanel: React.FC = () => {
 
   const { user, isAuthenticated, logout } = useAuth();
 
-  useEffect(() => {
-    if (isAuthenticated) {
-      fetchOrders();
-    }
-  }, [isAuthenticated, filter]);
-
-  const fetchOrders = async () => {
+  const fetchOrders = useCallback(async () => {
     try {
       setLoading(true);
       const statusParam = filter === 'all' ? '' : `?status=${filter}`;
@@ -72,7 +70,13 @@ const AdminPanel: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [filter]);
+
+  useEffect(() => {
+    if (isAuthenticated && activeTab === 'pedidos') {
+      fetchOrders();
+    }
+  }, [isAuthenticated, filter, activeTab, fetchOrders]);
 
   const handleConfirmOrder = async () => {
     if (!selectedOrder || !dispatchDate) {
@@ -222,7 +226,9 @@ const AdminPanel: React.FC = () => {
             <div className="flex justify-between items-center">
               <div className="flex-1 min-w-0">
                 <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Panel de Administración</h1>
-                <p className="text-sm sm:text-base text-gray-600">Gestión de pedidos - Delicias Florencia</p>
+                <p className="text-sm sm:text-base text-gray-600">
+                  {activeTab === 'pedidos' ? 'Gestión de pedidos' : activeTab === 'puntos-venta' ? 'Gestión de puntos de venta' : 'Gestión de socios distribuidores'} - Delicias Florencia
+                </p>
                 {user && (
                   <p className="text-xs sm:text-sm text-gray-500 mt-1">
                     Administrador: {user.email}
@@ -232,22 +238,26 @@ const AdminPanel: React.FC = () => {
               
               {/* Desktop Controls */}
               <div className="hidden md:flex gap-2">
-                <select
-                  value={filter}
-                  onChange={(e) => setFilter(e.target.value as any)}
-                  className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
-                >
-                  <option value="pending">Pendientes</option>
-                  <option value="confirmed">Confirmados</option>
-                  <option value="delivered">Entregados</option>
-                  <option value="all">Todos</option>
-                </select>
-                <button
-                  onClick={fetchOrders}
-                  className="px-4 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700 transition-colors"
-                >
-                  Actualizar
-                </button>
+                {activeTab === 'pedidos' && (
+                  <>
+                    <select
+                      value={filter}
+                      onChange={(e) => setFilter(e.target.value as any)}
+                      className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+                    >
+                      <option value="pending">Pendientes</option>
+                      <option value="confirmed">Confirmados</option>
+                      <option value="delivered">Entregados</option>
+                      <option value="all">Todos</option>
+                    </select>
+                    <button
+                      onClick={fetchOrders}
+                      className="px-4 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700 transition-colors"
+                    >
+                      Actualizar
+                    </button>
+                  </>
+                )}
                 <button
                   onClick={() => window.location.href = '/'}
                   className="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 transition-colors"
@@ -285,29 +295,33 @@ const AdminPanel: React.FC = () => {
             {/* Mobile Menu */}
             <div className={`md:hidden transition-all duration-300 overflow-hidden ${isMobileMenuOpen ? 'max-h-96 pt-4' : 'max-h-0'}`}>
               <div className="border-t border-gray-200 pt-4 space-y-3">
-                <div className="flex flex-col space-y-2">
-                  <label className="text-sm font-medium text-gray-700">Filtrar pedidos:</label>
-                  <select
-                    value={filter}
-                    onChange={(e) => setFilter(e.target.value as any)}
-                    className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
-                  >
-                    <option value="pending">Pendientes</option>
-                    <option value="confirmed">Confirmados</option>
-                    <option value="delivered">Entregados</option>
-                    <option value="all">Todos</option>
-                  </select>
-                </div>
-                
-                <button
-                  onClick={() => {
-                    fetchOrders();
-                    setIsMobileMenuOpen(false);
-                  }}
-                  className="w-full px-4 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700 transition-colors"
-                >
-                  Actualizar Pedidos
-                </button>
+                {activeTab === 'pedidos' && (
+                  <>
+                    <div className="flex flex-col space-y-2">
+                      <label className="text-sm font-medium text-gray-700">Filtrar pedidos:</label>
+                      <select
+                        value={filter}
+                        onChange={(e) => setFilter(e.target.value as any)}
+                        className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+                      >
+                        <option value="pending">Pendientes</option>
+                        <option value="confirmed">Confirmados</option>
+                        <option value="delivered">Entregados</option>
+                        <option value="all">Todos</option>
+                      </select>
+                    </div>
+                    
+                    <button
+                      onClick={() => {
+                        fetchOrders();
+                        setIsMobileMenuOpen(false);
+                      }}
+                      className="w-full px-4 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700 transition-colors"
+                    >
+                      Actualizar Pedidos
+                    </button>
+                  </>
+                )}
                 
                 <button
                   onClick={() => {
@@ -334,17 +348,54 @@ const AdminPanel: React.FC = () => {
             </div>
           </div>
 
+          {/* Tabs Navigation */}
+          <div className="border-b border-gray-200">
+            <nav className="flex space-x-8 px-6" aria-label="Tabs">
+              <button
+                onClick={() => setActiveTab('pedidos')}
+                className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
+                  activeTab === 'pedidos'
+                    ? 'border-primary-500 text-primary-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+              >
+                📦 Gestión de Pedidos
+              </button>
+              <button
+                onClick={() => setActiveTab('puntos-venta')}
+                className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
+                  activeTab === 'puntos-venta'
+                    ? 'border-primary-500 text-primary-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+              >
+                🏪 Puntos de Venta
+              </button>
+              <button
+                onClick={() => setActiveTab('socios')}
+                className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
+                  activeTab === 'socios'
+                    ? 'border-primary-500 text-primary-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+              >
+                👥 Gestión de Socios
+              </button>
+            </nav>
+          </div>
+
           <div className="p-6">
-            {loading ? (
-              <div className="text-center py-8">
-                <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
-                <p className="mt-2 text-gray-600">Cargando pedidos...</p>
-              </div>
-            ) : orders.length === 0 ? (
-              <div className="text-center py-8">
-                <p className="text-gray-500">No hay pedidos {filter === 'all' ? '' : filter === 'pending' ? 'pendientes' : filter === 'confirmed' ? 'confirmados' : filter === 'delivered' ? 'entregados' : ''}</p>
-              </div>
-            ) : (
+            {activeTab === 'pedidos' ? (
+              loading ? (
+                <div className="text-center py-8">
+                  <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
+                  <p className="mt-2 text-gray-600">Cargando pedidos...</p>
+                </div>
+              ) : orders.length === 0 ? (
+                <div className="text-center py-8">
+                  <p className="text-gray-500">No hay pedidos {filter === 'all' ? '' : filter === 'pending' ? 'pendientes' : filter === 'confirmed' ? 'confirmados' : filter === 'delivered' ? 'entregados' : ''}</p>
+                </div>
+              ) : (
               <div className="overflow-x-auto">
                 <table className="min-w-full divide-y divide-gray-200">
                   <thead className="bg-gray-50">
@@ -440,6 +491,11 @@ const AdminPanel: React.FC = () => {
                   </tbody>
                 </table>
               </div>
+            )
+            ) : activeTab === 'puntos-venta' ? (
+              <AdminPuntosVentaPanel />
+            ) : (
+              <AdminGestionSociosPanel />
             )}
           </div>
         </div>
