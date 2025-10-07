@@ -110,35 +110,9 @@ export interface SocioDistribuidor {
   activo: boolean;
 }
 
-// Socio distribuidor pendiente de aprobación (para admin)
-export interface SocioDistribuidorPendiente {
-  id: string;
-  user_id: string;
-  nombre: string;
-  apellido: string;
-  telefono: string;
-  nombre_comercial: string;
-  descripcion_negocio?: string;
-  horario_atencion?: string;
-  permite_pedidos_directos: boolean;
-  telefono_negocio?: string;
-  email_negocio?: string;
-  created_at: string;
-  updated_at: string;
-  // Información de dirección
-  direccion: string;
-  comuna: string;
-  negocio: string;
-  contacto: string;
-  tipo: string;
-}
-
-// Datos para aprobar/rechazar socio
-export interface AprobacionSocioData {
-  user_id: string;
-  aprobado: boolean;
-  admin_id: string;
-}
+// NOTA: Las interfaces SocioDistribuidorPendiente y AprobacionSocioData 
+// han sido eliminadas porque el sistema ahora usa el sistema unificado 
+// basado en Address con aprobación integrada
 
 export interface PricingTier {
   nombre: string;

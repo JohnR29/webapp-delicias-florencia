@@ -40,12 +40,10 @@ const ContactForm: React.FC<ContactFormProps> = ({ cartState, productosSeleccion
     if (selectedAddress) {
       setFormData(prev => ({
         ...prev,
-        negocio: selectedAddress.negocio || '',
+        negocio: selectedAddress.nombre_comercial || selectedAddress.nombre || '',
         contacto: selectedAddress.contacto || '',
-        telefono: selectedAddress.telefono || '',
-        tipo: (['Almacén', 'Minimarket', 'Pastelería', 'Cafetería', 'Otro'].includes(selectedAddress.tipo)
-          ? selectedAddress.tipo
-          : 'Almacén') as BusinessForm['tipo'],
+        telefono: selectedAddress.telefono_negocio || selectedAddress.telefono || '',
+        tipo: (selectedAddress.tipo_negocio as BusinessForm['tipo']) || 'Almacén',
         comuna: selectedAddress.comuna || '',
         direccion: selectedAddress.direccion || '',
       }));
@@ -452,52 +450,56 @@ const ContactForm: React.FC<ContactFormProps> = ({ cartState, productosSeleccion
       />
       {/* Modal para agregar dirección (solo alta) */}
       {showAddAddress && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
-          <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-md relative animate-fade-in">
-            <button className="absolute top-2 right-2 text-gray-500 hover:text-gray-700 text-2xl" onClick={() => setShowAddAddress(false)}>&times;</button>
-            <h4 className="text-lg font-bold mb-4">Agregar nueva dirección</h4>
-            <AddressManager onSelect={addr => {
-              setShowAddAddress(false);
-              if (addr) {
-                setFormData(prev => ({
-                  ...prev,
-                  negocio: addr.negocio || '',
-                  contacto: addr.contacto || '',
-                  telefono: addr.telefono || '',
-                  tipo: (['Almacén', 'Minimarket', 'Pastelería', 'Cafetería', 'Otro'].includes(addr.tipo)
-                    ? (addr.tipo as BusinessForm['tipo'])
-                    : 'Almacén'),
-                  comuna: addr.comuna || '',
-                  direccion: addr.direccion || '',
-                }));
-              }
-            }} onlyAdd />
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40 p-4">
+          <div className="bg-white rounded-lg shadow-lg w-full max-w-2xl max-h-[90vh] overflow-hidden relative animate-fade-in">
+            <div className="flex items-center justify-between p-6 border-b border-gray-200">
+              <h4 className="text-lg font-bold">Agregar nueva dirección</h4>
+              <button className="text-gray-500 hover:text-gray-700 text-2xl" onClick={() => setShowAddAddress(false)}>&times;</button>
+            </div>
+            <div className="overflow-y-auto max-h-[calc(90vh-80px)]">
+              <AddressManager onSelect={addr => {
+                setShowAddAddress(false);
+                if (addr) {
+                  setFormData(prev => ({
+                    ...prev,
+                    negocio: addr.nombre_comercial || addr.nombre || '',
+                    contacto: addr.contacto || '',
+                    telefono: addr.telefono_negocio || addr.telefono || '',
+                    tipo: (addr.tipo_negocio as BusinessForm['tipo']) || 'Almacén',
+                    comuna: addr.comuna || '',
+                    direccion: addr.direccion || '',
+                  }));
+                }
+              }} onlyAdd />
+            </div>
           </div>
         </div>
       )}
 
       {/* Modal para seleccionar y administrar direcciones */}
       {showListAddress && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
-          <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-md relative animate-fade-in">
-            <button className="absolute top-2 right-2 text-gray-500 hover:text-gray-700 text-2xl" onClick={() => setShowListAddress(false)}>&times;</button>
-            <h4 className="text-lg font-bold mb-4">Seleccionar o administrar direcciones</h4>
-            <AddressManager onSelect={addr => {
-              setShowListAddress(false);
-              if (addr) {
-                setFormData(prev => ({
-                  ...prev,
-                  negocio: addr.negocio || '',
-                  contacto: addr.contacto || '',
-                  telefono: addr.telefono || '',
-                  tipo: (['Almacén', 'Minimarket', 'Pastelería', 'Cafetería', 'Otro'].includes(addr.tipo)
-                    ? (addr.tipo as BusinessForm['tipo'])
-                    : 'Almacén'),
-                  comuna: addr.comuna || '',
-                  direccion: addr.direccion || '',
-                }));
-              }
-            }} />
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40 p-4">
+          <div className="bg-white rounded-lg shadow-lg w-full max-w-4xl max-h-[90vh] overflow-hidden relative animate-fade-in">
+            <div className="flex items-center justify-between p-6 border-b border-gray-200">
+              <h4 className="text-lg font-bold">Seleccionar o administrar direcciones</h4>
+              <button className="text-gray-500 hover:text-gray-700 text-2xl" onClick={() => setShowListAddress(false)}>&times;</button>
+            </div>
+            <div className="overflow-y-auto max-h-[calc(90vh-80px)] p-6">
+              <AddressManager onSelect={addr => {
+                setShowListAddress(false);
+                if (addr) {
+                  setFormData(prev => ({
+                    ...prev,
+                    negocio: addr.nombre_comercial || addr.nombre || '',
+                    contacto: addr.contacto || '',
+                    telefono: addr.telefono_negocio || addr.telefono || '',
+                    tipo: (addr.tipo_negocio as BusinessForm['tipo']) || 'Almacén',
+                    comuna: addr.comuna || '',
+                    direccion: addr.direccion || '',
+                  }));
+                }
+              }} />
+            </div>
           </div>
         </div>
       )}

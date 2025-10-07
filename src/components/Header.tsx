@@ -89,12 +89,12 @@ const Header = () => {
               </Link>
             </li>
             <li>
-              <button
-                onClick={() => scrollToSection('cotizar')}
-                className="bg-primary-600 hover:bg-primary-700 text-white px-3 py-2 lg:px-4 rounded-lg transition-colors text-sm lg:text-base"
+              <Link
+                href="/mayorista"
+                className="bg-secondary-600 hover:bg-secondary-700 text-white px-3 py-2 lg:px-4 rounded-lg transition-colors text-sm lg:text-base"
               >
-                Hacer Pedido
-              </button>
+                Acceso Mayorista
+              </Link>
             </li>
             <li>
               {isAuthenticated && user ? (

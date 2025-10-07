@@ -6,9 +6,8 @@ import { useProfile } from '../hooks/useProfile';
 import { useAddresses } from '../hooks/useAddresses';
 import PersonalInfoForm from '@/components/PersonalInfoForm';
 import AddressManager from './AddressManager';
-import SocioDistribuidorForm from './SocioDistribuidorForm';
 
-type TabType = 'personal' | 'direcciones' | 'negocio';
+type TabType = 'personal' | 'direcciones';
 
 export default function ProfileManager() {
   const { user } = useAuthContext();
@@ -41,8 +40,7 @@ export default function ProfileManager() {
 
   const tabs = [
     { id: 'personal' as TabType, label: 'Información Personal', icon: '👤' },
-    { id: 'direcciones' as TabType, label: 'Direcciones', icon: '📍' },
-    { id: 'negocio' as TabType, label: 'Mi Negocio', icon: '🏪' }
+    { id: 'direcciones' as TabType, label: 'Direcciones', icon: '📍' }
   ];
 
   return (
@@ -53,7 +51,7 @@ export default function ProfileManager() {
           <div className="p-6">
             <h1 className="text-2xl font-bold text-gray-900">Mi Perfil</h1>
             <p className="text-gray-600 mt-2">
-              Gestiona tu información personal y direcciones de entrega
+              Gestiona tu información personal y direcciones. Puedes configurar direcciones como puntos de venta público desde la sección Direcciones.
             </p>
           </div>
           
@@ -106,7 +104,7 @@ export default function ProfileManager() {
                   Direcciones de Entrega
                 </h2>
                 <p className="text-gray-600 text-sm">
-                  Administra las direcciones donde quieres recibir tus pedidos
+                  Administra las direcciones donde quieres recibir tus pedidos. También puedes configurar una dirección como punto de venta público para aparecer en nuestro mapa.
                 </p>
                 {addresses.length > 0 && (
                   <div className="mt-2 text-sm text-gray-500">
@@ -119,31 +117,7 @@ export default function ProfileManager() {
             </div>
           )}
 
-          {activeTab === 'negocio' && (
-            <div>
-              <div className="mb-6">
-                <h2 className="text-lg font-semibold text-gray-900 mb-2">
-                  Configuración de Socio Distribuidor
-                </h2>
-                <p className="text-gray-600 text-sm">
-                  Conviértete en un socio distribuidor y permite que clientes finales te encuentren
-                </p>
-                {profile?.es_punto_venta_publico && (
-                  <div className="mt-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                    ✓ Activo como Socio Distribuidor
-                  </div>
-                )}
-              </div>
-              
-              <SocioDistribuidorForm
-                profile={profile}
-                loading={profileLoading}
-                error={profileError}
-                onSave={saveProfile}
-                userEmail={user.email || ''}
-              />
-            </div>
-          )}
+
         </div>
 
         {/* Loading overlay */}

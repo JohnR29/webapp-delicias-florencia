@@ -72,7 +72,6 @@ const CoverageMap: React.FC<CoverageMapProps> = ({ className = '' }) => {
     // Cargar y procesar el GeoJSON
     const loadGeoData = async () => {
       try {
-        console.log('Cargando datos del mapa...');
         const response = await fetch('/comunas.geojson');
         
         if (!response.ok) {
@@ -80,14 +79,11 @@ const CoverageMap: React.FC<CoverageMapProps> = ({ className = '' }) => {
         }
         
         const data = await response.json();
-        console.log('Datos GeoJSON cargados:', data);
 
         // Filtrar solo las comunas permitidas
         const featuresPermitidas = data.features.filter((f: any) =>
           COMUNAS_PERMITIDAS.includes(f.properties.NOMBRE)
         );
-
-        console.log('Features permitidas:', featuresPermitidas.map((f: any) => f.properties.NOMBRE));
 
         if (featuresPermitidas.length === 0) {
           console.warn('No se encontraron comunas permitidas en el GeoJSON');
@@ -176,7 +172,7 @@ const CoverageMap: React.FC<CoverageMapProps> = ({ className = '' }) => {
           }
         }, 1000);
 
-        console.log('Mapa cargado exitosamente');
+
 
         // Detectar si es móvil para ajustar el tamaño del ícono
         // Guardar referencias a los círculos para interacción externa

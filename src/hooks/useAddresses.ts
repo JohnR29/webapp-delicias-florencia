@@ -5,15 +5,29 @@ export interface Address {
   id: string;
   user_id: string;
   nombre: string;
-  negocio: string;
   contacto: string;
   telefono: string;
-  tipo: string;
   comuna: string;
   direccion: string;
-  // Campos para punto de venta público
+  
+  // Campos para punto de venta público (simplificado)
   es_punto_venta_publico?: boolean;
-  visible_en_mapa?: boolean;
+  
+  // Información adicional del negocio (cuando es punto de venta)
+  nombre_comercial?: string;
+  telefono_negocio?: string;
+  tipo_negocio?: 'Almacén' | 'Minimarket' | 'Pastelería' | 'Cafetería' | 'Otro'; // Tipo de negocio
+  horario_atencion?: string;
+  descripcion_negocio?: string;
+  email_negocio?: string;
+  whatsapp_negocio?: string;
+  
+  // Campos de aprobación (para puntos de venta públicos)
+  estado_aprobacion?: 'pendiente' | 'aprobado' | 'rechazado';
+  aprobado_por?: string; // UUID del admin, mantenemos como string en el frontend
+  fecha_aprobacion?: string;
+  comentarios_admin?: string;
+  
   created_at: string;
 }
 

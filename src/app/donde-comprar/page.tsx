@@ -1,10 +1,9 @@
 "use client";
 import { useState } from 'react';
 import Link from 'next/link';
-import SociosLista from '@/components/SociosLista';
 import SociosFilters from '@/components/SociosFilters';
-import SugerenciasSocios from '@/components/SugerenciasSocios';
-import MapaDistribuidores from '@/components/MapaDistribuidores';
+import SugerenciasSociosFree from '@/components/SugerenciasSociosFree';
+import MapaDistribuidoresIndividual from '@/components/MapaDistribuidoresIndividual';
 import { useSociosDistribuidores } from '@/hooks/useSociosDistribuidores';
 
 export default function DondeComprarPage() {
@@ -20,7 +19,7 @@ export default function DondeComprarPage() {
     fetchSocios
   } = useSociosDistribuidores();
 
-  const [vistaActual, setVistaActual] = useState<'lista' | 'mapa'>('lista');
+
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -122,7 +121,7 @@ export default function DondeComprarPage() {
       </div>
 
       {/* Sugerencias inteligentes basadas en ubicación */}
-      <SugerenciasSocios />
+      <SugerenciasSociosFree />
 
       {/* Contenido principal */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -140,65 +139,23 @@ export default function DondeComprarPage() {
 
           {/* Contenido principal */}
           <div className="flex-1">
-            {/* Controles de vista */}
-            <div className="flex items-center justify-between mb-6">
+            {/* Header de la sección */}
+            <div className="mb-6">
               <h2 className="text-xl font-semibold text-gray-900">
-                Puntos de venta disponibles
+                🗺️ Mapa de puntos de venta
                 {socios.length > 0 && (
                   <span className="ml-2 text-sm font-normal text-gray-500">
                     ({socios.length} {socios.length === 1 ? 'resultado' : 'resultados'})
                   </span>
                 )}
               </h2>
-
-              {/* Selector de vista */}
-              <div className="flex rounded-lg border border-gray-300 overflow-hidden">
-                <button
-                  onClick={() => setVistaActual('lista')}
-                  className={`px-4 py-2 text-sm font-medium transition-colors ${
-                    vistaActual === 'lista'
-                      ? 'bg-blue-600 text-white'
-                      : 'bg-white text-gray-700 hover:bg-gray-50'
-                  }`}
-                >
-                  📋 Lista
-                </button>
-                <button
-                  onClick={() => setVistaActual('mapa')}
-                  className={`px-4 py-2 text-sm font-medium transition-colors border-l border-gray-300 ${
-                    vistaActual === 'mapa'
-                      ? 'bg-blue-600 text-white'
-                      : 'bg-white text-gray-700 hover:bg-gray-50'
-                  }`}
-                >
-                  🗺️ Mapa
-                </button>
-              </div>
+              <p className="text-gray-600 mt-1">
+                Encuentra el punto de venta más cercano a tu ubicación
+              </p>
             </div>
 
-            {/* Contenido según vista seleccionada */}
-            {vistaActual === 'lista' ? (
-              <SociosLista
-                socios={socios}
-                loading={loading}
-                error={error}
-              />
-            ) : (
-              <div className="bg-white rounded-lg border border-gray-200 p-8 text-center">
-                <div className="text-gray-400 text-4xl mb-4">🗺️</div>
-                <h3 className="text-lg font-medium text-gray-900 mb-2">Vista de mapa próximamente</h3>
-                <p className="text-gray-600">
-                  Estamos trabajando en una vista de mapa interactivo para que puedas ver 
-                  la ubicación exacta de cada punto de venta.
-                </p>
-                <button 
-                  onClick={() => setVistaActual('lista')}
-                  className="mt-4 text-blue-600 hover:text-blue-800 font-medium"
-                >
-                  Ver en lista →
-                </button>
-              </div>
-            )}
+            {/* Vista de mapa única */}
+            <MapaDistribuidoresIndividual socios={socios} />
           </div>
         </div>
       </div>

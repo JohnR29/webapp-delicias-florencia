@@ -142,7 +142,7 @@ export function useGeolocation() {
           setPermission(result.state);
         });
       } catch (error) {
-        console.warn('No se pudo verificar el permiso de geolocalización');
+        // No se pudo verificar el permiso de geolocalización
       }
     }
   };
