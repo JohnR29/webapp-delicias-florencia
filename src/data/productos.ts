@@ -1,6 +1,6 @@
-import { Product } from '@/lib/types';
-
-// ==========================
+import { Product } from '@/lib/typ  },
+  
+  // Formato 9oz=========================
 // Datos de productos migrados del script.js original
 // ==========================
 
@@ -33,15 +33,6 @@ export const saboresData: Product[] = [
     imagen: '/images/oreo.jpg',
     descripcion: 'Irresistible combinación de galletas Oreo con crema y capas de chocolate. Favorito de niños y jóvenes'
   },
-  //{
-  //  key: 'pina-crema-12oz',
-  //  nombre: 'Piña Crema (12oz)',
-  //  formato: '12oz',
-  //  precio: 1500,
-  //  ingredientes: ['Bizcocho Blanco', 'Piña', 'Crema', 'Manjar'],
-  //  imagen: '/images/pina-crema.jpg',
-  //  descripcion: 'Deliciosa torta de bizcocho blanco, piña, crema y manjar. Sabor tropical popular'
-  //},
   
   // Formato 9oz
   {
@@ -70,16 +61,7 @@ export const saboresData: Product[] = [
     ingredientes: ['Bizcocho Chocolate', 'Crema', 'Galleta Oreo', 'Manjar'],
     imagen: '/images/oreo.jpg',
     descripcion: 'Irresistible combinación de galletas Oreo con crema y capas de chocolate. Favorito de niños y jóvenes'
-  }//,
-  //{
-  //  key: 'pina-crema-9oz',
-  //  nombre: 'Piña Crema (9oz)',
-  //  formato: '9oz',
-  //  precio: 1250,
-  //  ingredientes: ['Bizcocho Blanco', 'Piña', 'Crema', 'Manjar'],
-  //  imagen: '/images/pina-crema.jpg',
-  //  descripcion: 'Deliciosa torta de bizcocho blanco, piña, crema y manjar. Sabor tropical popular'
-  //}
+  }
 ];
 
 // Productos únicos para mostrar en el catálogo (sin duplicar por formato)
@@ -104,12 +86,5 @@ export const saboresUnicos = [
     ingredientes: ['Bizcocho Chocolate', 'Crema de oreo', 'Manjar', 'Galleta Oreo'],
     imagen: '/images/oreo.jpg',
     descripcion: 'Irresistible combinación de galletas Oreo con crema y capas de chocolate. Favorito de niños y jóvenes'
-  }//,
-  //{
-  //  key: 'pina-crema',
-  //  nombre: 'Piña Crema',
-  //  ingredientes: ['Bizcocho Blanco', 'Piña', 'Crema', 'Manjar'],
-  //  imagen: '/images/pina-crema.jpg',
-  //  descripcion: 'Deliciosa torta de bizcocho blanco, piña, crema y manjar. Sabor tropical popular'
-  //}
+  }
 ];
