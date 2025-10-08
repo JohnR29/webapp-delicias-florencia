@@ -22,15 +22,39 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     let ignore = false;
-    supabase.auth.getSession().then(({ data }) => {
+    
+    // Obtener sesión inicial
+    supabase.auth.getSession().then(({ data, error }) => {
       if (!ignore) {
-        setUser(data.session?.user ?? null);
+        if (error) {
+          console.error('Error getting session:', error);
+          setUser(null);
+        } else {
+          setUser(data.session?.user ?? null);
+        }
         setLoading(false);
       }
     });
-    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null);
+
+    // Escuchar cambios en el estado de autenticación
+    const { data: listener } = supabase.auth.onAuthStateChange((event, session) => {
+      console.log('Auth state change:', event, session?.user?.email);
+      
+      if (event === 'SIGNED_OUT') {
+        setUser(null);
+        // Limpiar almacenamiento local cuando se cierre sesión
+        if (typeof window !== 'undefined') {
+          localStorage.clear();
+          sessionStorage.clear();
+        }
+      } else if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+        setUser(session?.user ?? null);
+      } else {
+        setUser(session?.user ?? null);
+      }
+      setLoading(false);
     });
+
     return () => {
       ignore = true;
       listener.subscription.unsubscribe();
@@ -62,10 +86,51 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
 
   const logout = async () => {
+    console.log('🚪 Iniciando logout...');
     setLoading(true);
-    await supabase.auth.signOut();
-    setUser(null);
-    setLoading(false);
+    try {
+      // Cerrar sesión en Supabase
+      console.log('📝 Cerrando sesión en Supabase...');
+      const { error } = await supabase.auth.signOut();
+      if (error) {
+        console.error('❌ Error signing out:', error);
+        throw error;
+      }
+      console.log('✅ Sesión cerrada en Supabase');
+      
+      // Limpiar el estado local
+      console.log('🧹 Limpiando estado local...');
+      setUser(null);
+      
+      // Limpiar cualquier información almacenada localmente
+      if (typeof window !== 'undefined') {
+        console.log('🗑️ Limpiando localStorage y sessionStorage...');
+        localStorage.clear();
+        sessionStorage.clear();
+      }
+      
+      console.log('✅ Logout completado exitosamente');
+      
+      // Pequeño delay antes de redirigir para asegurar que todo se limpie
+      setTimeout(() => {
+        if (typeof window !== 'undefined') {
+          console.log('🔄 Redirigiendo a página principal...');
+          window.location.href = '/';
+        }
+      }, 100);
+      
+    } catch (error) {
+      console.error('❌ Error during logout:', error);
+      // En caso de error, forzar limpieza manual
+      setUser(null);
+      if (typeof window !== 'undefined') {
+        localStorage.clear();
+        sessionStorage.clear();
+        window.location.href = '/';
+      }
+    } finally {
+      setLoading(false);
+    }
   };
 
   const requestPasswordReset = async (email: string) => {

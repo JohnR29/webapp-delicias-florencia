@@ -140,7 +140,7 @@ export default function MayoristaPage() {
               <p className="text-lg text-gray-600">Elige los sabores y cantidades para tu pedido</p>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-              {saboresUnicos.map((sabor) => (
+              {saboresUnicos.map((sabor, index) => (
                 <ProductCard
                   key={sabor.key}
                   sabor={sabor}
@@ -148,6 +148,7 @@ export default function MayoristaPage() {
                   total12oz={cartState.total12oz}
                   total9oz={cartState.total9oz}
                   onUpdateQuantity={updateQuantity}
+                  priority={index <= 2}
                 />
               ))}
             </div>

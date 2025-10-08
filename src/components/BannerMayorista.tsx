@@ -13,6 +13,7 @@ export default function BannerMayorista() {
           fill
           className="block sm:hidden w-full h-full object-cover object-top"
           priority
+          sizes="(max-width: 640px) 100vw, 1px"
         />
         {/* Imagen para tablet y desktop - vista más profesional */}
         <Image
@@ -21,6 +22,7 @@ export default function BannerMayorista() {
           fill
           className="hidden sm:block w-full h-full object-cover object-center"
           priority
+          sizes="(min-width: 640px) 100vw, 1px"
         />
         {/* Overlay con gradiente mejorado */}
         <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/50 to-black/70" />
@@ -37,9 +39,11 @@ export default function BannerMayorista() {
               alt="Logo Delicias Florencia"
               width={120}
               height={120}
-              className="w-20 h-20 sm:w-24 sm:h-24 md:w-32 md:h-32 lg:w-40 lg:h-40 drop-shadow-2xl"
+              className="drop-shadow-2xl"
               style={{ 
-                filter: 'brightness(0) saturate(100%) invert(1)' 
+                filter: 'brightness(0) saturate(100%) invert(1)',
+                width: 'clamp(80px, 8vw, 160px)',
+                height: 'auto'
               }}
               priority
             />

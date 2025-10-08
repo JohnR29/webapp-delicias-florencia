@@ -541,9 +541,9 @@ const MapaDistribuidoresIndividual: React.FC<MapaDistribuidoresIndividualProps> 
                 Más cercanos a ti
               </h3>
               <div className="space-y-3">
-                {sociosCercanos.map((socio, index) => (
+                {sociosCercanos.map((socio) => (
                   <PuntoVentaCard
-                    key={`mapa-socio-${socio.user_id}-${index}`}
+                    key={socio.user_id}
                     socio={socio}
                     onVerDetalles={(socio) => setSocioSeleccionado(socio)}
                     compact={true}

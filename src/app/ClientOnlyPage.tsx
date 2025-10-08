@@ -35,12 +35,14 @@ export default function ClientOnlyPage() {
                 key={sabor.nombre}
                 className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-xl transition-shadow duration-300 border border-gray-100"
               >
-                <div className="aspect-w-16 aspect-h-12 bg-gray-100 relative">
+                <div className="bg-gray-100 relative h-48 overflow-hidden flex items-center justify-center">
                   <Image 
                     src={sabor.imagen} 
                     alt={sabor.nombre}
                     fill
-                    className="w-full h-48 object-cover"
+                    className="object-scale-down"
+                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                    priority={index <= 2}
                   />
                 </div>
                 <div className="p-6">

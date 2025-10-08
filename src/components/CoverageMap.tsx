@@ -44,6 +44,12 @@ const CoverageMap: React.FC<CoverageMapProps> = ({ className = '' }) => {
 
   useEffect(() => {
     if (typeof window === 'undefined' || !mapRef.current || mapInstanceRef.current) return;
+    
+    // Verificar que el elemento del DOM esté completamente disponible
+    if (!mapRef.current.parentElement || !document.body.contains(mapRef.current)) {
+      console.warn('Elemento del mapa no está disponible en el DOM');
+      return;
+    }
 
     // Fix para los iconos de marcadores de Leaflet
     delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -213,24 +219,32 @@ const CoverageMap: React.FC<CoverageMapProps> = ({ className = '' }) => {
       } catch (error) {
         console.error('Error cargando datos del mapa:', error);
         // Mostrar fallback en caso de error SOLO en cliente
-        if (typeof window !== 'undefined' && mapRef.current) {
-          const fallbackDiv = document.createElement('div');
-          fallbackDiv.className = 'flex items-center justify-center h-full text-gray-500';
-          fallbackDiv.innerHTML = `
-            <div class="text-center">
-              <div class="text-2xl mb-2">🗺️</div>
-              <p>Error cargando el mapa</p>
-            </div>
-          `;
-          mapRef.current.appendChild(fallbackDiv);
+        if (typeof window !== 'undefined' && mapRef.current && typeof mapRef.current.appendChild === 'function') {
+          try {
+            const fallbackDiv = document.createElement('div');
+            fallbackDiv.className = 'flex items-center justify-center h-full text-gray-500';
+            fallbackDiv.innerHTML = `
+              <div class="text-center">
+                <div class="text-2xl mb-2">🗺️</div>
+                <p>Error cargando el mapa</p>
+              </div>
+            `;
+            mapRef.current.appendChild(fallbackDiv);
+          } catch (appendError) {
+            console.error('Error mostrando fallback del mapa:', appendError);
+          }
         }
       }
     };
 
-    loadGeoData();
+    // Pequeño delay para asegurar que el DOM esté completamente estable
+    const timeoutId = setTimeout(() => {
+      loadGeoData();
+    }, 100);
 
     // Cleanup
     return () => {
+      clearTimeout(timeoutId);
       if (mapInstanceRef.current) {
         mapInstanceRef.current.remove();
         mapInstanceRef.current = null;
