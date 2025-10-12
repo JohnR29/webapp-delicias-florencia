@@ -89,18 +89,6 @@ export default function StructuredData() {
             "priceCurrency": "CLP", 
             "availability": "https://schema.org/InStock"
           }
-        },
-        {
-          "@type": "Product",
-          "name": "Torta Piña Crema 12oz",
-          "description": "Deliciosa torta de bizcocho blanco, piña, crema y manjar",
-          "image": "https://deliciasflorencia.cl/images/pina-crema.jpg",
-          "offers": {
-            "@type": "Offer",
-            "price": "1500-1700",
-            "priceCurrency": "CLP",
-            "availability": "https://schema.org/InStock"
-          }
         }
       ]
     }

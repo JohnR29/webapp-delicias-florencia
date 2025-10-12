@@ -34,8 +34,9 @@ const HeaderPublico = () => {
               src="/images/logo-delicias-florencia.png"
               alt="Delicias Florencia"
               width={120}
-              height={40}
-              className="h-10 w-auto flex-shrink-0"
+              height={120}
+              className="h-10 flex-shrink-0"
+              style={{ width: 'auto' }}
               priority
             />
             <span className="font-dancing-script text-lg sm:text-2xl md:text-3xl lg:text-4xl font-extrabold bg-gradient-to-r from-primary-600 to-secondary-600 bg-clip-text text-transparent drop-shadow-md whitespace-nowrap">

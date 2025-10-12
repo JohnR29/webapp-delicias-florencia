@@ -81,6 +81,61 @@ export default function MayoristaPage() {
           </div>
         </section>
 
+        {/* Call to Action - Registro de Punto de Venta */}
+        <section className="py-8 bg-gradient-to-r from-orange-50 to-yellow-50">
+          <div className="container mx-auto px-4">
+            <div className="max-w-4xl mx-auto">
+              <div className="bg-white rounded-2xl shadow-lg p-8 border-2 border-orange-200">
+                <div className="text-center mb-6">
+                  <div className="w-16 h-16 bg-gradient-to-r from-orange-400 to-orange-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <span className="text-2xl text-white">🏪</span>
+                  </div>
+                  <h3 className="text-2xl font-bold text-gray-900 mb-2">
+                    ¿Ya tienes tu negocio listo?
+                  </h3>
+                  <p className="text-gray-600 max-w-2xl mx-auto">
+                    Registra tu punto de venta para aparecer en nuestro mapa y que los clientes puedan encontrarte fácilmente.
+                    Solo toma unos minutos y el proceso de aprobación es rápido.
+                  </p>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                  <div className="text-center p-4 bg-green-50 rounded-lg">
+                    <div className="text-2xl mb-2">⚡</div>
+                    <h4 className="font-semibold text-gray-900 mb-1">Proceso rápido</h4>
+                    <p className="text-sm text-gray-600">Solo 5 minutos</p>
+                  </div>
+                  
+                  <div className="text-center p-4 bg-blue-50 rounded-lg">  
+                    <div className="text-2xl mb-2">📍</div>
+                    <h4 className="font-semibold text-gray-900 mb-1">Visibilidad</h4>
+                    <p className="text-sm text-gray-600">Aparece en el mapa</p>
+                  </div>
+                  
+                  <div className="text-center p-4 bg-purple-50 rounded-lg">
+                    <div className="text-2xl mb-2">🚀</div>
+                    <h4 className="font-semibold text-gray-900 mb-1">Aprobación</h4>
+                    <p className="text-sm text-gray-600">24-48 horas</p>
+                  </div>
+                </div>
+                
+                <div className="text-center">
+                  <a
+                    href="/registro-punto-venta"
+                    className="inline-flex items-center px-8 py-4 bg-gradient-to-r from-orange-500 to-orange-600 text-white font-bold rounded-lg hover:from-orange-600 hover:to-orange-700 transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl text-lg"
+                  >
+                    <span className="mr-2">🏪</span>
+                    Registrar mi punto de venta
+                  </a>
+                  <p className="text-xs text-gray-500 mt-2">
+                    Sin costos • Proceso simple • Aprobación rápida
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
         {/* Coverage Information */}
         <section id="cobertura" className="py-8 bg-white">
           <div className="container mx-auto px-4">
@@ -140,7 +195,7 @@ export default function MayoristaPage() {
               <p className="text-lg text-gray-600">Elige los sabores y cantidades para tu pedido</p>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-              {saboresUnicos.map((sabor) => (
+              {saboresUnicos.map((sabor, index) => (
                 <ProductCard
                   key={sabor.key}
                   sabor={sabor}
@@ -148,6 +203,7 @@ export default function MayoristaPage() {
                   total12oz={cartState.total12oz}
                   total9oz={cartState.total9oz}
                   onUpdateQuantity={updateQuantity}
+                  priority={index <= 2}
                 />
               ))}
             </div>

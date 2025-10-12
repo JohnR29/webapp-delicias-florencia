@@ -3,7 +3,8 @@
 import ClientHeaderPublico from '@/components/ClientHeaderPublico';
 import Banner from '@/components/Banner';
 import { saboresUnicos } from '@/data/productos';
-import MapaDistribuidoresIndividual from '@/components/MapaDistribuidoresIndividual';
+import MapaDistribuidoresGoogle from '@/components/MapaDistribuidoresGoogle';
+import CallToActionSocios from '@/components/CallToActionSocios';
 import Image from 'next/image';
 import { useSociosDistribuidores } from '@/hooks/useSociosDistribuidores';
 
@@ -35,12 +36,14 @@ export default function ClientOnlyPage() {
                 key={sabor.nombre}
                 className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-xl transition-shadow duration-300 border border-gray-100"
               >
-                <div className="aspect-w-16 aspect-h-12 bg-gray-100 relative">
+                <div className="bg-gray-100 relative h-48 overflow-hidden flex items-center justify-center">
                   <Image 
                     src={sabor.imagen} 
                     alt={sabor.nombre}
                     fill
-                    className="w-full h-48 object-cover"
+                    className="object-scale-down"
+                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                    priority={index <= 2}
                   />
                 </div>
                 <div className="p-6">
@@ -105,7 +108,7 @@ export default function ClientOnlyPage() {
                   <div className="text-red-500">Error al cargar los puntos de venta</div>
                 </div>
               ) : (
-                <MapaDistribuidoresIndividual socios={socios} />
+                <MapaDistribuidoresGoogle socios={socios} />
               )}
             </div>
           </div>
@@ -212,6 +215,13 @@ export default function ClientOnlyPage() {
               </div>
             </div>
           </div>
+        </div>
+      </section>
+
+      {/* Call to Action para nuevos socios */}
+      <section className="py-12 bg-gradient-to-br from-orange-50 to-yellow-50">
+        <div className="container mx-auto px-4">
+          <CallToActionSocios />
         </div>
       </section>
 

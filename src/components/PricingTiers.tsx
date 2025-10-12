@@ -79,9 +79,10 @@ export default function PricingTiers({ tierActual, unidadesHastaSiguienteTier }:
               <Image
                 src="/images/vaso-12oz.png"
                 alt="Formato 12oz"
-                width={120}
-                height={160}
-                className="h-[160px] w-auto drop-shadow-lg"
+                width={150}
+                height={200}
+                className="drop-shadow-lg"
+                style={{ height: '160px', width: 'auto' }}
                 priority={false}
               />
             </div>
@@ -89,9 +90,10 @@ export default function PricingTiers({ tierActual, unidadesHastaSiguienteTier }:
               <Image
                 src="/images/vaso-9oz.png"
                 alt="Formato 9oz"
-                width={120}
-                height={160}
-                className="h-[160px] w-auto drop-shadow-lg"
+                width={150}
+                height={200}
+                className="drop-shadow-lg"
+                style={{ height: '160px', width: 'auto' }}
                 priority={false}
               />
             </div>

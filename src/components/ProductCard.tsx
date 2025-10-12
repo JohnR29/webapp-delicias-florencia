@@ -17,6 +17,7 @@ interface ProductCardProps {
   total12oz: number;
   total9oz: number;
   onUpdateQuantity: (productKey: string, cantidad: number) => void;
+  priority?: boolean;
 }
 
 export default function ProductCard({ 
@@ -24,7 +25,8 @@ export default function ProductCard({
   items, 
   total12oz, 
   total9oz, 
-  onUpdateQuantity 
+  onUpdateQuantity,
+  priority = false
 }: ProductCardProps) {
 
   const [imageError, setImageError] = useState(false);
@@ -101,6 +103,7 @@ export default function ProductCard({
                 className="object-cover"
                 onError={() => setImageError(true)}
                 sizes="128px"
+                priority={priority}
               />
             ) : (
               <div className="w-full h-full bg-gradient-to-br from-primary-100 to-secondary-100 flex items-center justify-center">

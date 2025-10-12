@@ -14,6 +14,14 @@ const Header = () => {
   const [authModalMode, setAuthModalMode] = useState<'login' | 'register'>('login');
   const { user, isAuthenticated, logout } = useAuth();
 
+  // Cerrar modal y menú cuando cambie el estado de autenticación
+  useEffect(() => {
+    if (!isAuthenticated) {
+      setShowAuthModal(false);
+      setIsMenuOpen(false);
+    }
+  }, [isAuthenticated]);
+
   const scrollToSection = (sectionId: string) => {
     if (typeof window !== 'undefined') {
       const element = document.getElementById(sectionId);
@@ -34,8 +42,9 @@ const Header = () => {
               src="/images/logo-delicias-florencia.png"
               alt="Delicias Florencia"
               width={120}
-              height={40}
-              className="h-10 w-auto flex-shrink-0"
+              height={120}
+              className="h-10 flex-shrink-0"
+              style={{ width: 'auto' }}
               priority
             />
             <span className="font-dancing-script text-lg sm:text-2xl md:text-3xl lg:text-4xl font-extrabold bg-gradient-to-r from-primary-600 to-secondary-600 bg-clip-text text-transparent drop-shadow-md whitespace-nowrap">
@@ -115,7 +124,15 @@ const Header = () => {
                     </a>
                   )}
                   <button
-                    onClick={logout}
+                    onClick={async () => {
+                      try {
+                        await logout();
+                      } catch (error) {
+                        console.error('Error during logout:', error);
+                        // Forzar actualización de página si hay error
+                        window.location.reload();
+                      }
+                    }}
                     className="text-xs lg:text-sm text-gray-500 hover:text-gray-700 underline"
                   >
                     Salir
@@ -223,9 +240,16 @@ const Header = () => {
                   )}
                   
                   <button
-                    onClick={() => {
-                      logout();
-                      setIsMenuOpen(false);
+                    onClick={async () => {
+                      try {
+                        await logout();
+                        setIsMenuOpen(false);
+                      } catch (error) {
+                        console.error('Error during logout:', error);
+                        setIsMenuOpen(false);
+                        // Forzar actualización de página si hay error
+                        window.location.reload();
+                      }
                     }}
                     className="w-full text-left text-sm bg-red-50 text-red-600 hover:bg-red-100 hover:text-red-700 px-3 py-2 rounded-lg transition-colors border border-red-200 mt-2"
                   >
