@@ -1,8 +1,6 @@
-import { Product } from '@/lib/typ  },
-  
-  // Formato 9oz=========================
+import { Product } from '@/lib/types';
 // Datos de productos migrados del script.js original
-// ==========================
+// Estructura limpia separando sabores por formato
 
 export const saboresData: Product[] = [
   // Formato 12oz

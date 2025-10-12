@@ -38,7 +38,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     // Escuchar cambios en el estado de autenticación
     const { data: listener } = supabase.auth.onAuthStateChange((event, session) => {
-      console.log('Auth state change:', event, session?.user?.email);
+
       
       if (event === 'SIGNED_OUT') {
         setUser(null);
@@ -86,35 +86,35 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
 
   const logout = async () => {
-    console.log('🚪 Iniciando logout...');
+
     setLoading(true);
     try {
       // Cerrar sesión en Supabase
-      console.log('📝 Cerrando sesión en Supabase...');
+
       const { error } = await supabase.auth.signOut();
       if (error) {
         console.error('❌ Error signing out:', error);
         throw error;
       }
-      console.log('✅ Sesión cerrada en Supabase');
+
       
       // Limpiar el estado local
-      console.log('🧹 Limpiando estado local...');
+
       setUser(null);
       
       // Limpiar cualquier información almacenada localmente
       if (typeof window !== 'undefined') {
-        console.log('🗑️ Limpiando localStorage y sessionStorage...');
+
         localStorage.clear();
         sessionStorage.clear();
       }
       
-      console.log('✅ Logout completado exitosamente');
+
       
       // Pequeño delay antes de redirigir para asegurar que todo se limpie
       setTimeout(() => {
         if (typeof window !== 'undefined') {
-          console.log('🔄 Redirigiendo a página principal...');
+
           window.location.href = '/';
         }
       }, 100);

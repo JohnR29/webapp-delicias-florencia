@@ -3,7 +3,8 @@
 import ClientHeaderPublico from '@/components/ClientHeaderPublico';
 import Banner from '@/components/Banner';
 import { saboresUnicos } from '@/data/productos';
-import MapaDistribuidoresIndividual from '@/components/MapaDistribuidoresIndividual';
+import MapaDistribuidoresGoogle from '@/components/MapaDistribuidoresGoogle';
+import CallToActionSocios from '@/components/CallToActionSocios';
 import Image from 'next/image';
 import { useSociosDistribuidores } from '@/hooks/useSociosDistribuidores';
 
@@ -107,7 +108,7 @@ export default function ClientOnlyPage() {
                   <div className="text-red-500">Error al cargar los puntos de venta</div>
                 </div>
               ) : (
-                <MapaDistribuidoresIndividual socios={socios} />
+                <MapaDistribuidoresGoogle socios={socios} />
               )}
             </div>
           </div>
@@ -214,6 +215,13 @@ export default function ClientOnlyPage() {
               </div>
             </div>
           </div>
+        </div>
+      </section>
+
+      {/* Call to Action para nuevos socios */}
+      <section className="py-12 bg-gradient-to-br from-orange-50 to-yellow-50">
+        <div className="container mx-auto px-4">
+          <CallToActionSocios />
         </div>
       </section>
 

@@ -9,7 +9,7 @@ export default function Banner() {
       <div className="absolute inset-0">
         {/* Imagen para móvil - enfoque en la torta */}
         <Image
-          src="/images/tres-leches.jpg"
+          src="/images/torta1.png"
           alt="Tortas artesanales Delicias Florencia en vaso"
           fill
           className="block sm:hidden w-full h-full object-cover object-top"
@@ -18,7 +18,7 @@ export default function Banner() {
         />
         {/* Imagen para tablet y desktop - vista más amplia */}
         <Image
-          src="/images/selva-negra.jpg"
+          src="/images/torta1.png"
           alt="Tortas artesanales Delicias Florencia en vaso"
           fill
           className="hidden sm:block w-full h-full object-cover object-center"

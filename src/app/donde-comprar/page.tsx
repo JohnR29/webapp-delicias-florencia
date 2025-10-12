@@ -3,7 +3,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import SociosFilters from '@/components/SociosFilters';
 import SugerenciasSociosFree from '@/components/SugerenciasSociosFree';
-import MapaDistribuidoresIndividual from '@/components/MapaDistribuidoresIndividual';
+import MapaDistribuidoresGoogle from '@/components/MapaDistribuidoresGoogle';
 import { useSociosDistribuidores } from '@/hooks/useSociosDistribuidores';
 
 export default function DondeComprarPage() {
@@ -155,7 +155,7 @@ export default function DondeComprarPage() {
             </div>
 
             {/* Vista de mapa única */}
-            <MapaDistribuidoresIndividual socios={socios} />
+            <MapaDistribuidoresGoogle socios={socios} />
           </div>
         </div>
       </div>
@@ -171,12 +171,22 @@ export default function DondeComprarPage() {
               Únete a nuestra red de socios distribuidores y aumenta tus ventas ofreciendo 
               los productos de Delicias Florencia en tu local.
             </p>
-            <Link
-              href="/"
-              className="inline-flex items-center px-6 py-3 border border-blue-600 text-base font-medium rounded-md text-blue-600 bg-white hover:bg-blue-50 transition-colors"
-            >
-              Conocer más sobre distribución
-            </Link>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Link
+                href="/registro-punto-venta"
+                className="inline-flex items-center px-6 py-3 text-base font-medium rounded-md text-white bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 transition-all duration-200 transform hover:scale-105 shadow-md hover:shadow-lg"
+              >
+                <span className="mr-2">🚀</span>
+                ¡Regístrate como socio!
+              </Link>
+              <Link
+                href="/"
+                className="inline-flex items-center px-6 py-3 border border-blue-600 text-base font-medium rounded-md text-blue-600 bg-white hover:bg-blue-50 transition-colors"
+              >
+                <span className="mr-2">🛒</span>
+                Conocer más sobre distribución
+              </Link>
+            </div>
           </div>
         </div>
       </div>

@@ -16,7 +16,7 @@ export default function SociosDistribuidoresTest() {
 
   const handleTestEstadisticas = async () => {
     const stats = await getEstadisticas();
-    console.log('Estadísticas:', stats);
+
     alert(`Total socios: ${stats?.total}, Comunas: ${Object.keys(stats?.porComuna || {}).join(', ')}`);
   };
 

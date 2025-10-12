@@ -12,7 +12,8 @@ export default function RegistroPage() {
 
   useEffect(() => {
     if (isAuthenticated && user) {
-      router.push('/mayorista');
+      // Redirigir al registro de punto de venta después del registro
+      router.push('/registro-punto-venta');
     }
   }, [isAuthenticated, user, router]);
 
@@ -21,7 +22,7 @@ export default function RegistroPage() {
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-50 via-white to-secondary-50">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Redirigiendo al área mayorista...</p>
+          <p className="text-gray-600">Redirigiendo al registro de punto de venta...</p>
         </div>
       </div>
     );
@@ -40,9 +41,35 @@ export default function RegistroPage() {
             <h1 className="text-3xl font-bold text-gray-800 mb-4">
               Conviértete en Socio Distribuidor
             </h1>
-            <p className="text-gray-600 mb-6">
+            <p className="text-gray-600 mb-4">
               Únete a nuestra exclusiva red de <strong>Socios Distribuidores</strong> y transforma tu negocio con nuestras tortas artesanales
             </p>
+            
+            {/* Proceso de aprobación */}
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+              <h4 className="text-sm font-semibold text-blue-800 mb-3 flex items-center">
+                <span className="mr-2">📋</span>
+                Proceso de Registro y Aprobación
+              </h4>
+              <div className="space-y-2 text-xs text-blue-700">
+                <div className="flex items-start">
+                  <span className="flex-shrink-0 w-5 h-5 bg-blue-500 text-white rounded-full flex items-center justify-center text-xs font-bold mr-2 mt-0.5">1</span>
+                  <span><strong>Registro:</strong> Completa tus datos de contacto y ubicación del negocio</span>
+                </div>
+                <div className="flex items-start">
+                  <span className="flex-shrink-0 w-5 h-5 bg-blue-500 text-white rounded-full flex items-center justify-center text-xs font-bold mr-2 mt-0.5">2</span>
+                  <span><strong>Revisión:</strong> Nuestro equipo evaluará tu solicitud (24-48 horas)</span>
+                </div>
+                <div className="flex items-start">
+                  <span className="flex-shrink-0 w-5 h-5 bg-blue-500 text-white rounded-full flex items-center justify-center text-xs font-bold mr-2 mt-0.5">3</span>
+                  <span><strong>Aprobación:</strong> Una vez aprobado, aparecerás en nuestro mapa de puntos de venta</span>
+                </div>
+                <div className="flex items-start">
+                  <span className="flex-shrink-0 w-5 h-5 bg-blue-500 text-white rounded-full flex items-center justify-center text-xs font-bold mr-2 mt-0.5">4</span>
+                  <span><strong>Activación:</strong> Accede a precios mayoristas y la plataforma de pedidos</span>
+                </div>
+              </div>
+            </div>
             
             {/* Beneficios */}
             <div className="bg-gradient-to-r from-secondary-50 to-accent-50 p-6 rounded-lg mb-6">
