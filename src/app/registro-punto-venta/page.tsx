@@ -148,7 +148,6 @@ export default function RegistroPuntoVentaPage() {
               onClick={() => router.push('/registro')}
               className="w-full bg-gradient-to-r from-orange-500 to-orange-600 text-white font-semibold py-3 px-6 rounded-lg hover:from-orange-600 hover:to-orange-700 transition-all duration-200"
             >
-              <span className="mr-2">🚀</span>
               Crear cuenta y registrar punto de venta
             </button>
             <button
@@ -393,7 +392,6 @@ export default function RegistroPuntoVentaPage() {
                     </>
                   ) : (
                     <>
-                      <span className="mr-2">🚀</span>
                       Enviar solicitud de registro
                     </>
                   )}

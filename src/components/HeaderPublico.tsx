@@ -7,6 +7,7 @@ import { useAuth } from '@/hooks/useAuth';
 import AuthModal from '@/components/AuthModal';
 import { isAdminUser } from '@/lib/admin-config';
 import { ShoppingBag } from 'lucide-react';
+import { FaBuilding, FaTools } from 'react-icons/fa';
 
 const HeaderPublico = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -106,16 +107,18 @@ const HeaderPublico = () => {
                   <div className="py-1">
                     <Link
                       href="/mayorista"
-                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                      className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
                     >
-                      🏢 Portal Socios
+                      <FaBuilding className="mr-2" />
+                      Portal Socios
                     </Link>
                     {isAdminUser(user?.email) && (
                       <Link
                         href="/admin"
-                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                        className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
                       >
-                        🛠️ Panel Admin
+                        <FaTools className="mr-2" />
+                        Panel Admin
                       </Link>
                     )}
                     <button
@@ -157,26 +160,26 @@ const HeaderPublico = () => {
                 onClick={() => scrollToSection('inicio')}
                 className="nav-link-mobile text-gray-700 hover:text-primary-600 block px-3 py-2 text-base font-medium transition-colors w-full text-left"
               >
-                🏠 Inicio
+                Inicio
               </button>
               <button
                 onClick={() => scrollToSection('productos')}
                 className="nav-link-mobile text-gray-700 hover:text-primary-600 block px-3 py-2 text-base font-medium transition-colors w-full text-left"
               >
-                🍰 Nuestros Productos
+                Nuestros Productos
               </button>
               <button
                 onClick={() => scrollToSection('donde-comprar')}
                 className="nav-link-mobile text-gray-700 hover:text-primary-600 block px-3 py-2 text-base font-medium transition-colors w-full text-left"
               >
-                📍 ¿Dónde Comprar?
+                ¿Dónde Comprar?
               </button>
               <Link
                 href="/mayorista"
                 className="nav-link-mobile bg-secondary-600 text-white hover:bg-secondary-700 block px-3 py-2 text-base font-medium transition-colors rounded-lg mx-3 mt-4 text-center"
                 onClick={() => setIsMenuOpen(false)}
               >
-                🏢 Portal Socios
+                Portal Socios
               </Link>
               
               {/* Mobile User Menu */}

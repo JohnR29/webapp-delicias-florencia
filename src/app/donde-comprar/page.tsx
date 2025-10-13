@@ -176,7 +176,6 @@ export default function DondeComprarPage() {
                 href="/registro-punto-venta"
                 className="inline-flex items-center px-6 py-3 text-base font-medium rounded-md text-white bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 transition-all duration-200 transform hover:scale-105 shadow-md hover:shadow-lg"
               >
-                <span className="mr-2">🚀</span>
                 ¡Regístrate como socio!
               </Link>
               <Link

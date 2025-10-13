@@ -6,6 +6,25 @@ import { useGeolocationFree } from '@/hooks/useGeolocationFree';
 import { useRankingDistancia } from '@/hooks/useRankingDistancia';
 import PuntoVentaCard from './PuntoVentaCard';
 import CallToActionSocios from './CallToActionSocios';
+import { 
+  FaMapMarkerAlt, 
+  FaBullseye, 
+  FaTimesCircle, 
+  FaDollarSign, 
+  FaTruck, 
+  FaPhone, 
+  FaCheckCircle, 
+  FaRocket,
+  FaMap,
+  FaHandsHelping,
+  FaMobile,
+  FaBullhorn,
+  FaHeadset,
+  FaList,
+  FaClock
+} from 'react-icons/fa';
+import { MdGpsFixed } from 'react-icons/md';
+import { GiCakeSlice } from 'react-icons/gi';
 
 interface MapaDistribuidoresGoogleProps {
   socios: SocioDistribuidor[];
@@ -561,34 +580,52 @@ const MapaDistribuidoresGoogle: React.FC<MapaDistribuidoresGoogleProps> = ({
     }
 
     try {
-      // Crear marcador personalizado para el usuario con estilo que combine con la app
+      // SVG con React Icons para el marcador del usuario
+      const userSvgIcon = `
+        <svg width="28" height="28" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <filter id="userShadow" x="-20%" y="-20%" width="140%" height="140%">
+              <feDropShadow dx="0" dy="2" stdDeviation="2" flood-color="rgba(0,0,0,0.3)"/>
+            </filter>
+          </defs>
+          
+          <!-- Círculo de fondo -->
+          <circle cx="12" cy="12" r="11" 
+                  fill="#dc2626" 
+                  stroke="#ffffff" 
+                  stroke-width="2"
+                  filter="url(#userShadow)"/>
+          
+          <!-- Ícono GPS Fixed -->
+          <path d="M12,8A4,4 0 0,1 16,12A4,4 0 0,1 12,16A4,4 0 0,1 8,12A4,4 0 0,1 12,8M3.05,13H1V11H3.05C3.5,6.83 6.83,3.5 11,3.05V1H13V3.05C17.17,3.5 20.5,6.83 20.95,11H23V13H20.95C20.5,17.17 17.17,20.5 13,20.95V23H11V20.95C6.83,20.5 3.5,17.17 3.05,13M12,5A7,7 0 0,0 5,12A7,7 0 0,0 12,19A7,7 0 0,0 19,12A7,7 0 0,0 12,5Z" 
+                fill="#ffffff"/>
+        </svg>
+      `;
+      
+      const encodedUserIcon = encodeURIComponent(userSvgIcon);
+
+      // Crear marcador personalizado para el usuario
       const userMarker = new googleMaps.maps.Marker({
         position: { lat: userLocation.lat, lng: userLocation.lng },
         map: mapInstanceRef.current,
         title: 'Tu ubicación',
         icon: {
-          path: googleMaps.maps.SymbolPath.CIRCLE,
-          fillColor: '#dc2626', // Rojo para diferenciarlo de los socios
-          fillOpacity: 0.9,
-          strokeColor: '#ffffff',
-          strokeWeight: 4,
-          scale: 14
+          url: 'data:image/svg+xml;charset=utf-8,' + encodedUserIcon,
+          scaledSize: new googleMaps.maps.Size(28, 28),
+          anchor: new googleMaps.maps.Point(14, 14),
+          optimized: false
         },
         zIndex: 1000,
         animation: googleMaps.maps.Animation.DROP
       });
 
-      // Info window para el usuario
+      // Info window simplificado para el usuario
       const userInfoWindow = new googleMaps.maps.InfoWindow({
         content: `
-          <div style="padding: 12px; font-family: system-ui, -apple-system, sans-serif; text-align: center;">
-            <h3 style="font-size: 16px; font-weight: 600; color: #dc2626; margin: 0 0 8px 0;">📍 Tu ubicación</h3>
-            <div style="color: #6b7280; font-size: 12px; margin-bottom: 8px;">
-              Lat: ${userLocation.lat.toFixed(6)}<br>
-              Lng: ${userLocation.lng.toFixed(6)}
-            </div>
+          <div style="padding: 8px; font-family: system-ui, -apple-system, sans-serif; text-align: center;">
+            <h3 style="font-size: 14px; font-weight: 600; color: #dc2626; margin: 0 0 4px 0;">Tu ubicación</h3>
             <div style="font-size: 11px; color: #059669; font-weight: 500;">
-              🎯 Las distancias se calculan desde aquí
+              Las distancias se calculan desde aquí
             </div>
           </div>
         `
@@ -635,42 +672,33 @@ const MapaDistribuidoresGoogle: React.FC<MapaDistribuidoresGoogleProps> = ({
         
         // Crear marcador personalizado con colores que combinen con la app
         const isDirectOrder = socio.permite_pedidos_directos;
-        const primaryColor = isDirectOrder ? '#ea580c' : '#f97316'; // Naranjas de la app
-        const secondaryColor = isDirectOrder ? '#fb923c' : '#fdba74'; // Naranjas más claros
+        const markerColor = isDirectOrder ? '#ea580c' : '#f97316'; // Naranjas de la app
         
+        // SVG directo del ícono FaMapMarkerAlt con el path correcto
         const svgIcon = `
-          <svg width="40" height="50" viewBox="0 0 40 50" xmlns="http://www.w3.org/2000/svg">
-            <!-- Sombra -->
-            <ellipse cx="20" cy="47" rx="8" ry="3" fill="rgba(0,0,0,0.2)"/>
-            <!-- Pin principal -->
-            <path d="M20 2C11.2 2 4 9.2 4 18c0 10.5 16 28 16 28s16-17.5 16-28C36 9.2 28.8 2 20 2z" 
-                  fill="${primaryColor}" 
-                  stroke="#ffffff" 
-                  stroke-width="3"/>
-            <!-- Círculo interior -->
-            <circle cx="20" cy="18" r="10" fill="white" stroke="${primaryColor}" stroke-width="2"/>
-            <!-- Ícono de tienda -->
-            <rect x="15" y="13" width="10" height="8" fill="${primaryColor}" rx="1"/>
-            <rect x="13" y="15" width="14" height="1" fill="${primaryColor}"/>
-            <circle cx="17" cy="19" r="1" fill="white"/>
-            <circle cx="23" cy="19" r="1" fill="white"/>
-            <!-- Indicador de pedidos directos -->
-            ${isDirectOrder ? `<circle cx="28" cy="10" r="4" fill="#10b981" stroke="white" stroke-width="2"/>
-            <text x="28" y="13" text-anchor="middle" fill="white" font-size="6" font-weight="bold">✓</text>` : ''}
+          <svg width="32" height="32" viewBox="0 0 384 512" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+                <feDropShadow dx="0" dy="2" stdDeviation="2" flood-color="rgba(0,0,0,0.3)"/>
+              </filter>
+            </defs>
+            <path d="M215.7 499.2C267 435 384 279.4 384 192C384 86 298 0 192 0S0 86 0 192c0 87.4 117 243 168.3 307.2c12.3 15.3 35.1 15.3 47.4 0zM192 128a64 64 0 1 1 0 128 64 64 0 1 1 0-128z" 
+                  fill="${markerColor}" 
+                  filter="url(#shadow)"/>
           </svg>
         `;
         
-        // Usar encodeURIComponent en lugar de btoa para manejar Unicode correctamente
-        const encodedSvg = encodeURIComponent(svgIcon);
+        // Convertir SVG a data URL
+        const encodedIcon = encodeURIComponent(svgIcon);
         
         const marker = new googleMaps.maps.Marker({
           position: position,
           map: mapInstanceRef.current,
           title: socio.nombre_comercial,
           icon: {
-            url: 'data:image/svg+xml;charset=utf-8,' + encodedSvg,
-            scaledSize: new googleMaps.maps.Size(40, 50),
-            anchor: new googleMaps.maps.Point(20, 47), // Anclar en la base del pin
+            url: 'data:image/svg+xml;charset=utf-8,' + encodedIcon,
+            scaledSize: new googleMaps.maps.Size(24, 30),
+            anchor: new googleMaps.maps.Point(12, 30), // Anclar en la base del pin
             optimized: false // Para mejor renderizado de SVG personalizado
           },
           animation: googleMaps.maps.Animation.DROP // Animación de caída
@@ -757,37 +785,15 @@ const MapaDistribuidoresGoogle: React.FC<MapaDistribuidoresGoogleProps> = ({
           <h2 className="text-xl font-semibold text-gray-900">Puntos de venta disponibles</h2>
           <p className="text-sm text-gray-600 mt-1">
             {sociosGeocodificados.filter(s => s.coordenadas).length} puntos de venta encontrados
-            {googleMaps && <span className="ml-2 text-green-600 font-medium">• Powered by Google Maps</span>}
+            {googleMaps && <span className="ml-2 text-green-600 font-medium"></span>}
           </p>
           
-          {/* Call to Action para nuevos socios */}
-          <div className="mt-3 p-3 bg-gradient-to-r from-yellow-50 to-orange-50 border border-yellow-200 rounded-lg">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-2">
-                <span className="text-lg">🏪</span>
-                <span className="text-sm font-medium text-gray-800">
-                  ¿Tienes un negocio?
-                </span>
-              </div>
-              <a
-                href="/registro-punto-venta"
-                className="inline-flex items-center px-3 py-1.5 bg-gradient-to-r from-orange-500 to-orange-600 text-white text-xs font-semibold rounded-full hover:from-orange-600 hover:to-orange-700 transition-all duration-200 transform hover:scale-105 shadow-sm hover:shadow-md"
-              >
-                <span className="mr-1">🚀</span>
-                ¡Únete como socio!
-              </a>
-            </div>
-            <p className="text-xs text-gray-600 mt-1 ml-7">
-              Suma tu punto de venta y vende productos Delicias Florencia
-            </p>
-          </div>
         </div>
         
         {/* Botón para obtener ubicación */}
         <div className="flex flex-col items-end gap-2">
           {userLocation && (
             <div className="text-sm text-green-600 bg-green-50 px-3 py-1 rounded-full">
-              📍 Ubicación detectada
             </div>
           )}
           <button
@@ -805,13 +811,14 @@ const MapaDistribuidoresGoogle: React.FC<MapaDistribuidoresGoogleProps> = ({
             }`}
           >
             {geoLoading ? '⏳ Obteniendo ubicación...' : 
-             userLocation ? '� Actualizar ubicación' : '�📍 Mostrar mi ubicación'}
+             userLocation ? 'Actualizar ubicación' : 'Mostrar mi ubicación'}
           </button>
         </div>
         
         {geoError && (
-          <div className="text-sm text-red-600 font-medium">
-            ❌ {geoError}
+          <div className="text-sm text-red-600 font-medium flex items-center">
+            <FaTimesCircle className="mr-1" />
+            {geoError}
           </div>
         )}
       </div>
@@ -826,7 +833,7 @@ const MapaDistribuidoresGoogle: React.FC<MapaDistribuidoresGoogleProps> = ({
           {sociosCercanos.length > 0 && (
             <div>
               <h3 className="text-lg font-medium text-gray-900 mb-3 flex items-center">
-                <span className="mr-2">🎯</span>
+                <FaBullseye className="mr-2 text-orange-500" />
                 Más cercanos a ti
               </h3>
               <div className="space-y-3">
@@ -847,44 +854,11 @@ const MapaDistribuidoresGoogle: React.FC<MapaDistribuidoresGoogleProps> = ({
                     onClick={openAllModal}
                     className="w-full flex items-center justify-center px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white font-medium rounded-lg transition-colors text-sm"
                   >
-                    <span className="mr-2">📋</span>
+                    <FaList className="mr-2" />
                     Ver todos los puntos de venta ({sociosOrdenados.length})
                   </button>
                 </div>
               )}
-            </div>
-          )}
-
-          {/* Resumen de puntos de venta */}
-          {sociosOrdenados.length > 0 && (
-            <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-3">
-                  <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                    <span className="text-blue-600 font-semibold text-sm">
-                      {sociosOrdenados.length}
-                    </span>
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium text-gray-900">
-                      Puntos de venta disponibles
-                    </p>
-                    <p className="text-xs text-gray-600">
-                      {sociosOrdenados.filter(s => s.permite_pedidos_directos).length} aceptan pedidos directos
-                    </p>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <p className="text-xs text-gray-500 mb-1">Cobertura en</p>
-                  <div className="flex flex-wrap gap-1 justify-end">
-                    {Array.from(new Set(sociosOrdenados.map(s => s.comuna))).map(comuna => (
-                      <span key={comuna} className="inline-block bg-gray-200 text-gray-700 text-xs px-2 py-1 rounded-full">
-                        {comuna}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              </div>
             </div>
           )}
           
@@ -911,38 +885,7 @@ const MapaDistribuidoresGoogle: React.FC<MapaDistribuidoresGoogleProps> = ({
                 className="w-full h-80 lg:h-96 rounded-lg border border-gray-200"
               />
               
-              {/* Información del mapa */}
-              <div className="absolute top-3 right-3 bg-white/90 backdrop-blur-sm p-2 rounded-lg shadow-sm">
-                <div className="text-xs text-gray-600">
-                  <div className="flex items-center space-x-2 mb-1">
-                    <div className="flex items-center">
-                      <div className="w-2 h-2 bg-blue-500 rounded-full mr-1"></div>
-                      <span>Puntos</span>
-                    </div>
-                    <div className="flex items-center">
-                      <div className="w-2 h-2 bg-red-600 rounded-full mr-1"></div>
-                      <span>Tu ubicación</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              
-              {/* Estadísticas del mapa */}
-              <div className="absolute bottom-3 left-3 bg-white/90 backdrop-blur-sm p-2 rounded-lg shadow-sm">
-                <div className="text-xs text-gray-700 font-medium">
-                  {sociosGeocodificados.filter(s => s.coordenadas).length} puntos en el mapa
-                </div>
-                {userLocation && (
-                  <div className="text-xs text-green-600 mt-1">
-                    📍 Con tu ubicación
-                  </div>
-                )}
-                {googleMaps && (
-                  <div className="text-xs text-blue-600 mt-1">
-                    🗺️ Google Maps
-                  </div>
-                )}
-              </div>
+
               
               {geocodingLoading && (
                 <div className="absolute inset-0 bg-white/80 backdrop-blur-sm rounded-lg flex items-center justify-center">
@@ -955,22 +898,6 @@ const MapaDistribuidoresGoogle: React.FC<MapaDistribuidoresGoogleProps> = ({
                 </div>
               )}
             </div>
-            
-            {/* Información sobre Google Maps */}
-            <div className="mt-4 bg-blue-50 border border-blue-200 rounded-lg p-3">
-              <div className="text-xs text-blue-800">
-                {googleMaps ? (
-                  <>🗺️ Ubicaciones precisas con Google Maps • 📍 Navegación integrada • ⚡ Alta precisión</>
-                ) : (
-                  <>⚠️ Google Maps no disponible • 📍 Usando coordenadas de respaldo • 🆓 Funcionalidad limitada</>
-                )}
-              </div>
-              {!googleMaps && (
-                <div className="text-xs text-orange-600 mt-1">
-                  💡 Configura NEXT_PUBLIC_GOOGLE_MAPS_API_KEY para activar Google Maps
-                </div>
-              )}
-            </div>
           </div>
         </div>
       </div>
@@ -980,8 +907,9 @@ const MapaDistribuidoresGoogle: React.FC<MapaDistribuidoresGoogleProps> = ({
       {/* Sección de beneficios para nuevos socios */}
       <div id="beneficios-socios" className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
         <div className="text-center mb-6">
-          <h3 className="text-xl font-bold text-gray-900 mb-2">
-            🎯 Beneficios exclusivos para Socios Distribuidores
+          <h3 className="text-xl font-bold text-gray-900 mb-2 flex items-center justify-center gap-3">
+            <FaHandsHelping className="text-orange-500 text-6xl" />
+            Beneficios exclusivos para Socios
           </h3>
           <p className="text-gray-600">
             Al unirte a nuestra red, obtienes acceso a ventajas únicas para hacer crecer tu negocio
@@ -989,22 +917,22 @@ const MapaDistribuidoresGoogle: React.FC<MapaDistribuidoresGoogleProps> = ({
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+          <div className="bg-green-100 border border-green-200 rounded-lg p-4">
             <div className="flex items-center mb-3">
-              <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center text-white font-bold text-sm mr-3">
-                💰
+              <div className="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center text-white font-bold text-sm mr-3">
+                <FaDollarSign className="text-white-500 text-2xl" />
               </div>
               <h4 className="font-semibold text-gray-900">Precios mayoristas</h4>
             </div>
             <p className="text-sm text-gray-600">
-              Hasta 40% de descuento en todos nuestros productos artesanales
+              Accede a los mejores precios del mercado y aumenta tu margen de ganancia.
             </p>
           </div>
           
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+          <div className="bg-blue-100 border border-blue-200 rounded-lg p-4">
             <div className="flex items-center mb-3">
-              <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white font-bold text-sm mr-3">
-                📍
+              <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center text-white font-bold text-sm mr-3">
+                <FaMapMarkerAlt className="text-white-500 text-2xl" />
               </div>
               <h4 className="font-semibold text-gray-900">Aparece en el mapa</h4>
             </div>
@@ -1013,10 +941,10 @@ const MapaDistribuidoresGoogle: React.FC<MapaDistribuidoresGoogleProps> = ({
             </p>
           </div>
           
-          <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
+          <div className="bg-purple-100 border border-purple-200 rounded-lg p-4">
             <div className="flex items-center mb-3">
-              <div className="w-8 h-8 bg-purple-500 rounded-full flex items-center justify-center text-white font-bold text-sm mr-3">
-                📱
+              <div className="w-10 h-10 bg-purple-500 rounded-full flex items-center justify-center text-white font-bold text-sm mr-3">
+                <FaMobile className="text-white text-2xl" />
               </div>
               <h4 className="font-semibold text-gray-900">Plataforma digital</h4>
             </div>
@@ -1025,39 +953,15 @@ const MapaDistribuidoresGoogle: React.FC<MapaDistribuidoresGoogleProps> = ({
             </p>
           </div>
           
-          <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
+          <div className="bg-orange-100 border border-orange-200 rounded-lg p-4">
             <div className="flex items-center mb-3">
-              <div className="w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center text-white font-bold text-sm mr-3">
-                🚚
+              <div className="w-10 h-10 bg-orange-500 rounded-full flex items-center justify-center text-white font-bold text-sm mr-3">
+                <FaTruck className="text-white text-2xl" />
               </div>
               <h4 className="font-semibold text-gray-900">Entregas programadas</h4>
             </div>
             <p className="text-sm text-gray-600">
-              Recibe tus productos frescos cada lunes y viernes sin complicaciones
-            </p>
-          </div>
-          
-          <div className="bg-indigo-50 border border-indigo-200 rounded-lg p-4">
-            <div className="flex items-center mb-3">
-              <div className="w-8 h-8 bg-indigo-500 rounded-full flex items-center justify-center text-white font-bold text-sm mr-3">
-                🎯
-              </div>
-              <h4 className="font-semibold text-gray-900">Marketing incluido</h4>
-            </div>
-            <p className="text-sm text-gray-600">
-              Material promocional y presencia en redes sociales sin costo adicional
-            </p>
-          </div>
-          
-          <div className="bg-teal-50 border border-teal-200 rounded-lg p-4">
-            <div className="flex items-center mb-3">
-              <div className="w-8 h-8 bg-teal-500 rounded-full flex items-center justify-center text-white font-bold text-sm mr-3">
-                💬
-              </div>
-              <h4 className="font-semibold text-gray-900">Soporte dedicado</h4>
-            </div>
-            <p className="text-sm text-gray-600">
-              Asesor personalizado para resolver dudas y optimizar tus ventas
+              Recibe tus productos frescos todas las semanas.
             </p>
           </div>
         </div>
@@ -1067,7 +971,6 @@ const MapaDistribuidoresGoogle: React.FC<MapaDistribuidoresGoogleProps> = ({
             href="/registro-punto-venta"
             className="inline-flex items-center px-8 py-4 bg-gradient-to-r from-orange-500 to-orange-600 text-white font-bold rounded-lg hover:from-orange-600 hover:to-orange-700 transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl text-lg"
           >
-            <span className="mr-2">🚀</span>
             ¡Quiero ser socio distribuidor!
           </a>
           <p className="text-xs text-gray-500 mt-2">
@@ -1117,18 +1020,18 @@ const MapaDistribuidoresGoogle: React.FC<MapaDistribuidoresGoogleProps> = ({
                         </h3>
                         <div className="text-sm text-gray-600 space-y-1">
                           <div className="flex items-center gap-2">
-                            <span>📍</span>
+                            <FaMapMarkerAlt className="text-gray-400 text-xs" />
                             <span>{socio.direccion}, {socio.comuna}</span>
                           </div>
                           {socio.telefono_negocio && (
                             <div className="flex items-center gap-2">
-                              <span>📞</span>
+                              <FaPhone className="text-gray-400 text-xs" />
                               <span>{socio.telefono_negocio}</span>
                             </div>
                           )}
                           {userLocation && socio.coordenadas && (
                             <div className="flex items-center gap-2">
-                              <span>🎯</span>
+                              <FaBullseye className="text-gray-400 text-xs" />
                               <span>{calculateDistance(
                                 userLocation.lat,
                                 userLocation.lng,
@@ -1140,15 +1043,6 @@ const MapaDistribuidoresGoogle: React.FC<MapaDistribuidoresGoogleProps> = ({
                         </div>
                       </div>
                       <div className="ml-3 flex flex-col items-end gap-1">
-                        {socio.permite_pedidos_directos ? (
-                          <span className="bg-green-100 text-green-800 text-xs font-medium px-2 py-1 rounded-full">
-                            Acepta pedidos
-                          </span>
-                        ) : (
-                          <span className="bg-orange-100 text-orange-800 text-xs font-medium px-2 py-1 rounded-full">
-                            Punto de venta
-                          </span>
-                        )}
                         <span className="text-xs text-gray-400">
                           Toca para ver detalles
                         </span>
@@ -1166,7 +1060,7 @@ const MapaDistribuidoresGoogle: React.FC<MapaDistribuidoresGoogleProps> = ({
                   onClick={loadMoreSocios}
                   className="w-full flex items-center justify-center px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white font-medium rounded-lg transition-colors text-sm"
                 >
-                  <span className="mr-2">📋</span>
+                  <FaList className="mr-2" />
                   Cargar 5 más ({sociosOrdenados.length - displayedSocios.length} restantes)
                 </button>
               </div>
@@ -1200,8 +1094,9 @@ const MapaDistribuidoresGoogle: React.FC<MapaDistribuidoresGoogleProps> = ({
               <div className="text-white pr-8">
                 <h2 className="text-lg font-bold mb-1">{socioSeleccionado.nombre_comercial}</h2>
                 {userLocation && socioSeleccionado?.coordenadas && (
-                  <p className="text-white/90 text-sm">
-                    📍 A {calculateDistance(
+                  <p className="text-white/90 text-sm flex items-center">
+                    <FaBullseye className="mr-1" />
+                    A {calculateDistance(
                       userLocation.lat, 
                       userLocation.lng, 
                       socioSeleccionado.coordenadas.lat, 
@@ -1216,7 +1111,7 @@ const MapaDistribuidoresGoogle: React.FC<MapaDistribuidoresGoogleProps> = ({
             <div className="p-4 space-y-3">
               {/* Dirección */}
               <div className="flex items-center gap-3">
-                <span className="text-lg">📍</span>
+                <FaMapMarkerAlt className="text-orange-500" />
                 <div>
                   <p className="font-medium text-gray-900">{socioSeleccionado.direccion}</p>
                   <p className="text-sm text-gray-600">{socioSeleccionado.comuna}</p>
@@ -1226,7 +1121,7 @@ const MapaDistribuidoresGoogle: React.FC<MapaDistribuidoresGoogleProps> = ({
               {/* Teléfono */}
               {socioSeleccionado.telefono_negocio && (
                 <div className="flex items-center gap-3">
-                  <span className="text-lg">📞</span>
+                  <FaPhone className="text-green-500" />
                   <a 
                     href={`tel:${socioSeleccionado.telefono_negocio}`}
                     className="font-medium text-green-600 hover:text-green-700"
@@ -1239,27 +1134,20 @@ const MapaDistribuidoresGoogle: React.FC<MapaDistribuidoresGoogleProps> = ({
               {/* Horarios */}
               {socioSeleccionado.horario_atencion && (
                 <div className="flex items-center gap-3">
-                  <span className="text-lg">🕒</span>
+                  <FaClock className="text-blue-500" />
                   <p className="text-gray-700">{socioSeleccionado.horario_atencion}</p>
                 </div>
               )}
 
-              {/* Tipo de servicio */}
+              {/* Información del negocio */}
               <div className="bg-orange-50 rounded-lg p-3 mt-3">
                 <div className="flex items-center gap-2">
-                  <span className="text-lg">🍰</span>
+                  <GiCakeSlice className="text-orange-600" />
                   <div>
-                    {socioSeleccionado.permite_pedidos_directos ? (
-                      <p className="text-sm text-orange-800">
-                        <span className="font-semibold">Acepta pedidos directos</span><br/>
-                        Llama o visita para hacer tu pedido
-                      </p>
-                    ) : (
-                      <p className="text-sm text-orange-800">
-                        <span className="font-semibold">Punto de venta</span><br/>
-                        Tortas artesanales ya preparadas
-                      </p>
-                    )}
+                    <p className="text-sm text-orange-800">
+                      <span className="font-semibold">Tortas artesanales</span><br/>
+                      Productos de Delicias Florencia disponibles
+                    </p>
                   </div>
                 </div>
               </div>
@@ -1272,7 +1160,7 @@ const MapaDistribuidoresGoogle: React.FC<MapaDistribuidoresGoogleProps> = ({
                   rel="noopener noreferrer"
                   className="flex-1 inline-flex items-center justify-center px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors text-sm"
                 >
-                  🗺️ Cómo llegar
+                  Cómo llegar
                 </a>
                 
                 {socioSeleccionado.telefono_negocio && (
@@ -1280,7 +1168,7 @@ const MapaDistribuidoresGoogle: React.FC<MapaDistribuidoresGoogleProps> = ({
                     href={`tel:${socioSeleccionado.telefono_negocio}`}
                     className="flex-1 inline-flex items-center justify-center px-4 py-2 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 transition-colors text-sm"
                   >
-                    📞 Llamar
+                    Llamar
                   </a>
                 )}
               </div>

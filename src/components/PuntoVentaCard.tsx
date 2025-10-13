@@ -1,5 +1,7 @@
 "use client";
 import { SocioDistribuidor } from '@/hooks/useSociosDistribuidores';
+import { FaPhone, FaMapMarkerAlt, FaClock, FaRoute } from 'react-icons/fa';
+import { GiPathDistance } from "react-icons/gi";
 
 interface PuntoVentaCardProps {
   socio: SocioDistribuidor & { coordenadas?: { lat: number; lng: number }; distancia?: number };
@@ -36,19 +38,16 @@ const PuntoVentaCard: React.FC<PuntoVentaCardProps> = ({
             {socio.nombre_comercial}
           </h3>
           <div className="flex items-center mt-1">
-            <span className="text-xs text-gray-500 mr-2">📍 {socio.comuna}</span>
-            {socio.permite_pedidos_directos && (
-              <span className="bg-green-100 text-green-800 text-xs px-2 py-0.5 rounded-full">
-                Pedidos directos
-              </span>
-            )}
+            <FaMapMarkerAlt className="mr-1 text-gray-400" />
+            <span className="text-xs text-gray-500">{socio.comuna}</span>
           </div>
         </div>
         
         {socio.distancia && (
           <div className="ml-3 text-right">
-            <div className="bg-blue-50 text-blue-700 px-2 py-1 rounded-full text-xs font-medium">
-              📏 {formatearDistancia(socio.distancia)}
+            <div className="bg-blue-50 text-blue-700 px-2 py-1 rounded-full text-xs font-medium flex items-center">
+              <GiPathDistance className='text-black-500 text-2xl'/>
+              {formatearDistancia(socio.distancia)}
             </div>
           </div>
         )}
@@ -58,7 +57,7 @@ const PuntoVentaCard: React.FC<PuntoVentaCardProps> = ({
       <div className="space-y-1 mb-3">
         {socio.telefono_negocio && (
           <div className="flex items-center text-xs text-gray-600">
-            <span className="mr-2">📞</span>
+            <FaPhone className="mr-2 text-green-600" />
             <a 
               href={`tel:${socio.telefono_negocio}`}
               className="hover:text-blue-600 transition-colors"
@@ -70,7 +69,7 @@ const PuntoVentaCard: React.FC<PuntoVentaCardProps> = ({
         
         {socio.horario_atencion && (
           <div className="flex items-center text-xs text-gray-600">
-            <span className="mr-2">🕒</span>
+            <FaClock className="mr-2 text-gray-400" />
             <span className="truncate">{socio.horario_atencion}</span>
           </div>
         )}
@@ -97,7 +96,7 @@ const PuntoVentaCard: React.FC<PuntoVentaCardProps> = ({
             compact ? 'flex-1' : 'flex-1'
           }`}
         >
-          <span className="mr-1">🧭</span>
+          <FaRoute className="mr-1" />
           Cómo llegar
         </a>
         
@@ -108,7 +107,6 @@ const PuntoVentaCard: React.FC<PuntoVentaCardProps> = ({
               compact ? 'flex-1' : 'flex-1'
             }`}
           >
-            <span className="mr-1">👁️</span>
             Ver detalles
           </button>
         )}

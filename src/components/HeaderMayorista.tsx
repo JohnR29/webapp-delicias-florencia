@@ -7,6 +7,7 @@ import { useAuth } from '@/hooks/useAuth';
 import AuthModal from '@/components/AuthModal';
 import { isAdminUser } from '@/lib/admin-config';
 import { MapPin, Home } from 'lucide-react';
+import { FaTools } from 'react-icons/fa';
 
 const HeaderMayorista = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -112,9 +113,10 @@ const HeaderMayorista = () => {
                     {isAdminUser(user?.email) && (
                       <Link
                         href="/admin"
-                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                        className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
                       >
-                        🛠️ Panel Admin
+                        <FaTools className="mr-2" />
+                        Panel Admin
                       </Link>
                     )}
                     <button
@@ -207,10 +209,11 @@ const HeaderMayorista = () => {
                   {isAdminUser(user?.email) && (
                     <Link
                       href="/admin"
-                      className="block px-3 py-2 text-base font-medium text-gray-700 hover:text-primary-600 transition-colors"
+                      className="flex items-center px-3 py-2 text-base font-medium text-gray-700 hover:text-primary-600 transition-colors"
                       onClick={() => setIsMenuOpen(false)}
                     >
-                      🛠️ Panel Admin
+                      <FaTools className="mr-2" />
+                      Panel Admin
                     </Link>
                   )}
                   <button

@@ -73,7 +73,7 @@ export default function RegistroPage() {
             
             {/* Beneficios */}
             <div className="bg-gradient-to-r from-secondary-50 to-accent-50 p-6 rounded-lg mb-6">
-              <h3 className="font-semibold text-gray-800 mb-4">🚀 Beneficios Exclusivos para Socios:</h3>
+              <h3 className="font-semibold text-gray-800 mb-4">Beneficios Exclusivos para Socios:</h3>
               <ul className="text-sm text-gray-700 space-y-3 text-left">
                 <li className="flex items-center">
                   <span className="text-green-500 mr-2 font-bold">✓</span>
