@@ -124,7 +124,6 @@ export default function MayoristaPage() {
                     href="/registro-punto-venta"
                     className="inline-flex items-center px-8 py-4 bg-gradient-to-r from-orange-500 to-orange-600 text-white font-bold rounded-lg hover:from-orange-600 hover:to-orange-700 transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl text-lg"
                   >
-                    <span className="mr-2">🏪</span>
                     Registrar mi punto de venta
                   </a>
                   <p className="text-xs text-gray-500 mt-2">

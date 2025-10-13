@@ -351,11 +351,11 @@ export function AdminPuntosVentaPanel() {
                 <div className="flex gap-2 flex-wrap">
                   {/* Botón editar - disponible para todos */}
                   <button
-                    onClick={() => abrirModalEdicion(punto)}
+                    onClick={() => setEditandoPunto(punto)}
                     disabled={procesando[punto.id]}
                     className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white px-3 py-2 rounded-lg font-medium transition-colors text-sm"
                   >
-                    ✏️ Editar
+                    Editar
                   </button>
 
                   {/* Botones específicos por estado */}
@@ -366,14 +366,14 @@ export function AdminPuntosVentaPanel() {
                         disabled={procesando[punto.id]}
                         className="bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white px-3 py-2 rounded-lg font-medium transition-colors text-sm"
                       >
-                        {procesando[punto.id] ? 'Procesando...' : '✅ Aprobar'}
+                        {procesando[punto.id] ? 'Procesando...' : 'Aprobar'}
                       </button>
                       <button
                         onClick={() => handleRechazar(punto)}
                         disabled={procesando[punto.id]}
                         className="bg-red-600 hover:bg-red-700 disabled:bg-gray-400 text-white px-3 py-2 rounded-lg font-medium transition-colors text-sm"
                       >
-                        {procesando[punto.id] ? 'Procesando...' : '❌ Rechazar'}
+                        {procesando[punto.id] ? 'Procesando...' : 'Rechazar'}
                       </button>
                     </>
                   )}
@@ -399,7 +399,7 @@ export function AdminPuntosVentaPanel() {
                         disabled={procesando[punto.id]}
                         className="bg-red-800 hover:bg-red-900 disabled:bg-gray-400 text-white px-3 py-2 rounded-lg font-medium transition-colors text-sm"
                       >
-                        🗑️ Eliminar
+                        Eliminar
                       </button>
                     </>
                   )}
@@ -418,7 +418,7 @@ export function AdminPuntosVentaPanel() {
                         disabled={procesando[punto.id]}
                         className="bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white px-3 py-2 rounded-lg font-medium transition-colors text-sm"
                       >
-                        {procesando[punto.id] ? 'Procesando...' : '✅ Aprobar'}
+                        {procesando[punto.id] ? 'Procesando...' : 'Aprobar'}
                       </button>
                     </>
                   )}

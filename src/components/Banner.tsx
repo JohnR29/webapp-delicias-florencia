@@ -64,13 +64,13 @@ export default function Banner() {
               href="#productos"
               className="w-full sm:w-auto inline-flex items-center justify-center bg-red-600 hover:bg-red-700 text-white font-semibold px-6 sm:px-8 py-3 sm:py-4 rounded-full text-base sm:text-lg transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl min-w-[240px] sm:min-w-0"
             >
-              🍰 Ver Nuestras Tortas
+              Ver Nuestras Tortas
             </Link>
             <Link
               href="#donde-comprar"
               className="w-full sm:w-auto inline-flex items-center justify-center bg-white hover:bg-gray-100 text-gray-800 font-semibold px-6 sm:px-8 py-3 sm:py-4 rounded-full text-base sm:text-lg transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl min-w-[240px] sm:min-w-0"
             >
-              📍 ¿Dónde Comprar?
+              ¿Dónde Comprar?
             </Link>
           </div>
         </div>

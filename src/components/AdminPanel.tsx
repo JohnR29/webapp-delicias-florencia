@@ -359,7 +359,7 @@ const AdminPanel: React.FC = () => {
                     : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                 }`}
               >
-                📦 Gestión de Pedidos
+                Gestión de Pedidos
               </button>
               <button
                 onClick={() => setActiveTab('puntos-venta')}
@@ -369,7 +369,7 @@ const AdminPanel: React.FC = () => {
                     : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                 }`}
               >
-                🏪 Puntos de Venta
+                Puntos de Venta
               </button>
               <button
                 onClick={() => setActiveTab('socios')}
@@ -379,7 +379,7 @@ const AdminPanel: React.FC = () => {
                     : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                 }`}
               >
-                👥 Gestión de Socios
+                Gestión de Socios
               </button>
             </nav>
           </div>
