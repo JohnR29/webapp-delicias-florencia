@@ -449,6 +449,9 @@ const MapaDistribuidoresGoogle: React.FC<MapaDistribuidoresGoogleProps> = ({
         fullscreenControl: true,
         zoomControl: true,
         gestureHandling: 'greedy',
+        // Desactivar todos los tooltips del mapa
+        clickableIcons: false, // Desactiva tooltips de POIs
+        disableDefaultUI: false, // Mantener controles básicos
         // Personalizar controles
         zoomControlOptions: {
           position: googleMaps.maps.ControlPosition.RIGHT_CENTER
@@ -643,6 +646,8 @@ const MapaDistribuidoresGoogle: React.FC<MapaDistribuidoresGoogleProps> = ({
     }
   }, [googleMaps, userLocation]);
 
+
+
   // Crear marcadores de socios con Google Maps
   useEffect(() => {
     if (!googleMaps || !mapInstanceRef.current || !sociosGeocodificados.length) {
@@ -790,29 +795,28 @@ const MapaDistribuidoresGoogle: React.FC<MapaDistribuidoresGoogleProps> = ({
           
         </div>
         
-        {/* Botón para obtener ubicación */}
+        {/* Controles */}
         <div className="flex flex-col items-end gap-2">
-          {userLocation && (
-            <div className="text-sm text-green-600 bg-green-50 px-3 py-1 rounded-full">
-            </div>
-          )}
-          <button
-            onClick={() => {
-
-              getCurrentLocation();
-            }}
-            disabled={geoLoading}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-              geoLoading 
-                ? 'bg-gray-400 cursor-not-allowed text-white'
-                : userLocation 
-                  ? 'bg-gray-200 hover:bg-gray-300 text-gray-700 border border-gray-300'
-                  : 'bg-blue-600 hover:bg-blue-700 text-white'
-            }`}
-          >
-            {geoLoading ? '⏳ Obteniendo ubicación...' : 
-             userLocation ? 'Actualizar ubicación' : 'Mostrar mi ubicación'}
-          </button>
+          <div className="flex gap-2">
+            {/* Botón ubicación */}
+            <button
+              onClick={() => {
+                console.log('🎯 Obteniendo ubicación del usuario...');
+                getCurrentLocation();
+              }}
+              disabled={geoLoading}
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                geoLoading 
+                  ? 'bg-gray-400 cursor-not-allowed text-white'
+                  : userLocation 
+                    ? 'bg-gray-200 hover:bg-gray-300 text-gray-700 border border-gray-300'
+                    : 'bg-blue-600 hover:bg-blue-700 text-white'
+              }`}
+            >
+              {geoLoading ? '⏳ Obteniendo ubicación...' : 
+               userLocation ? 'Actualizar ubicación' : 'Mostrar mi ubicación'}
+            </button>
+          </div>
         </div>
         
         {geoError && (
@@ -862,7 +866,7 @@ const MapaDistribuidoresGoogle: React.FC<MapaDistribuidoresGoogleProps> = ({
             </div>
           )}
           
-          {/* Estado de geocodificación */}
+          {/* Estado de geocodificación y zona de cobertura */}
           {geocodingLoading && (
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
               <div className="flex items-center space-x-2">
@@ -901,8 +905,6 @@ const MapaDistribuidoresGoogle: React.FC<MapaDistribuidoresGoogleProps> = ({
           </div>
         </div>
       </div>
-
-
 
       {/* Sección de beneficios para nuevos socios */}
       <div id="beneficios-socios" className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">

@@ -1,6 +1,10 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
+
+// Global cache para evitar cargar GeoJSON múltiples veces
+let globalGeoJsonData: any = null;
+let isLoadingGeoJson = false;
 import { BusinessForm } from '@/lib/types';
 import { useAuth } from '@/hooks/useAuth';
 import AuthModal from '@/components/AuthModal';
@@ -65,7 +69,16 @@ const ContactForm: React.FC<ContactFormProps> = ({ cartState, productosSeleccion
   const [isSubmitting, setIsSubmitting] = useState(false);
   type ContactFormFields = BusinessForm & { correo: string };
   const [errors, setErrors] = useState<Partial<Record<keyof ContactFormFields, string>>>({});
-
+  
+  // Estados para Google Places y validación de cobertura
+  const addressInputRef = useRef<HTMLInputElement>(null);
+  const [autocomplete, setAutocomplete] = useState<google.maps.places.Autocomplete | null>(null);
+  const [selectedPlace, setSelectedPlace] = useState<google.maps.places.PlaceResult | null>(null);
+  const [isInCoverageArea, setIsInCoverageArea] = useState<boolean | null>(null);
+  const [shippingCost, setShippingCost] = useState<number>(0);
+  const [isValidatingAddress, setIsValidatingAddress] = useState(false);
+  const [geoJsonData, setGeoJsonData] = useState<any>(null);
+  const [pendingValidationCoords, setPendingValidationCoords] = useState<{lat: number, lng: number} | null>(null);
 
   // Autocompletar correo si el usuario está autenticado
   useEffect(() => {
@@ -77,7 +90,297 @@ const ContactForm: React.FC<ContactFormProps> = ({ cartState, productosSeleccion
     }));
   }, [auth.isAuthenticated, auth.user]);
 
-  const comunasPermitidas = ['San Bernardo', 'La Pintana', 'El Bosque', 'La Cisterna'];
+  // Cargar GeoJSON usando cache global
+  useEffect(() => {
+    const loadCoverageData = async () => {
+      // Si ya tenemos datos en cache, usarlos
+      if (globalGeoJsonData) {
+        setGeoJsonData(globalGeoJsonData);
+        return;
+      }
+      
+      // Si ya se está cargando, esperar
+      if (isLoadingGeoJson) {
+        const checkInterval = setInterval(() => {
+          if (globalGeoJsonData) {
+            setGeoJsonData(globalGeoJsonData);
+            clearInterval(checkInterval);
+          }
+        }, 100);
+        return;
+      }
+      
+      // Cargar por primera vez
+      try {
+        isLoadingGeoJson = true;
+        
+        const response = await fetch('/cobertura-costos.geojson', {
+          cache: 'force-cache',
+          priority: 'high' as RequestInit['priority']
+        });
+        
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        
+        if (data.features?.length > 0) {
+          globalGeoJsonData = data;
+          setGeoJsonData(data);
+          console.log('✅ Coverage data loaded:', data.features.length, 'zones');
+          
+          // Si hay una validación pendiente, ejecutarla ahora
+          if (pendingValidationCoords) {
+            setTimeout(() => {
+              checkCoverage(pendingValidationCoords);
+              setPendingValidationCoords(null);
+            }, 100);
+          }
+        }
+        
+      } catch (error) {
+        console.error('❌ Error loading coverage data:', error);
+      } finally {
+        isLoadingGeoJson = false;
+      }
+    };
+    
+    loadCoverageData();
+  }, []);
+
+  // Inicializar Google Places Autocomplete
+  useEffect(() => {
+    let attempts = 0;
+    const maxAttempts = 10;
+
+    const initializeAutocomplete = () => {
+      if (!addressInputRef.current || autocomplete || typeof window === 'undefined') return;
+
+      console.log(`Initializing autocomplete... Attempt ${attempts + 1}`);
+
+      // Verificar si Google Maps ya está disponible
+      if (window.google && window.google.maps && window.google.maps.places) {
+        console.log('Google Maps is available, creating autocomplete');
+        try {
+          const autocompleteInstance = new google.maps.places.Autocomplete(addressInputRef.current, {
+            componentRestrictions: { country: 'CL' },
+            fields: ['formatted_address', 'geometry', 'name', 'types', 'address_components'],
+            types: ['address']
+          });
+
+          autocompleteInstance.addListener('place_changed', () => {
+            console.log('🎯 Place changed event fired');
+            const place = autocompleteInstance.getPlace();
+            console.log('📍 Place selected:', {
+              name: place?.name,
+              formatted_address: place?.formatted_address,
+              geometry: place?.geometry ? {
+                lat: place.geometry.location?.lat(),
+                lng: place.geometry.location?.lng(),
+                viewport: place.geometry.viewport
+              } : null,
+              types: place?.types,
+              address_components: place?.address_components
+            });
+            
+            if (place && place.geometry && place.geometry.location) {
+              const lat = place.geometry.location.lat();
+              const lng = place.geometry.location.lng();
+              
+              console.log('✅ Valid place with geometry, processing...');
+              console.log('🎯 Autocomplete coordinates:', { lat, lng });
+              
+              // Primero establecer el selectedPlace para evitar conflictos con handleInputChange
+              setSelectedPlace(place);
+              
+              const newAddress = place.formatted_address || place.name || '';
+              console.log('📝 Setting address to:', newAddress);
+              
+              // Usar timeout para asegurar que el selectedPlace se establezca primero
+              setTimeout(() => {
+                setFormData(prev => ({ 
+                  ...prev, 
+                  direccion: newAddress
+                }));
+                
+                // Validar automáticamente la cobertura
+                console.log('🔍 Starting automatic coverage validation...');
+                validateCoverage(place);
+              }, 10);
+              
+            } else {
+              console.log('❌ Invalid place or missing geometry:', place);
+            }
+          });
+
+          setAutocomplete(autocompleteInstance);
+          console.log('Autocomplete initialized successfully');
+        } catch (error) {
+          console.error('Error creating autocomplete:', error);
+          // Reintentar si falló
+          if (attempts < maxAttempts) {
+            attempts++;
+            setTimeout(initializeAutocomplete, 1000);
+          }
+        }
+      } else {
+        console.log('Google Maps not available, waiting for existing script...');
+        // Reintentar hasta que esté disponible
+        if (attempts < maxAttempts) {
+          attempts++;
+          setTimeout(initializeAutocomplete, 1000);
+        }
+      }
+    };
+
+    // Esperar un poco más para que otros componentes terminen de cargar Google Maps
+    const timer = setTimeout(initializeAutocomplete, 1500);
+    return () => clearTimeout(timer);
+  }, []);
+
+  // Función para validar cobertura con retry automático hasta que GeoJSON esté listo
+  const checkCoverage = useCallback((location: {lat: number, lng: number}, retryCount = 0) => {
+    // Validate coverage for location
+    
+    // Primero verificar si tenemos datos en el cache global
+    const currentData = geoJsonData || globalGeoJsonData;
+    
+    if (!currentData || !window.google || !window.google.maps.geometry) {
+      if (retryCount === 0) {
+        console.log('⏳ Waiting for coverage data and Google Maps...');
+      }
+      
+      // Si no está listo y no hemos intentado muchas veces, reintentar
+      if (retryCount < 15) { // Aumentar intentos
+        setTimeout(() => checkCoverage(location, retryCount + 1), 300); // Reducir tiempo entre intentos
+        return;
+      }
+      
+      // Si ya intentamos muchas veces, marcar como no disponible
+      console.log('⚠️ Coverage validation timed out');
+      setIsInCoverageArea(false);
+      setShippingCost(0);
+      return;
+    }
+
+    try {
+      console.log('✅ Validating coverage...');
+      const point = new google.maps.LatLng(location.lat, location.lng);
+      
+      for (const feature of currentData.features) {
+        if (feature.geometry.type === 'Polygon') {
+          const paths = feature.geometry.coordinates.map((ring: number[][]) => 
+            ring.map(([lng, lat]: number[]) => new google.maps.LatLng(lat, lng))
+          );
+          
+          const polygon = new google.maps.Polygon({ paths });
+          
+          if (google.maps.geometry.poly.containsLocation(point, polygon)) {
+            const cost = feature.properties.cost || 1000;
+            console.log(`✅ Found coverage! Cost: $${cost}`);
+            setIsInCoverageArea(true);
+            setShippingCost(cost);
+            setErrors(prev => ({ ...prev, direccion: undefined }));
+            return;
+          }
+        }
+      }
+      
+      // Si no está en ningún polígono
+      console.log('❌ Not in coverage area');
+      setIsInCoverageArea(false);
+      setShippingCost(0);
+      setErrors(prev => ({ 
+        ...prev, 
+        direccion: 'Esta dirección no está en nuestra zona de cobertura'
+      }));
+    } catch (error) {
+      console.error('💥 Error verificando cobertura:', error);
+      setIsInCoverageArea(false);
+      setShippingCost(0);
+    }
+  }, [geoJsonData, pendingValidationCoords]);
+
+  // Wrapper para usar con places
+  const validateCoverage = async (place: google.maps.places.PlaceResult) => {
+    console.log('🔍 validateCoverage called, extracting coordinates...');
+    
+    if (!place.geometry?.location) {
+      console.log('❌ No geometry location in place');
+      return;
+    }
+    
+    setIsValidatingAddress(true);
+    
+    const lat = place.geometry.location.lat();
+    const lng = place.geometry.location.lng();
+    const coords = { lat, lng };
+    console.log('📍 Coordinates extracted:', coords);
+    
+    // Si los datos no están listos, guardar para validar después
+    if (!geoJsonData && !globalGeoJsonData) {
+      console.log('📋 Saving coordinates for validation when data is ready...');
+      setPendingValidationCoords(coords);
+    }
+    
+    // Usar la misma función que el mapa mayorista
+    checkCoverage(coords);
+    
+    setIsValidatingAddress(false);
+  };
+
+  // Función para validar dirección manualmente usando Geocoding API
+  const validateAddressManually = async (address: string) => {
+    if (!address.trim() || typeof window === 'undefined') return;
+    
+    setIsValidatingAddress(true);
+    
+    try {
+      console.log('🔍 Validating address manually:', address);
+      
+      // Verificar que Google Maps esté disponible
+      if (!window.google || !window.google.maps || !window.google.maps.Geocoder) {
+        console.error('❌ Google Maps Geocoder not available');
+        setIsInCoverageArea(false);
+        setShippingCost(0);
+        setIsValidatingAddress(false);
+        return;
+      }
+      
+      // Usar el Geocoding API para obtener coordenadas
+      const geocoder = new google.maps.Geocoder();
+      
+      geocoder.geocode(
+        { 
+          address: address + ', Chile',
+          componentRestrictions: { country: 'CL' }
+        },
+        (results, status) => {
+          console.log('📍 Geocoding result:', { status, foundResults: results?.length || 0 });
+          if (status === 'OK' && results && results[0]) {
+            const location = results[0].geometry.location;
+            const lat = location.lat();
+            const lng = location.lng();
+            console.log('✅ Geocoded successfully, checking coverage...');
+            checkCoverage({ lat, lng });
+            setIsValidatingAddress(false);
+          } else {
+            console.log('❌ Geocoding failed:', status);
+            setIsInCoverageArea(false);
+            setShippingCost(0);
+            setIsValidatingAddress(false);
+          }
+        }
+      );
+    } catch (error) {
+      console.error('💥 Error in manual validation:', error);
+      setIsInCoverageArea(false);
+      setShippingCost(0);
+      setIsValidatingAddress(false);
+    }
+  };
+
   const tiposNegocio = ['Almacén', 'Minimarket', 'Pastelería', 'Cafetería', 'Otro'];
 
   const validateForm = (): boolean => {
@@ -87,9 +390,13 @@ const ContactForm: React.FC<ContactFormProps> = ({ cartState, productosSeleccion
     if (!formData.contacto.trim()) newErrors.contacto = 'La persona de contacto es requerida';
     if (!formData.telefono.trim()) newErrors.telefono = 'El teléfono es requerido';
     if (!formData.tipo) newErrors.tipo = 'El tipo de negocio es requerido';
-    if (!formData.comuna) newErrors.comuna = 'La comuna es requerida';
     if (!formData.direccion.trim()) newErrors.direccion = 'La dirección es requerida';
     if (!formData.correo.trim()) newErrors.correo = 'El correo es requerido';
+    
+    // Validación de cobertura
+    if (formData.direccion.trim() && isInCoverageArea === false) {
+      newErrors.direccion = 'Esta dirección no está en nuestra zona de cobertura';
+    }
 
     // Validación de teléfono básica
     if (formData.telefono && !/^[\+]?[0-9\s\-\(\)]{8,}$/.test(formData.telefono)) {
@@ -106,11 +413,22 @@ const ContactForm: React.FC<ContactFormProps> = ({ cartState, productosSeleccion
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
+    
+    console.log('📝 Input change:', { name, value, hasSelectedPlace: !!selectedPlace });
+    
     setFormData(prev => ({ ...prev, [name]: value }));
     
     // Limpiar error del campo cuando el usuario empiece a escribir
     if (errors[name as keyof BusinessForm]) {
       setErrors(prev => ({ ...prev, [name]: undefined }));
+    }
+
+    // Solo resetear el estado de cobertura si el usuario está escribiendo manualmente
+    // (no cuando se actualiza por el autocomplete)
+    if (name === 'direccion' && !selectedPlace && value !== formData.direccion) {
+      console.log('🔄 Resetting coverage status - manual input detected');
+      setIsInCoverageArea(null);
+      setShippingCost(0);
     }
   };
 
@@ -123,12 +441,20 @@ const ContactForm: React.FC<ContactFormProps> = ({ cartState, productosSeleccion
 
     try {
       // Preparar datos para envío al API
+      const totalWithShipping = (cartState?.totalMonto || 0) + (isInCoverageArea === true ? shippingCost : 0);
+      
       const requestData = {
         businessInfo: { ...formData },
-        cart: cartState,
+        cart: {
+          ...cartState,
+          shippingCost,
+          totalWithShipping
+        },
         products: productosSeleccionados,
         userEmail: formData.correo || auth.user?.email || null,
         user_id: auth.user?.id || null,
+        selectedPlace,
+        isInCoverageArea,
         timestamp: new Date().toISOString()
       };
 
@@ -380,54 +706,151 @@ const ContactForm: React.FC<ContactFormProps> = ({ cartState, productosSeleccion
           {errors.tipo && <p className="text-red-500 text-xs mt-1">{errors.tipo}</p>}
         </div>
 
-        {/* Comuna */}
-        <div>
-          <label htmlFor="comuna" className="block text-sm font-medium text-gray-700 mb-1">
-            Comuna <span className="text-red-500">*</span>
-          </label>
-          <select
-            id="comuna"
-            name="comuna"
-            value={formData.comuna}
-            onChange={handleInputChange}
-            className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 ${
-              errors.comuna ? 'border-red-500' : 'border-gray-300'
-            }`}
-          >
-            <option value="" disabled>Selecciona...</option>
-            {comunasPermitidas.map(comuna => (
-              <option key={comuna} value={comuna}>{comuna}</option>
-            ))}
-          </select>
-          <p className="text-xs text-gray-500 mt-1">Rutas de distribución disponibles</p>
-          {errors.comuna && <p className="text-red-500 text-xs mt-1">{errors.comuna}</p>}
-        </div>
 
-        {/* Dirección */}
+
+        {/* Dirección con Google Places Autocomplete */}
         <div>
           <label htmlFor="direccion" className="block text-sm font-medium text-gray-700 mb-1">
             Dirección del negocio <span className="text-red-500">*</span>
           </label>
-          <input
-            type="text"
-            id="direccion"
-            name="direccion"
-            value={formData.direccion}
-            onChange={handleInputChange}
-            className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 ${
-              errors.direccion ? 'border-red-500' : 'border-gray-300'
-            }`}
-            placeholder="Dirección completa del local"
-          />
+          <div className="flex flex-col sm:flex-row gap-2">
+            <div className="relative flex-1">
+              <input
+                type="text"
+                id="direccion"
+                name="direccion"
+                ref={addressInputRef}
+                value={formData.direccion}
+              onChange={handleInputChange}
+              onKeyDown={(e) => {
+                // Limpiar selectedPlace si el usuario empieza a escribir manualmente
+                if (selectedPlace && e.key.length === 1) {
+                  console.log('🔄 User started typing manually, clearing selectedPlace');
+                  setSelectedPlace(null);
+                }
+                
+                // Permitir validación manual con Enter
+                if (e.key === 'Enter' && !selectedPlace && formData.direccion.trim()) {
+                  e.preventDefault();
+                  validateAddressManually(formData.direccion);
+                }
+              }}
+              onInput={() => {
+                // También limpiar selectedPlace en input events
+                if (selectedPlace) {
+                  console.log('🔄 Input event detected, clearing selectedPlace');
+                  setSelectedPlace(null);
+                }
+              }}
+              className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 pr-10 ${
+                errors.direccion ? 'border-red-500' : 
+                isInCoverageArea === true ? 'border-green-500' : 
+                isInCoverageArea === false ? 'border-red-500' : 'border-gray-300'
+              }`}
+              placeholder="Busca y selecciona tu dirección..."
+              />
+              
+              {/* Indicador de validación */}
+              <div className="absolute inset-y-0 right-0 flex items-center pr-3">
+                {isValidatingAddress && (
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary-600"></div>
+                )}
+                {!isValidatingAddress && isInCoverageArea === true && (
+                  <svg className="h-4 w-4 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                )}
+                {!isValidatingAddress && isInCoverageArea === false && (
+                  <svg className="h-4 w-4 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                )}
+              </div>
+            </div>
+            
+            {/* Botón para validar manualmente - solo mostrar si no hay lugar seleccionado */}
+            {!selectedPlace && (
+              <button
+                type="button"
+                onClick={() => validateAddressManually(formData.direccion)}
+                disabled={!formData.direccion.trim() || isValidatingAddress}
+                className="w-full sm:w-auto px-4 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-sm"
+              >
+                {isValidatingAddress ? 'Validando...' : 'Validar'}
+              </button>
+            )}
+          </div>
+          
+          <p className="text-xs text-gray-500 mt-1">
+            {selectedPlace 
+              ? 'Dirección seleccionada del autocompletado' 
+              : 'Busca tu dirección y selecciónala de las opciones sugeridas, o escríbela y presiona "Validar"'
+            }
+          </p>
+          
+          {/* Estado de cobertura */}
+          {isValidatingAddress && (
+            <div className="mt-2 p-2 bg-blue-50 border border-blue-200 rounded-md">
+              <p className="text-sm text-blue-800">
+                ⏳ Verificando cobertura y calculando costo de envío...
+              </p>
+            </div>
+          )}
+          
+          {!isValidatingAddress && isInCoverageArea === true && (
+            <div className="mt-2 p-2 bg-green-50 border border-green-200 rounded-md">
+              <p className="text-sm text-green-800">
+                ✅ Dirección en zona de cobertura • Costo de envío: ${shippingCost.toLocaleString('es-CL')}
+              </p>
+            </div>
+          )}
+          
+          {!isValidatingAddress && isInCoverageArea === false && (
+            <div className="mt-2 p-2 bg-red-50 border border-red-200 rounded-md">
+              <p className="text-sm text-red-800">
+                ❌ Esta dirección no está en nuestra zona de cobertura
+              </p>
+            </div>
+          )}
+          
           {errors.direccion && <p className="text-red-500 text-xs mt-1">{errors.direccion}</p>}
         </div>
+
+        {/* Resumen del pedido */}
+        {cartState && cartState.totalCantidad > 0 && (
+          <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+            <h4 className="font-semibold text-gray-900 mb-3">Resumen del Pedido</h4>
+            <div className="space-y-2 text-sm">
+              <div className="flex justify-between">
+                <span>Productos ({cartState.totalCantidad} unidades)</span>
+                <span>${cartState.totalMonto.toLocaleString('es-CL')}</span>
+              </div>
+              
+              {isInCoverageArea === true && shippingCost > 0 && (
+                <div className="flex justify-between">
+                  <span>Envío</span>
+                  <span>${shippingCost.toLocaleString('es-CL')}</span>
+                </div>
+              )}
+              
+              <hr className="border-gray-300" />
+              
+              <div className="flex justify-between font-semibold text-base">
+                <span>Total</span>
+                <span>
+                  ${(cartState.totalMonto + (isInCoverageArea === true ? shippingCost : 0)).toLocaleString('es-CL')}
+                </span>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Botón de envío */}
         <button
           type="submit"
-          disabled={isSubmitting || !isFormValid}
+          disabled={isSubmitting || !isFormValid || isInCoverageArea === false}
           className={`w-full py-3 px-4 rounded-md font-medium transition-colors ${
-            isFormValid && !isSubmitting
+            isFormValid && !isSubmitting && isInCoverageArea !== false
               ? 'bg-primary-600 hover:bg-primary-700 text-white'
               : 'bg-gray-300 text-gray-500 cursor-not-allowed'
           }`}
@@ -438,6 +861,12 @@ const ContactForm: React.FC<ContactFormProps> = ({ cartState, productosSeleccion
         {!isFormValid && cartState && cartState.totalCantidad < 6 && (
           <p className="text-sm text-amber-600 text-center">
             Agrega al menos 6 unidades para realizar un pedido mayorista
+          </p>
+        )}
+        
+        {isInCoverageArea === false && (
+          <p className="text-sm text-red-600 text-center">
+            Selecciona una dirección dentro de nuestra zona de cobertura para continuar
           </p>
         )}
       </form>
