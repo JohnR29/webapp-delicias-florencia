@@ -104,6 +104,12 @@ export default function RootLayout({
     <html lang="es" className={`${poppins.variable} ${dancingScript.variable}`}>
       <head>
         <StructuredData />
+        <script
+          src={`https://maps.googleapis.com/maps/api/js?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}&libraries=places,geometry`}
+          async
+          defer
+          loading="async"
+        />
       </head>
       <body className={`${poppins.className} antialiased`}>
         <AuthProvider>

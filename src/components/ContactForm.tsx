@@ -10,7 +10,7 @@ import { useAuth } from '@/hooks/useAuth';
 import AuthModal from '@/components/AuthModal';
 
 import { Address, useAddresses } from '@/hooks/useAddresses';
-import AddressManager from '@/components/AddressManager';
+import AddressManager from '@/components/AddressManagerV2';
 
 interface ContactFormProps {
   cartState?: {
@@ -128,19 +128,12 @@ const ContactForm: React.FC<ContactFormProps> = ({ cartState, productosSeleccion
         if (data.features?.length > 0) {
           globalGeoJsonData = data;
           setGeoJsonData(data);
-          console.log('✅ Coverage data loaded:', data.features.length, 'zones');
+
           
-          // Si hay una validación pendiente, ejecutarla ahora
-          if (pendingValidationCoords) {
-            setTimeout(() => {
-              checkCoverage(pendingValidationCoords);
-              setPendingValidationCoords(null);
-            }, 100);
-          }
         }
         
       } catch (error) {
-        console.error('❌ Error loading coverage data:', error);
+
       } finally {
         isLoadingGeoJson = false;
       }
@@ -157,11 +150,11 @@ const ContactForm: React.FC<ContactFormProps> = ({ cartState, productosSeleccion
     const initializeAutocomplete = () => {
       if (!addressInputRef.current || autocomplete || typeof window === 'undefined') return;
 
-      console.log(`Initializing autocomplete... Attempt ${attempts + 1}`);
+
 
       // Verificar si Google Maps ya está disponible
       if (window.google && window.google.maps && window.google.maps.places) {
-        console.log('Google Maps is available, creating autocomplete');
+
         try {
           const autocompleteInstance = new google.maps.places.Autocomplete(addressInputRef.current, {
             componentRestrictions: { country: 'CL' },
@@ -170,32 +163,19 @@ const ContactForm: React.FC<ContactFormProps> = ({ cartState, productosSeleccion
           });
 
           autocompleteInstance.addListener('place_changed', () => {
-            console.log('🎯 Place changed event fired');
             const place = autocompleteInstance.getPlace();
-            console.log('📍 Place selected:', {
-              name: place?.name,
-              formatted_address: place?.formatted_address,
-              geometry: place?.geometry ? {
-                lat: place.geometry.location?.lat(),
-                lng: place.geometry.location?.lng(),
-                viewport: place.geometry.viewport
-              } : null,
-              types: place?.types,
-              address_components: place?.address_components
-            });
             
             if (place && place.geometry && place.geometry.location) {
               const lat = place.geometry.location.lat();
               const lng = place.geometry.location.lng();
               
-              console.log('✅ Valid place with geometry, processing...');
-              console.log('🎯 Autocomplete coordinates:', { lat, lng });
+
               
               // Primero establecer el selectedPlace para evitar conflictos con handleInputChange
               setSelectedPlace(place);
               
               const newAddress = place.formatted_address || place.name || '';
-              console.log('📝 Setting address to:', newAddress);
+
               
               // Usar timeout para asegurar que el selectedPlace se establezca primero
               setTimeout(() => {
@@ -237,7 +217,7 @@ const ContactForm: React.FC<ContactFormProps> = ({ cartState, productosSeleccion
     // Esperar un poco más para que otros componentes terminen de cargar Google Maps
     const timer = setTimeout(initializeAutocomplete, 1500);
     return () => clearTimeout(timer);
-  }, []);
+  }, [autocomplete]); // validateCoverage is stable, autocomplete changes when initialized
 
   // Función para validar cobertura con retry automático hasta que GeoJSON esté listo
   const checkCoverage = useCallback((location: {lat: number, lng: number}, retryCount = 0) => {
@@ -300,7 +280,17 @@ const ContactForm: React.FC<ContactFormProps> = ({ cartState, productosSeleccion
       setIsInCoverageArea(false);
       setShippingCost(0);
     }
-  }, [geoJsonData, pendingValidationCoords]);
+  }, [geoJsonData]);
+
+  // Effect para manejar validación pendiente cuando se cargan los datos
+  useEffect(() => {
+    if (geoJsonData && pendingValidationCoords) {
+      setTimeout(() => {
+        checkCoverage(pendingValidationCoords);
+        setPendingValidationCoords(null);
+      }, 100);
+    }
+  }, [geoJsonData, pendingValidationCoords, checkCoverage]);
 
   // Wrapper para usar con places
   const validateCoverage = async (place: google.maps.places.PlaceResult) => {

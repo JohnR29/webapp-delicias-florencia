@@ -38,6 +38,14 @@ type WindowWithGoogleMaps = typeof window & {
   initGoogleMaps?: () => void;
 };
 
+// Coordenadas de referencia por comuna (backup)
+const COMUNAS_COORDS = {
+  'San Bernardo': { lat: -33.606246, lng: -70.700462 },
+  'La Pintana': { lat: -33.579463, lng: -70.648956 },
+  'El Bosque': { lat: -33.559729, lng: -70.672550 },
+  'La Cisterna': { lat: -33.528348, lng: -70.668608 }
+};
+
 const MapaDistribuidoresGoogle: React.FC<MapaDistribuidoresGoogleProps> = ({ 
   socios, 
   className = '' 
@@ -69,13 +77,7 @@ const MapaDistribuidoresGoogle: React.FC<MapaDistribuidoresGoogleProps> = ({
     }
   }, [permissionState, userLocation, geoLoading, getCurrentLocation]);
 
-  // Coordenadas de referencia por comuna (backup)
-  const COMUNAS_COORDS = {
-    'San Bernardo': { lat: -33.606246, lng: -70.700462 },
-    'La Pintana': { lat: -33.579463, lng: -70.648956 },
-    'El Bosque': { lat: -33.559729, lng: -70.672550 },
-    'La Cisterna': { lat: -33.528348, lng: -70.668608 }
-  };
+
 
   // Estado para coordenadas geocodificadas
   const [sociosGeocodificados, setSociosGeocodificados] = useState<(SocioDistribuidor & { coordenadas?: { lat: number; lng: number } })[]>([]);
@@ -112,25 +114,28 @@ const MapaDistribuidoresGoogle: React.FC<MapaDistribuidoresGoogleProps> = ({
           return;
         }
 
-        // Crear callback global
-        (window as any).initGoogleMaps = () => {
-          setGoogleMaps((window as any).google);
-          setMapLoaded(true);
-        };
-
         // Verificar si el script ya existe
         const existingScript = document.querySelector('script[src*="maps.googleapis.com"]');
         if (existingScript) {
+          existingScript.addEventListener('load', () => {
+            setGoogleMaps((window as any).google);
+            setMapLoaded(true);
+          });
           return;
         }
 
-        // Cargar script de Google Maps
+        // Cargar script de Google Maps sin callback
         const script = document.createElement('script');
-        script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&callback=initGoogleMaps&libraries=places,geometry`;
-        script.async = true;
-        script.defer = true;
-        script.id = 'google-maps-script';
-        
+  script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places,geometry`;
+  script.async = true;
+  script.defer = true;
+  script.id = 'google-maps-script';
+  script.setAttribute('loading', 'async');
+
+        script.onload = () => {
+          setGoogleMaps((window as any).google);
+          setMapLoaded(true);
+        };
         script.onerror = (error) => {
           setMapLoaded(true); // Continuar sin Google Maps
         };
@@ -144,10 +149,7 @@ const MapaDistribuidoresGoogle: React.FC<MapaDistribuidoresGoogleProps> = ({
     loadGoogleMaps();
 
     return () => {
-      // Limpiar callback
-      if ((window as any).initGoogleMaps) {
-        delete (window as any).initGoogleMaps;
-      }
+      // No es necesario limpiar callback global
     };
   }, []);
 
@@ -415,7 +417,7 @@ const MapaDistribuidoresGoogle: React.FC<MapaDistribuidoresGoogleProps> = ({
         },
         // Hacer más visibles los centros comerciales y supermercados
         {
-          featureType: 'poi.establishment',
+          featureType: 'poi',
           elementType: 'labels.text.fill',
           stylers: [
             { color: '#78350f' },
@@ -801,7 +803,6 @@ const MapaDistribuidoresGoogle: React.FC<MapaDistribuidoresGoogleProps> = ({
             {/* Botón ubicación */}
             <button
               onClick={() => {
-                console.log('🎯 Obteniendo ubicación del usuario...');
                 getCurrentLocation();
               }}
               disabled={geoLoading}

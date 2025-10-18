@@ -6,17 +6,18 @@ import BannerMayorista from '@/components/BannerMayorista';
 import PricingTiers from '@/components/PricingTiers';
 import ProductCard from '@/components/ProductCard';
 import ClientContactForm from '@/components/ClientContactForm';
-import ClientMapaCoberturaGoogleMayorista from '@/components/ClientMapaCoberturaGoogleMayorista';
+import MapaCoberturaGoogleMayorista from '@/components/MapaCoberturaGoogleMayorista';
 import MobileCartBar from '@/components/MobileCartBar';
 import ClientScrollToCart from '@/components/ClientScrollToCart';
 import { UserStatusMessage } from '@/components/UserStatusMessage';
 import { ApprovalNotification } from '@/components/ApprovalNotification';
-import { UserDebugInfo } from '@/components/UserDebugInfo';
+import UnifiedAddressModal from '@/components/UnifiedAddressModal';
+
 import { useCart } from '@/hooks/useCart';
 import { useAuth } from '@/hooks/useAuth';
 import { saboresData, saboresUnicos } from '@/data/productos';
 import { useAddresses } from '@/hooks/useAddresses';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { FaBolt, FaMapMarkerAlt, FaCheckCircle, FaStore } from 'react-icons/fa';
 
@@ -39,6 +40,9 @@ export default function MayoristaPage() {
   
   // For now, use the first address as selected (you can enhance this later)
   const selectedAddress = addresses.length > 0 ? addresses[0] : null;
+
+  // Estado para el modal de punto de venta
+  const [showPuntoVentaModal, setShowPuntoVentaModal] = useState(false);
 
   // Redirect if not authenticated
   useEffect(() => {
@@ -97,7 +101,7 @@ export default function MayoristaPage() {
             
             {/* Nuevo componente de mapa con Google Maps */}
             <div className="animate-fade-in">
-              <ClientMapaCoberturaGoogleMayorista className="max-w-6xl mx-auto" />
+              <MapaCoberturaGoogleMayorista className="max-w-6xl mx-auto" />
             </div>
 
             {/* Información adicional */}
@@ -159,12 +163,12 @@ export default function MayoristaPage() {
                   </div>
                   
                   <div className="text-center">
-                    <a
-                      href="/registro-punto-venta"
+                    <button
+                      onClick={() => setShowPuntoVentaModal(true)}
                       className="inline-flex items-center px-8 py-4 bg-gradient-to-r from-orange-500 to-orange-600 text-white font-bold rounded-lg hover:from-orange-600 hover:to-orange-700 transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl text-lg"
                     >
                       Registrar mi punto de venta
-                    </a>
+                    </button>
                   </div>
                 </div>
               </div>
@@ -248,6 +252,16 @@ export default function MayoristaPage() {
           }}
           productosSeleccionados={productosSeleccionados}
           clearCart={clearCart}
+        />
+
+        {/* Modal Unificado de Dirección/Punto de Venta */}
+        <UnifiedAddressModal 
+          isOpen={showPuntoVentaModal}
+          onClose={() => setShowPuntoVentaModal(false)}
+          onSuccess={() => {
+            console.log('Punto de venta registrado exitosamente');
+            // Refrescar datos si es necesario
+          }}
         />
       </main>
     </ClientOnly>

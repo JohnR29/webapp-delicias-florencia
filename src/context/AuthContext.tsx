@@ -1,5 +1,5 @@
 "use client";
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
 import { User } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabaseClient';
 
@@ -48,7 +48,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [loading, setLoading] = useState(true);
   const [profileLoading, setProfileLoading] = useState(false);
 
-  const fetchUserProfile = async (userId: string) => {
+  const fetchUserProfile = useCallback(async (userId: string) => {
     setProfileLoading(true);
     try {
       const { data, error } = await supabase
@@ -102,13 +102,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     } finally {
       setProfileLoading(false);
     }
-  };
+  }, []);
 
-  const refreshProfile = async () => {
+  const refreshProfile = useCallback(async () => {
     if (user) {
       await fetchUserProfile(user.id);
     }
-  };
+  }, [user, fetchUserProfile]);
 
   useEffect(() => {
     let ignore = false;
@@ -172,7 +172,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       ignore = true;
       listener.subscription.unsubscribe();
     };
-  }, []);
+  }, [fetchUserProfile]);
 
   const login = async (email: string, password: string) => {
     setLoading(true);
@@ -278,7 +278,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }, 10000); // Verificar cada 10 segundos
 
     return () => clearInterval(pollInterval);
-  }, [user, profile?.approval_status]);
+  }, [user, profile?.approval_status, refreshProfile]);
 
   // Valores derivados para facilitar el uso
   const isAuthenticated = !!user;

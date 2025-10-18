@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useGeolocation, UserLocation } from './useGeolocation';
 import { useSociosDistribuidores, SocioDistribuidor } from './useSociosDistribuidores';
 
@@ -71,7 +71,7 @@ export function useSociosCercanos() {
   };
 
   // Calcular distancias a todos los socios
-  const calcularDistancias = async (userLocation: UserLocation) => {
+  const calcularDistancias = useCallback(async (userLocation: UserLocation) => {
     if (!socios.length) return;
 
     setLoadingDistancias(true);
@@ -115,7 +115,7 @@ export function useSociosCercanos() {
     } finally {
       setLoadingDistancias(false);
     }
-  };
+  }, [socios, calculateDistance]);
 
   // Obtener los N socios más cercanos
   const getSociosMasCercanos = (limite: number = 5) => {
@@ -156,7 +156,7 @@ export function useSociosCercanos() {
     if (location && socios.length > 0) {
       calcularDistancias(location);
     }
-  }, [location, socios]);
+  }, [location, socios, calcularDistancias]);
 
   return {
     // Estados

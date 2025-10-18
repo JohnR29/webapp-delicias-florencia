@@ -147,7 +147,7 @@ Next.js 14 TypeScript mobile-first web application for **Delicias Florencia**, a
     │   ├── mayorista/               # Wholesale customer portal
     │   ├── perfil/                  # User profile management
     │   ├── registro/                # User registration
-    │   ├── test-socios/            # Partner testing (development)
+
     │   ├── ClientOnlyPage.tsx      # Public product showcase
     │   ├── globals.css             # Global styles and Tailwind
     │   ├── layout.tsx              # Root layout with providers
@@ -160,7 +160,7 @@ Next.js 14 TypeScript mobile-first web application for **Delicias Florencia**, a
     │   ├── CartSummaryBar.tsx      # Cart summary component
     │   ├── ClientContactForm.tsx   # Customer inquiry form
     │   ├── ContactForm.tsx         # Business order form
-    │   ├── CoverageMap.tsx         # Interactive service area map
+
     │   ├── Header.tsx              # Navigation headers (variants)
     │   ├── MapaDistribuidores.tsx  # Partner distributor map
     │   ├── MobileCartBar.tsx       # Mobile floating cart

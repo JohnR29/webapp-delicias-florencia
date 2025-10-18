@@ -3,7 +3,7 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
-import ClientHeaderPublico from '@/components/ClientHeaderPublico';
+import HeaderPublico from '@/components/HeaderPublico';
 import AuthModal from '@/components/AuthModal';
 
 export default function RegistroPage() {
@@ -30,7 +30,7 @@ export default function RegistroPage() {
 
   return (
     <main className="min-h-screen bg-gradient-to-br from-primary-50 via-white to-secondary-50">
-      <ClientHeaderPublico />
+      <HeaderPublico />
       
       {/* Spacer for fixed header */}
       <div className="h-20"></div>

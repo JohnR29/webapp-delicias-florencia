@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import { 
   TODAS_LAS_COMUNAS, 
   COLORES_COBERTURA, 
@@ -87,10 +87,11 @@ const MapaCoberturaGoogleMayorista: React.FC<MapaCoberturaGoogleMayoristaProps> 
 
         // Cargar script de Google Maps
         const script = document.createElement('script');
-        script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&callback=initGoogleMapsMayorista&libraries=places,geometry`;
-        script.async = true;
-        script.defer = true;
-        script.id = 'google-maps-mayorista-script';
+  script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&callback=initGoogleMapsMayorista&libraries=places,geometry`;
+  script.async = true;
+  script.defer = true;
+  script.id = 'google-maps-mayorista-script';
+  script.setAttribute('loading', 'async');
         
         script.onerror = () => {
           console.warn('❌ Error cargando Google Maps, usando fallback');
@@ -448,7 +449,7 @@ const MapaCoberturaGoogleMayorista: React.FC<MapaCoberturaGoogleMayoristaProps> 
   };
 
   // Función para verificar si el usuario está en zona de cobertura
-  const checkCoverage = (location: {lat: number, lng: number}) => {
+  const checkCoverage = useCallback((location: {lat: number, lng: number}) => {
     if (!geoJsonData || !googleMaps || !googleMaps.maps.geometry) return;
 
     try {
@@ -476,7 +477,7 @@ const MapaCoberturaGoogleMayorista: React.FC<MapaCoberturaGoogleMayoristaProps> 
       console.error('Error verificando cobertura:', error);
       setCoverageInfo({ inCoverage: false });
     }
-  };
+  }, [geoJsonData, googleMaps]);
 
   // Función para buscar dirección manual
   const searchManualAddress = async () => {
@@ -616,7 +617,7 @@ const MapaCoberturaGoogleMayorista: React.FC<MapaCoberturaGoogleMayoristaProps> 
     if (userLocation && geoJsonData) {
       checkCoverage(userLocation);
     }
-  }, [userLocation, geoJsonData, googleMaps]);
+  }, [userLocation, geoJsonData, googleMaps, checkCoverage]);
 
   // Fallback si no hay Google Maps
   if (!mapLoaded) {
