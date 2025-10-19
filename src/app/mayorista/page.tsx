@@ -22,7 +22,7 @@ import { useRouter } from 'next/navigation';
 import { FaBolt, FaMapMarkerAlt, FaCheckCircle, FaStore } from 'react-icons/fa';
 
 export default function MayoristaPage() {
-  const { user, profile, loading: authLoading, isEmailVerified, isApproved } = useAuth();
+  const { user, profile, loading: authLoading, profileLoading, isEmailVerified, isApproved, refreshProfile } = useAuth();
   const router = useRouter();
   
   const {
@@ -36,7 +36,7 @@ export default function MayoristaPage() {
     productosSeleccionados
   } = useCart(saboresData);
 
-  const { addresses, loading: addressesLoading } = useAddresses(user?.id || '');
+  const { addresses, loading: addressesLoading } = useAddresses(user?.id ?? null);
   
   // For now, use the first address as selected (you can enhance this later)
   const selectedAddress = addresses.length > 0 ? addresses[0] : null;
@@ -51,13 +51,50 @@ export default function MayoristaPage() {
     }
   }, [user, authLoading, router]);
 
-  // Show loading while checking authentication
-  if (authLoading) {
+
+  // Mostrar loader si la autenticación o el perfil están cargando
+  if (authLoading || profileLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-50 via-white to-secondary-50">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Verificando acceso...</p>
+          <p className="text-gray-600">Cargando tu perfil mayorista...</p>
+          <div className="mt-4 text-xs text-gray-400">(Espere unos segundos. Si esto no avanza, contacte soporte y revise la consola del navegador para ver detalles del error.)</div>
+        </div>
+      </div>
+    );
+  }
+
+  // Mostrar error si no hay perfil, o si el perfil está incompleto o no aprobado
+  if (!profile) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-50 via-white to-secondary-50">
+        <div className="text-center">
+          <div className="text-4xl mb-4 text-red-500">❌</div>
+          <p className="text-gray-700 mb-4">No se pudo cargar tu perfil mayorista.<br />Contacta soporte si el problema persiste.</p>
+          <div className="mt-4 text-xs text-gray-400">(Revisa la consola del navegador para ver el error exacto de Supabase. Si ves un error de red, revisa tu conexión o las credenciales de Supabase.)</div>
+        </div>
+      </div>
+    );
+  }
+
+  // Mostrar advertencia si el perfil existe pero no está aprobado o el email no está verificado
+  if (profile.approval_status !== 'approved') {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-50 via-white to-secondary-50">
+        <div className="text-center">
+          <div className="text-4xl mb-4 text-yellow-500">⚠️</div>
+          <p className="text-gray-700 mb-4">Tu perfil está pendiente de aprobación.<br />Recibirás un correo cuando sea aprobado.</p>
+        </div>
+      </div>
+    );
+  }
+  if (!profile.email_verified) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-50 via-white to-secondary-50">
+        <div className="text-center">
+          <div className="text-4xl mb-4 text-yellow-500">⚠️</div>
+          <p className="text-gray-700 mb-4">Debes verificar tu correo electrónico para acceder como mayorista.</p>
         </div>
       </div>
     );
