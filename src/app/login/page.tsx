@@ -10,7 +10,10 @@ function LoginContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { user, isAuthenticated } = useAuth();
-  const redirect = searchParams.get('redirect') || '/mayorista';
+  let redirect = '/mayorista';
+  if (searchParams) {
+    redirect = searchParams.get('redirect') || '/mayorista';
+  }
 
   useEffect(() => {
     if (isAuthenticated && user) {

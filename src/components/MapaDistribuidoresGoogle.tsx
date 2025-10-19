@@ -52,6 +52,7 @@ const MapaDistribuidoresGoogle: React.FC<MapaDistribuidoresGoogleProps> = ({
 }) => {
   const [mapLoaded, setMapLoaded] = useState(false);
   const [googleMaps, setGoogleMaps] = useState<any>(null);
+  const [markerLib, setMarkerLib] = useState<any>(null);
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<any>(null);
   const markersRef = useRef<any[]>([]);
@@ -89,74 +90,40 @@ const MapaDistribuidoresGoogle: React.FC<MapaDistribuidoresGoogleProps> = ({
   // Cargar Google Maps API dinámicamente
   useEffect(() => {
     if (typeof window === 'undefined') return;
-
-    const loadGoogleMaps = async () => {
-      try {
-        const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
-        
-        if (!apiKey || apiKey === 'TU_API_KEY_AQUI' || !apiKey.startsWith('AIza')) {
-          setMapLoaded(true);
-          return;
-        }
-
-        // Si ya está cargado
-        if ((window as any).google) {
-
-          setGoogleMaps((window as any).google);
-          setMapLoaded(true);
-          return;
-        }
-
-        // Verificar si Google Maps ya está cargado
-        if ((window as any).google?.maps) {
-          setGoogleMaps((window as any).google);
-          setMapLoaded(true);
-          return;
-        }
-
-        // Verificar si el script ya existe
-        const existingScript = document.querySelector('script[src*="maps.googleapis.com"]');
-        if (existingScript) {
-          existingScript.addEventListener('load', () => {
-            setGoogleMaps((window as any).google);
+    let isMounted = true;
+    // Esperar a que Google Maps esté disponible globalmente
+    const checkGoogleMaps = setInterval(async () => {
+      if ((window as any).google && (window as any).google.maps && (window as any).google.maps.importLibrary) {
+        const google = (window as any).google;
+        try {
+          // Cargar la librería marker de forma modular
+          const marker = await google.maps.importLibrary('marker');
+          if (isMounted) {
+            setGoogleMaps(google);
+            setMarkerLib(marker);
             setMapLoaded(true);
-          });
-          return;
+          }
+        } catch (e) {
+          if (isMounted) setMapLoaded(true);
         }
-
-        // Cargar script de Google Maps sin callback
-        const script = document.createElement('script');
-  script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places,geometry`;
-  script.async = true;
-  script.defer = true;
-  script.id = 'google-maps-script';
-  script.setAttribute('loading', 'async');
-
-        script.onload = () => {
-          setGoogleMaps((window as any).google);
-          setMapLoaded(true);
-        };
-        script.onerror = (error) => {
-          setMapLoaded(true); // Continuar sin Google Maps
-        };
-
-        document.head.appendChild(script);
-      } catch (error) {
-        setMapLoaded(true); // Continuar sin Google Maps
+        clearInterval(checkGoogleMaps);
       }
-    };
-
-    loadGoogleMaps();
-
+    }, 50);
+    // Fallback: si no carga en 10s, continuar sin mapa
+    const timeout = setTimeout(() => {
+      setMapLoaded(true);
+      clearInterval(checkGoogleMaps);
+    }, 10000);
     return () => {
-      // No es necesario limpiar callback global
+      isMounted = false;
+      clearInterval(checkGoogleMaps);
+      clearTimeout(timeout);
     };
   }, []);
 
   // Inicializar mapa de Google
   useEffect(() => {
     if (!googleMaps || !mapRef.current || mapInstanceRef.current) return;
-
     try {
       // Estilo personalizado que combina con los colores de la app y muestra información útil
       const customMapStyles = [
@@ -463,7 +430,11 @@ const MapaDistribuidoresGoogle: React.FC<MapaDistribuidoresGoogleProps> = ({
         }
       };
 
-      const map = new googleMaps.maps.Map(mapRef.current, mapOptions);
+      const mapId = process.env.NEXT_PUBLIC_GOOGLE_MAPS_MAP_ID;
+      const map = new googleMaps.maps.Map(mapRef.current, {
+        ...mapOptions,
+        ...(mapId ? { mapId } : {})
+      });
       mapInstanceRef.current = map;
 
       // Crear geocoder
@@ -473,7 +444,7 @@ const MapaDistribuidoresGoogle: React.FC<MapaDistribuidoresGoogleProps> = ({
     } catch (error) {
 
     }
-  }, [googleMaps]);
+  }, [googleMaps, markerLib?.AdvancedMarkerElement]);
 
   // Función para geocodificar dirección usando Google Geocoding API
   const geocodificarDireccion = useCallback(async (direccion: string, comuna: string): Promise<{ lat: number; lng: number } | null> => {
@@ -577,13 +548,11 @@ const MapaDistribuidoresGoogle: React.FC<MapaDistribuidoresGoogleProps> = ({
   // Crear marcador de ubicación del usuario
   useEffect(() => {
     if (!googleMaps || !mapInstanceRef.current || !userLocation) return;
-
     // Remover marcador anterior del usuario si existe
     if (userMarkerRef.current) {
       userMarkerRef.current.setMap(null);
       userMarkerRef.current = null;
     }
-
     try {
       // SVG con React Icons para el marcador del usuario
       const userSvgIcon = `
@@ -610,18 +579,18 @@ const MapaDistribuidoresGoogle: React.FC<MapaDistribuidoresGoogleProps> = ({
       const encodedUserIcon = encodeURIComponent(userSvgIcon);
 
       // Crear marcador personalizado para el usuario
-      const userMarker = new googleMaps.maps.Marker({
+      const userIcon = document.createElement('div');
+      userIcon.style.width = '28px';
+      userIcon.style.height = '28px';
+      userIcon.innerHTML = userSvgIcon;
+
+  if (!markerLib?.AdvancedMarkerElement) return;
+  const userMarker = new markerLib.AdvancedMarkerElement({
         position: { lat: userLocation.lat, lng: userLocation.lng },
         map: mapInstanceRef.current,
         title: 'Tu ubicación',
-        icon: {
-          url: 'data:image/svg+xml;charset=utf-8,' + encodedUserIcon,
-          scaledSize: new googleMaps.maps.Size(28, 28),
-          anchor: new googleMaps.maps.Point(14, 14),
-          optimized: false
-        },
-        zIndex: 1000,
-        animation: googleMaps.maps.Animation.DROP
+        content: userIcon,
+        zIndex: 1000
       });
 
       // Info window simplificado para el usuario
@@ -646,7 +615,7 @@ const MapaDistribuidoresGoogle: React.FC<MapaDistribuidoresGoogleProps> = ({
     } catch (error) {
 
     }
-  }, [googleMaps, userLocation]);
+  }, [googleMaps, userLocation, markerLib?.AdvancedMarkerElement]);
 
 
 
@@ -655,32 +624,25 @@ const MapaDistribuidoresGoogle: React.FC<MapaDistribuidoresGoogleProps> = ({
     if (!googleMaps || !mapInstanceRef.current || !sociosGeocodificados.length) {
       return;
     }
-
     // Limpiar marcadores existentes
     markersRef.current.forEach(marker => {
       try {
         marker.setMap(null);
       } catch (error) {
-
       }
     });
     markersRef.current = [];
-
     const bounds = new googleMaps.maps.LatLngBounds();
     const newMarkers: any[] = [];
-
     sociosGeocodificados.forEach((socio, index) => {
       if (!socio.coordenadas) {
         return;
       }
-
       try {
         const position = { lat: socio.coordenadas.lat, lng: socio.coordenadas.lng };
-        
         // Crear marcador personalizado con colores que combinen con la app
         const isDirectOrder = socio.permite_pedidos_directos;
         const markerColor = isDirectOrder ? '#ea580c' : '#f97316'; // Naranjas de la app
-        
         // SVG directo del ícono FaMapMarkerAlt con el path correcto
         const svgIcon = `
           <svg width="32" height="32" viewBox="0 0 384 512" xmlns="http://www.w3.org/2000/svg">
@@ -698,17 +660,17 @@ const MapaDistribuidoresGoogle: React.FC<MapaDistribuidoresGoogleProps> = ({
         // Convertir SVG a data URL
         const encodedIcon = encodeURIComponent(svgIcon);
         
-        const marker = new googleMaps.maps.Marker({
+        const markerIcon = document.createElement('div');
+        markerIcon.style.width = '24px';
+        markerIcon.style.height = '30px';
+        markerIcon.innerHTML = svgIcon;
+
+  if (!markerLib?.AdvancedMarkerElement) return;
+  const marker = new markerLib.AdvancedMarkerElement({
           position: position,
           map: mapInstanceRef.current,
           title: socio.nombre_comercial,
-          icon: {
-            url: 'data:image/svg+xml;charset=utf-8,' + encodedIcon,
-            scaledSize: new googleMaps.maps.Size(24, 30),
-            anchor: new googleMaps.maps.Point(12, 30), // Anclar en la base del pin
-            optimized: false // Para mejor renderizado de SVG personalizado
-          },
-          animation: googleMaps.maps.Animation.DROP // Animación de caída
+          content: markerIcon
         });
 
         // Al hacer clic en el marcador, abrir el modal con los detalles del socio
@@ -747,7 +709,7 @@ const MapaDistribuidoresGoogle: React.FC<MapaDistribuidoresGoogleProps> = ({
 
       }
     }
-  }, [googleMaps, sociosGeocodificados, userLocation, calculateDistance]);
+  }, [googleMaps, sociosGeocodificados, userLocation, calculateDistance, markerLib?.AdvancedMarkerElement]);
 
   // Funciones para el modal "Ver todos"
   const openAllModal = () => {

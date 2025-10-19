@@ -24,6 +24,7 @@ const MapaCoberturaGoogleMayorista: React.FC<MapaCoberturaGoogleMayoristaProps> 
 }) => {
   const [mapLoaded, setMapLoaded] = useState(false);
   const [googleMaps, setGoogleMaps] = useState<any>(null);
+  const [markerLib, setMarkerLib] = useState<any>(null);
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<any>(null);
   const markersRef = useRef<any[]>([]);
@@ -43,74 +44,39 @@ const MapaCoberturaGoogleMayorista: React.FC<MapaCoberturaGoogleMayoristaProps> 
   const [showManualInput, setShowManualInput] = useState(false);
   const addressInputRef = useRef<HTMLInputElement>(null);
   const autocompleteRef = useRef<any>(null);
+  const placeAutocompleteElementRef = useRef<any>(null);
 
   // Cargar Google Maps API dinámicamente
   useEffect(() => {
     if (typeof window === 'undefined') return;
-
-    const loadGoogleMaps = async () => {
-      try {
-        const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
-        
-        if (!apiKey || apiKey === 'TU_API_KEY_AQUI' || !apiKey.startsWith('AIza')) {
-          console.warn('⚠️ Google Maps API Key no configurada, usando fallback');
-          setMapLoaded(true);
-          return;
+    let isMounted = true;
+    // Esperar a que Google Maps esté disponible globalmente
+    const checkGoogleMaps = setInterval(async () => {
+      if ((window as any).google && (window as any).google.maps && (window as any).google.maps.importLibrary) {
+        const google = (window as any).google;
+        try {
+          // Cargar la librería marker de forma modular
+          const marker = await google.maps.importLibrary('marker');
+          if (isMounted) {
+            setGoogleMaps(google);
+            setMarkerLib(marker);
+            setMapLoaded(true);
+          }
+        } catch (e) {
+          if (isMounted) setMapLoaded(true);
         }
-
-        // Si ya está cargado
-        if ((window as any).google?.maps) {
-          setGoogleMaps((window as any).google);
-          setMapLoaded(true);
-          return;
-        }
-
-        // Crear callback global
-        (window as any).initGoogleMapsMayorista = () => {
-          setGoogleMaps((window as any).google);
-          setMapLoaded(true);
-        };
-
-        // Verificar si el script ya existe
-        const existingScript = document.querySelector('script[src*="maps.googleapis.com"]');
-        if (existingScript) {
-          // Si existe pero no está inicializado, esperar
-          const checkLoaded = setInterval(() => {
-            if ((window as any).google?.maps) {
-              setGoogleMaps((window as any).google);
-              setMapLoaded(true);
-              clearInterval(checkLoaded);
-            }
-          }, 100);
-          return;
-        }
-
-        // Cargar script de Google Maps
-        const script = document.createElement('script');
-  script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&callback=initGoogleMapsMayorista&libraries=places,geometry`;
-  script.async = true;
-  script.defer = true;
-  script.id = 'google-maps-mayorista-script';
-  script.setAttribute('loading', 'async');
-        
-        script.onerror = () => {
-          console.warn('❌ Error cargando Google Maps, usando fallback');
-          setMapLoaded(true);
-        };
-
-        document.head.appendChild(script);
-      } catch (error) {
-        console.error('Error inicializando Google Maps:', error);
-        setMapLoaded(true);
+        clearInterval(checkGoogleMaps);
       }
-    };
-
-    loadGoogleMaps();
-
+    }, 50);
+    // Fallback: si no carga en 10s, continuar sin mapa
+    const timeout = setTimeout(() => {
+      setMapLoaded(true);
+      clearInterval(checkGoogleMaps);
+    }, 10000);
     return () => {
-      if ((window as any).initGoogleMapsMayorista) {
-        delete (window as any).initGoogleMapsMayorista;
-      }
+      isMounted = false;
+      clearInterval(checkGoogleMaps);
+      clearTimeout(timeout);
     };
   }, []);
 
@@ -194,7 +160,11 @@ const MapaCoberturaGoogleMayorista: React.FC<MapaCoberturaGoogleMayoristaProps> 
         clickableIcons: false
       };
 
-      const map = new googleMaps.maps.Map(mapRef.current, mapOptions);
+      const mapId = process.env.NEXT_PUBLIC_GOOGLE_MAPS_MAP_ID;
+      const map = new googleMaps.maps.Map(mapRef.current, {
+        ...mapOptions,
+        ...(mapId ? { mapId } : {})
+      });
       mapInstanceRef.current = map;
 
       console.log('🗺️ Mapa de cobertura mayorista inicializado');
@@ -206,18 +176,15 @@ const MapaCoberturaGoogleMayorista: React.FC<MapaCoberturaGoogleMayoristaProps> 
   // Cargar y mostrar polígonos GeoJSON diferenciados por costo
   useEffect(() => {
     if (!googleMaps || !mapInstanceRef.current) return;
-
     const loadGeoJSON = async () => {
       try {
         const response = await fetch('/cobertura-costos.geojson');
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
-        
         const data = await response.json();
         setGeoJsonData(data); // Guardar datos para verificación de cobertura
         const bounds = new googleMaps.maps.LatLngBounds();
-        
         // Procesar features del GeoJSON
         data.features.forEach((feature: any) => {
           if (feature.geometry.type === 'Polygon') {
@@ -225,13 +192,10 @@ const MapaCoberturaGoogleMayorista: React.FC<MapaCoberturaGoogleMayoristaProps> 
             const paths = feature.geometry.coordinates.map((ring: number[][]) => 
               ring.map(([lng, lat]: number[]) => ({ lat, lng }))
             );
-
             // Obtener costo del feature
             const costo = feature.properties.cost || 1000;
-            
             // Obtener colores según el costo
             const colores = COLORES_POR_COSTO[costo as keyof typeof COLORES_POR_COSTO] || COLORES_POR_COSTO[1000];
-
             // Crear el polígono con estilos según costo e interactividad
             const polygon = new googleMaps.maps.Polygon({
               paths: paths,
@@ -243,7 +207,6 @@ const MapaCoberturaGoogleMayorista: React.FC<MapaCoberturaGoogleMayoristaProps> 
               map: mapInstanceRef.current,
               clickable: true // Habilitar clicks
             });
-
             // Agregar efectos de hover y click
             polygon.addListener('mouseover', () => {
               polygon.setOptions({
@@ -252,7 +215,6 @@ const MapaCoberturaGoogleMayorista: React.FC<MapaCoberturaGoogleMayoristaProps> 
                 strokeOpacity: 1.0
               });
             });
-
             polygon.addListener('mouseout', () => {
               polygon.setOptions({
                 fillOpacity: colores.fillOpacity, // Restaurar opacidad original
@@ -260,14 +222,12 @@ const MapaCoberturaGoogleMayorista: React.FC<MapaCoberturaGoogleMayoristaProps> 
                 strokeOpacity: 0.8
               });
             });
-
             polygon.addListener('click', (event: any) => {
               // Efecto de "pulso" al hacer click
               polygon.setOptions({
                 fillOpacity: 0.6,
                 strokeWeight: 4
               });
-              
               // Restaurar después de 200ms
               setTimeout(() => {
                 polygon.setOptions({
@@ -275,12 +235,10 @@ const MapaCoberturaGoogleMayorista: React.FC<MapaCoberturaGoogleMayoristaProps> 
                   strokeWeight: 2
                 });
               }, 200);
-
               // Mostrar información del costo (opcional)
               const priceText = `Despacho: $${costo.toLocaleString('es-CL')}`;
               console.log(`📍 Zona seleccionada - ${priceText}`);
             });
-
             // Usar coordenadas personalizadas para la etiqueta o calcular el centro como fallback
             let labelPosition;
             if (feature.properties.labelPosition) {
@@ -294,65 +252,32 @@ const MapaCoberturaGoogleMayorista: React.FC<MapaCoberturaGoogleMayoristaProps> 
               paths[0].forEach((point: any) => polygonBounds.extend(point));
               labelPosition = polygonBounds.getCenter();
             }
-
             // Crear etiqueta de precio más visible con fondo
             const priceText = `$${(costo / 1000).toFixed(0)}.000`;
-            
-            const priceLabel = new googleMaps.maps.Marker({
+            const priceLabelDiv = document.createElement('div');
+            priceLabelDiv.style.width = '65px';
+            priceLabelDiv.style.height = '24px';
+            priceLabelDiv.innerHTML = `
+              <svg xmlns="http://www.w3.org/2000/svg" width="65" height="24" viewBox="0 0 65 24">
+                <rect x="1" y="1" width="63" height="22" rx="11" fill="white" stroke="#ea580c" stroke-width="1.5"/>
+                <text x="32.5" y="15.5" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" font-weight="bold" fill="#ea580c">${priceText}</text>
+              </svg>
+            `;
+            if (!markerLib?.AdvancedMarkerElement) return;
+            const priceLabel = new markerLib.AdvancedMarkerElement({
               position: labelPosition,
               map: mapInstanceRef.current,
-              icon: {
-                url: `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(`
-                  <svg xmlns="http://www.w3.org/2000/svg" width="65" height="24" viewBox="0 0 65 24">
-                    <rect x="1" y="1" width="63" height="22" rx="11" fill="white" stroke="#ea580c" stroke-width="1.5"/>
-                    <text x="32.5" y="15.5" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" font-weight="bold" fill="#ea580c">${priceText}</text>
-                  </svg>
-                `)}`,
-                scaledSize: new googleMaps.maps.Size(65, 24),
-                anchor: new googleMaps.maps.Point(32.5, 12)
-              },
-              clickable: false,
+              content: priceLabelDiv,
               zIndex: 1000
             });
-
-            // No necesitamos tooltips ni modales
-            /* Removido: ya no necesitamos infoWindow */
-            /*
-            const infoWindow = new googleMaps.maps.InfoWindow({
-              content: `
-                <div style="padding: 8px; font-family: system-ui, -apple-system, sans-serif;">
-                  <div style="font-weight: 600; color: ${colores.stroke}; margin-bottom: 4px;">
-                    ${costo === 0 ? '🎁 Despacho Gratuito' : `� Despacho $${costo.toLocaleString('es-CL')}`}
-                  </div>
-                  <div style="font-size: 12px; color: #666;">
-                    Zona de cobertura mayorista
-                  </div>
-                </div>
-              `
-            });
-
-            // Event listeners para el polígono
-            polygon.addListener('mouseover', (event: any) => {
-              infoWindow.setPosition(event.latLng);
-              infoWindow.open(mapInstanceRef.current);
-            });
-
-            polygon.addListener('mouseout', () => {
-              infoWindow.close();
-            });
-            */
-
             // Agregar puntos al bounds para ajustar vista
             paths[0].forEach((point: any) => bounds.extend(point));
-
             console.log(`🗺️ Polígono renderizado - Costo: $${costo.toLocaleString('es-CL')}`);
           }
         });
-
         // Ajustar vista para mostrar todos los polígonos
         if (!bounds.isEmpty()) {
           mapInstanceRef.current.fitBounds(bounds);
-          
           // Limitar zoom
           const listener = googleMaps.maps.event.addListener(mapInstanceRef.current, 'bounds_changed', () => {
             const zoom = mapInstanceRef.current.getZoom();
@@ -364,14 +289,12 @@ const MapaCoberturaGoogleMayorista: React.FC<MapaCoberturaGoogleMayoristaProps> 
             googleMaps.maps.event.removeListener(listener);
           });
         }
-
       } catch (error) {
         console.error('❌ Error cargando polígonos GeoJSON:', error);
       }
     };
-
     loadGeoJSON();
-  }, [googleMaps]);
+  }, [googleMaps, markerLib?.AdvancedMarkerElement]);
 
   // Función para obtener ubicación del usuario
   const getUserLocation = () => {
@@ -405,18 +328,20 @@ const MapaCoberturaGoogleMayorista: React.FC<MapaCoberturaGoogleMayoristaProps> 
           }
 
           // Crear nuevo marcador del usuario
-          userMarkerRef.current = new googleMaps.maps.Marker({
+          const userCircle = document.createElement('div');
+          userCircle.style.width = '20px';
+          userCircle.style.height = '20px';
+          userCircle.style.borderRadius = '50%';
+          userCircle.style.background = '#4285F4';
+          userCircle.style.border = '2px solid #fff';
+          userCircle.style.boxShadow = '0 0 4px rgba(0,0,0,0.15)';
+          userCircle.style.display = 'block';
+          if (!markerLib?.AdvancedMarkerElement) return;
+          userMarkerRef.current = new markerLib.AdvancedMarkerElement({
             position: userPos,
             map: mapInstanceRef.current,
             title: 'Tu ubicación',
-            icon: {
-              path: googleMaps.maps.SymbolPath.CIRCLE,
-              fillColor: '#4285F4',
-              fillOpacity: 1,
-              strokeColor: '#ffffff',
-              strokeWeight: 2,
-              scale: 8
-            }
+            content: userCircle
           });
 
           // Centrar el mapa en la ubicación del usuario
@@ -523,18 +448,20 @@ const MapaCoberturaGoogleMayorista: React.FC<MapaCoberturaGoogleMayoristaProps> 
         }
 
         // Crear nuevo marcador del usuario
-        userMarkerRef.current = new googleMaps.maps.Marker({
+        const userCircle = document.createElement('div');
+        userCircle.style.width = '20px';
+        userCircle.style.height = '20px';
+        userCircle.style.borderRadius = '50%';
+        userCircle.style.background = '#4285F4';
+        userCircle.style.border = '2px solid #fff';
+        userCircle.style.boxShadow = '0 0 4px rgba(0,0,0,0.15)';
+        userCircle.style.display = 'block';
+  if (!markerLib?.AdvancedMarkerElement) return;
+  userMarkerRef.current = new markerLib.AdvancedMarkerElement({
           position: userPos,
           map: mapInstanceRef.current,
           title: `Dirección: ${manualAddress}`,
-          icon: {
-            path: googleMaps.maps.SymbolPath.CIRCLE,
-            fillColor: '#4285F4',
-            fillOpacity: 1,
-            strokeColor: '#ffffff',
-            strokeWeight: 2,
-            scale: 8
-          }
+          content: userCircle
         });
 
         // Centrar el mapa en la ubicación
@@ -549,30 +476,27 @@ const MapaCoberturaGoogleMayorista: React.FC<MapaCoberturaGoogleMayoristaProps> 
     }
   };
 
-  // Configurar autocompletado de Google Places
+  // Configurar autocompletado de Google Places (nuevo: PlaceAutocompleteElement)
   useEffect(() => {
-    if (!googleMaps || !addressInputRef.current || autocompleteRef.current) return;
+    if (!googleMaps || !addressInputRef.current || placeAutocompleteElementRef.current) return;
 
     try {
-      const autocomplete = new googleMaps.maps.places.Autocomplete(addressInputRef.current, {
-        types: ['address'],
-        componentRestrictions: { country: 'cl' },
-        fields: ['geometry', 'formatted_address', 'name']
-      });
+      // Crear el nuevo elemento de autocompletado
+      const placeAutocomplete = new googleMaps.maps.places.PlaceAutocompleteElement();
+      placeAutocomplete.setComponentRestrictions({ country: ['cl'] });
+      placeAutocomplete.setFields(['geometry', 'formatted_address', 'name']);
+      placeAutocomplete.input = addressInputRef.current;
 
-      autocomplete.addListener('place_changed', () => {
-        const place = autocomplete.getPlace();
-        
-        if (!place.geometry) {
+      placeAutocomplete.addListener('gmp-placeautocomplete-placechanged', () => {
+        const place = placeAutocomplete.getPlace();
+        if (!place || !place.geometry) {
           setAddressError('Selecciona una dirección de la lista de sugerencias');
           return;
         }
-
         const userPos = {
           lat: place.geometry.location.lat(),
           lng: place.geometry.location.lng()
         };
-
         setUserLocation(userPos);
         setManualAddress(place.formatted_address || place.name || '');
         checkCoverage(userPos);
@@ -584,31 +508,31 @@ const MapaCoberturaGoogleMayorista: React.FC<MapaCoberturaGoogleMayoristaProps> 
           if (userMarkerRef.current) {
             userMarkerRef.current.setMap(null);
           }
-
           // Crear nuevo marcador del usuario
-          userMarkerRef.current = new googleMaps.maps.Marker({
+          const userCircle = document.createElement('div');
+          userCircle.style.width = '20px';
+          userCircle.style.height = '20px';
+          userCircle.style.borderRadius = '50%';
+          userCircle.style.background = '#4285F4';
+          userCircle.style.border = '2px solid #fff';
+          userCircle.style.boxShadow = '0 0 4px rgba(0,0,0,0.15)';
+          userCircle.style.display = 'block';
+          if (!markerLib?.AdvancedMarkerElement) return;
+          userMarkerRef.current = new markerLib.AdvancedMarkerElement({
             position: userPos,
             map: mapInstanceRef.current,
             title: `Dirección: ${place.formatted_address || place.name}`,
-            icon: {
-              path: googleMaps.maps.SymbolPath.CIRCLE,
-              fillColor: '#4285F4',
-              fillOpacity: 1,
-              strokeColor: '#ffffff',
-              strokeWeight: 2,
-              scale: 8
-            }
+            content: userCircle
           });
-
           // Centrar el mapa en la ubicación
           mapInstanceRef.current.setCenter(userPos);
           mapInstanceRef.current.setZoom(15);
         }
       });
 
-      autocompleteRef.current = autocomplete;
+      placeAutocompleteElementRef.current = placeAutocomplete;
     } catch (error) {
-      console.error('Error configurando autocompletado:', error);
+      console.error('Error configurando PlaceAutocompleteElement:', error);
     }
   }, [googleMaps, showManualInput]);
 
@@ -617,7 +541,7 @@ const MapaCoberturaGoogleMayorista: React.FC<MapaCoberturaGoogleMayoristaProps> 
     if (userLocation && geoJsonData) {
       checkCoverage(userLocation);
     }
-  }, [userLocation, geoJsonData, googleMaps, checkCoverage]);
+  }, [userLocation, geoJsonData, googleMaps, checkCoverage, markerLib?.AdvancedMarkerElement]);
 
   // Fallback si no hay Google Maps
   if (!mapLoaded) {

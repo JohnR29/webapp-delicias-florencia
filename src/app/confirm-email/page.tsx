@@ -13,8 +13,10 @@ function ConfirmEmailContent() {
   useEffect(() => {
     const confirmEmail = async () => {
       // Obtener el token de la URL
-      const token = searchParams.get('token') || searchParams.get('token_hash');
-      
+      let token: string | null = null;
+      if (searchParams) {
+        token = searchParams.get('token') || searchParams.get('token_hash');
+      }
       if (!token) {
         setStatus('error');
         setMessage('Token de confirmación no válido');

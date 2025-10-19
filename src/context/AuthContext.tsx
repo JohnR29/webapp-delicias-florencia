@@ -112,7 +112,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     let ignore = false;
-    
     // Obtener sesión inicial
     supabase.auth.getSession().then(async ({ data, error }) => {
       if (!ignore) {
@@ -123,7 +122,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         } else {
           const currentUser = data.session?.user ?? null;
           setUser(currentUser);
-          
           // Obtener perfil si hay usuario
           if (currentUser) {
             await fetchUserProfile(currentUser.id);
@@ -134,7 +132,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setLoading(false);
       }
     });
-
     // Escuchar cambios en el estado de autenticación
     const { data: listener } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (event === 'SIGNED_OUT') {
@@ -148,7 +145,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       } else if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
         const currentUser = session?.user ?? null;
         setUser(currentUser);
-        
         // Obtener perfil del usuario
         if (currentUser) {
           await fetchUserProfile(currentUser.id);
@@ -158,7 +154,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       } else {
         const currentUser = session?.user ?? null;
         setUser(currentUser);
-        
         if (currentUser && !profile) {
           await fetchUserProfile(currentUser.id);
         } else if (!currentUser) {
@@ -167,12 +162,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
       setLoading(false);
     });
-
     return () => {
       ignore = true;
       listener.subscription.unsubscribe();
     };
-  }, [fetchUserProfile]);
+  }, [fetchUserProfile, profile]);
 
   const login = async (email: string, password: string) => {
     setLoading(true);
@@ -272,13 +266,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   // Polling para verificar cambios en el perfil (solo para usuarios no aprobados)
   useEffect(() => {
     if (!user || !profile || profile.approval_status === 'approved') return;
-
     const pollInterval = setInterval(async () => {
       await refreshProfile();
     }, 10000); // Verificar cada 10 segundos
-
     return () => clearInterval(pollInterval);
-  }, [user, profile?.approval_status, refreshProfile]);
+  }, [user, profile, profile?.approval_status, refreshProfile]);
 
   // Valores derivados para facilitar el uso
   const isAuthenticated = !!user;
