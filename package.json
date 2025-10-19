@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.67.0",
     "@googlemaps/js-api-loader": "^2.0.1",
     "@supabase/supabase-js": "^2.57.4",
     "@turf/turf": "^7.2.0",
@@ -19,7 +20,7 @@
     "bcryptjs": "^3.0.2",
     "leaflet": "^1.9.4",
     "lucide-react": "^0.544.0",
-    "next": "14.2.13",
+    "next": "^14.2.33",
     "nodemailer": "^7.0.6",
     "react": "^18",
     "react-dom": "^18",

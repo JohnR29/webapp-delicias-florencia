@@ -47,22 +47,56 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [profileLoading, setProfileLoading] = useState(false);
+  // Fallback para limpiar sesión si detecta inconsistencia
+  useEffect(() => {
+    if (!loading && !user && typeof window !== 'undefined') {
+      localStorage.clear();
+      sessionStorage.clear();
+    }
+  }, [loading, user]);
 
+  // Control de concurrencia para evitar requests duplicadas
+  const profileRequestRef = React.useRef<Promise<void> | null>(null);
   const fetchUserProfile = useCallback(async (userId: string) => {
+    if (!user || profileLoading) {
+      console.log('[fetchUserProfile] Abort: user null o profileLoading', { user, profileLoading });
+      return;
+    }
     setProfileLoading(true);
-    try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', userId)
-        .single();
-
-      if (error) {
-        console.error('Error fetching profile:', error);
-        // Si no existe el perfil, intentar crearlo basado en los datos del usuario
-        const { data: userData, error: userError } = await supabase.auth.getUser();
-        if (!userError && userData.user) {
-          const user = userData.user;
+    if (profileRequestRef.current) {
+      console.log('[fetchUserProfile] Esperando request concurrente previa');
+      await profileRequestRef.current;
+      setProfileLoading(false);
+      return;
+    }
+    let triedCreate = false;
+    function fetchWithTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
+      return Promise.race([
+        promise,
+        new Promise<T>((_, reject) => setTimeout(() => reject(new Error('Timeout al consultar perfil en Supabase')), ms))
+      ]);
+    }
+    profileRequestRef.current = (async () => {
+      try {
+        console.log('[fetchUserProfile] Consultando perfil en Supabase', { userId });
+        let { data, error }: { data: UserProfile | null; error: any } = await fetchWithTimeout(
+          (async () => await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', userId)
+            .single())(),
+          10000
+        );
+        console.log('[fetchUserProfile] Resultado consulta', { data, error });
+        // Si no hay data ni error, forzar setProfile(null) y no intentar más
+        if (!data && !error) {
+          setProfile(null);
+          console.error('[fetchUserProfile] No se encontró perfil ni error. Deteniendo intentos.');
+          return;
+        }
+        if (error && !data && user && (error.message?.toLowerCase().includes('row') || error.message?.toLowerCase().includes('not found') || error.message?.toLowerCase().includes('no rows')) && !triedCreate) {
+          triedCreate = true;
+          console.warn('[fetchUserProfile] Perfil no existe, intentando crear', { user });
           const { error: createError } = await supabase
             .from('profiles')
             .insert({
@@ -78,31 +112,43 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
               created_at: new Date().toISOString(),
               updated_at: new Date().toISOString()
             });
-          
           if (!createError) {
-            // Intentar obtener el perfil nuevamente
-            const { data: newProfile } = await supabase
-              .from('profiles')
-              .select('*')
-              .eq('id', userId)
-              .single();
-            setProfile(newProfile);
+            console.log('[fetchUserProfile] Perfil creado, consultando de nuevo');
+            const { data: newProfile, error: fetchNewError }: { data: UserProfile | null; error: any } = await fetchWithTimeout(
+              (async () => await supabase
+                .from('profiles')
+                .select('*')
+                .eq('id', userId)
+                .single())(),
+              10000
+            );
+            if (fetchNewError) {
+              console.error('[fetchUserProfile] Error al consultar perfil recién creado', fetchNewError);
+              setProfile(null);
+            } else {
+              setProfile(newProfile);
+            }
           } else {
             setProfile(null);
+            console.error('[fetchUserProfile] Error creando perfil:', createError);
           }
-        } else {
+        } else if (error) {
           setProfile(null);
+          console.error('[fetchUserProfile] Error consultando perfil:', error);
+        } else {
+          setProfile(data);
         }
-      } else {
-        setProfile(data);
+      } catch (error) {
+        setProfile(null);
+        console.error('[fetchUserProfile] Excepción general:', error);
+      } finally {
+        setProfileLoading(false);
+        profileRequestRef.current = null;
+        console.log('[fetchUserProfile] FIN carga perfil');
       }
-    } catch (error) {
-      console.error('Error fetching profile:', error);
-      setProfile(null);
-    } finally {
-      setProfileLoading(false);
-    }
-  }, []);
+    })();
+    await profileRequestRef.current;
+  }, [user, profile, profileLoading]);
 
   const refreshProfile = useCallback(async () => {
     if (user) {
@@ -114,59 +160,48 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     let ignore = false;
     // Obtener sesión inicial
     supabase.auth.getSession().then(async ({ data, error }) => {
-      if (!ignore) {
-        if (error) {
-          console.error('Error getting session:', error);
-          setUser(null);
-          setProfile(null);
-        } else {
-          const currentUser = data.session?.user ?? null;
-          setUser(currentUser);
-          // Obtener perfil si hay usuario
-          if (currentUser) {
-            await fetchUserProfile(currentUser.id);
-          } else {
-            setProfile(null);
-          }
-        }
+      if (ignore) return;
+      if (error || !data.session) {
+        setUser(null);
+        setProfile(null);
         setLoading(false);
+        return;
       }
+      const currentUser = data.session?.user ?? null;
+      setUser(currentUser);
+      // Solo cargar perfil si no existe ya uno en memoria
+      if (currentUser && !profile && !profileLoading) {
+        await fetchUserProfile(currentUser.id);
+      }
+      setLoading(false);
     });
     // Escuchar cambios en el estado de autenticación
     const { data: listener } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (event === 'SIGNED_OUT') {
         setUser(null);
         setProfile(null);
-        // Limpiar almacenamiento local cuando se cierre sesión
         if (typeof window !== 'undefined') {
           localStorage.clear();
           sessionStorage.clear();
         }
-      } else if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
-        const currentUser = session?.user ?? null;
-        setUser(currentUser);
-        // Obtener perfil del usuario
-        if (currentUser) {
-          await fetchUserProfile(currentUser.id);
-        } else {
-          setProfile(null);
-        }
-      } else {
-        const currentUser = session?.user ?? null;
-        setUser(currentUser);
-        if (currentUser && !profile) {
-          await fetchUserProfile(currentUser.id);
-        } else if (!currentUser) {
-          setProfile(null);
-        }
+        setLoading(false);
+        return;
       }
-      setLoading(false);
+      if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+        const currentUser = session?.user ?? null;
+        setUser(currentUser);
+        if (currentUser && !profile && !profileLoading) {
+          await fetchUserProfile(currentUser.id);
+        }
+        setLoading(false);
+        return;
+      }
     });
     return () => {
       ignore = true;
       listener.subscription.unsubscribe();
     };
-  }, [fetchUserProfile, profile]);
+  }, [fetchUserProfile, profileLoading]);
 
   const login = async (email: string, password: string) => {
     setLoading(true);
@@ -205,43 +240,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const logout = async () => {
     setLoading(true);
     try {
-      // Cerrar sesión en Supabase
-      const { error } = await supabase.auth.signOut();
-      if (error) {
-        console.error('❌ Error signing out:', error);
-        throw error;
-      }
-
-      // Limpiar el estado local
-      setUser(null);
-      setProfile(null);
-      
-      // Limpiar cualquier información almacenada localmente
-      if (typeof window !== 'undefined') {
-        localStorage.clear();
-        sessionStorage.clear();
-      }
-
-      // Pequeño delay antes de redirigir para asegurar que todo se limpie
-      setTimeout(() => {
-        if (typeof window !== 'undefined') {
-          window.location.href = '/';
-        }
-      }, 100);
-      
+      await supabase.auth.signOut();
     } catch (error) {
       console.error('❌ Error during logout:', error);
-      // En caso de error, forzar limpieza manual
-      setUser(null);
-      setProfile(null);
-      if (typeof window !== 'undefined') {
-        localStorage.clear();
-        sessionStorage.clear();
-        window.location.href = '/';
-      }
-    } finally {
-      setLoading(false);
     }
+    setUser(null);
+    setProfile(null);
+    if (typeof window !== 'undefined') {
+      localStorage.clear();
+      sessionStorage.clear();
+      window.location.reload();
+    }
+    setLoading(false);
   };
 
   const requestPasswordReset = async (email: string) => {
@@ -263,14 +273,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return { error };
   };
 
-  // Polling para verificar cambios en el perfil (solo para usuarios no aprobados)
-  useEffect(() => {
-    if (!user || !profile || profile.approval_status === 'approved') return;
-    const pollInterval = setInterval(async () => {
-      await refreshProfile();
-    }, 10000); // Verificar cada 10 segundos
-    return () => clearInterval(pollInterval);
-  }, [user, profile, profile?.approval_status, refreshProfile]);
+  // Eliminado polling de perfil para evitar parpadeos y cambios de estado innecesarios
 
   // Valores derivados para facilitar el uso
   const isAuthenticated = !!user;
@@ -296,8 +299,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       {children}
     </AuthContext.Provider>
   );
-};
-
+}
 export const useAuthContext = () => {
   const ctx = useContext(AuthContext);
   if (!ctx) throw new Error('useAuthContext must be used within AuthProvider');

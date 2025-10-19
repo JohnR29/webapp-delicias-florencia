@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import { TipoNegocio } from '@/types/negocio';
 
@@ -40,64 +40,55 @@ export function useAddresses(userId: string | null) {
   const [error, setError] = useState<string | null>(null);
 
   // Obtener direcciones del usuario
-  const fetchAddresses = async () => {
+  const fetchAddresses = useCallback(async () => {
     if (!userId) {
-      console.log('⚠️ No hay userId, no se pueden cargar direcciones');
+      setAddresses([]);
+      setError(null);
       return;
     }
-    
-    console.log('🔍 Buscando direcciones para usuario:', userId);
     setLoading(true);
     setError(null);
-    
-    const { data, error } = await supabase
-      .from('addresses')
-      .select('*')
-      .eq('user_id', userId)
-      .order('created_at', { ascending: false });
-    
-    if (error) {
-      console.error('❌ Error al obtener direcciones:', error);
-      setError(error.message);
-    } else {
-      console.log('📍 Direcciones encontradas:', data?.length || 0, data);
+    try {
+      const { data, error } = await supabase
+        .from('addresses')
+        .select('*')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false });
+      if (error) {
+        setError(error.message);
+      }
+      setAddresses(data || []);
+    } catch (err: any) {
+      setError(err.message);
+      setAddresses([]);
     }
-    
-    setAddresses(data || []);
     setLoading(false);
-  };
+  }, [userId]);
 
   useEffect(() => {
     fetchAddresses();
+    // Solo depende de userId
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userId]);
 
   // Agregar dirección
-  const addAddress = async (address: Omit<Address, 'id' | 'created_at' | 'user_id'>) => {
+  const addAddress = useCallback(async (address: Omit<Address, 'id' | 'created_at' | 'user_id'>) => {
     if (!userId) {
-      console.error('❌ Usuario no autenticado al intentar agregar dirección');
       return { success: false, message: 'Usuario no autenticado' };
     }
-    
-    console.log('📝 Insertando dirección en Supabase:', { ...address, user_id: userId });
-    
     const { data, error } = await supabase
       .from('addresses')
       .insert({ ...address, user_id: userId })
       .select();
-    
     if (error) {
-      console.error('❌ Error de Supabase al insertar dirección:', error);
       return { success: false, message: error.message };
     }
-    
-    console.log('✅ Dirección insertada exitosamente:', data);
     await fetchAddresses();
     return { success: true, message: 'Dirección agregada' };
-  };
+  }, [userId, fetchAddresses]);
 
   // Editar dirección
-  const updateAddress = async (id: string, address: Partial<Address>) => {
+  const updateAddress = useCallback(async (id: string, address: Partial<Address>) => {
     const { error } = await supabase
       .from('addresses')
       .update(address)
@@ -105,10 +96,10 @@ export function useAddresses(userId: string | null) {
     if (error) return { success: false, message: error.message };
     await fetchAddresses();
     return { success: true, message: 'Dirección actualizada' };
-  };
+  }, [fetchAddresses]);
 
   // Eliminar dirección
-  const deleteAddress = async (id: string) => {
+  const deleteAddress = useCallback(async (id: string) => {
     const { error } = await supabase
       .from('addresses')
       .delete()
@@ -116,7 +107,7 @@ export function useAddresses(userId: string | null) {
     if (error) return { success: false, message: error.message };
     await fetchAddresses();
     return { success: true, message: 'Dirección eliminada' };
-  };
+  }, [fetchAddresses]);
 
   return {
     addresses,
