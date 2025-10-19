@@ -6,6 +6,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { isAdminUser } from '@/lib/admin-config';
 import { AdminPuntosVentaPanel } from './AdminPuntosVentaPanel';
 import { AdminGestionSociosPanel } from './AdminGestionSociosPanel';
+import { AdminUsuariosPanel } from './AdminUsuariosPanel';
 
 interface Order {
   id: number;
@@ -37,7 +38,7 @@ interface Order {
 }
 
 const AdminPanel: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'pedidos' | 'puntos-venta' | 'socios'>('pedidos');
+  const [activeTab, setActiveTab] = useState<'pedidos' | 'puntos-venta' | 'socios' | 'usuarios'>('pedidos');
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
@@ -227,7 +228,10 @@ const AdminPanel: React.FC = () => {
               <div className="flex-1 min-w-0">
                 <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Panel de Administración</h1>
                 <p className="text-sm sm:text-base text-gray-600">
-                  {activeTab === 'pedidos' ? 'Gestión de pedidos' : activeTab === 'puntos-venta' ? 'Gestión de puntos de venta' : 'Gestión de socios distribuidores'} - Delicias Florencia
+                  {activeTab === 'pedidos' ? 'Gestión de pedidos' : 
+                   activeTab === 'puntos-venta' ? 'Gestión de puntos de venta' : 
+                   activeTab === 'usuarios' ? 'Gestión de usuarios' :
+                   'Gestión de socios distribuidores'} - Delicias Florencia
                 </p>
                 {user && (
                   <p className="text-xs sm:text-sm text-gray-500 mt-1">
@@ -350,7 +354,7 @@ const AdminPanel: React.FC = () => {
 
           {/* Tabs Navigation */}
           <div className="border-b border-gray-200">
-            <nav className="flex space-x-8 px-6" aria-label="Tabs">
+            <nav className="flex flex-wrap space-x-6 lg:space-x-8 px-6" aria-label="Tabs">
               <button
                 onClick={() => setActiveTab('pedidos')}
                 className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
@@ -359,7 +363,17 @@ const AdminPanel: React.FC = () => {
                     : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                 }`}
               >
-                Gestión de Pedidos
+                Pedidos
+              </button>
+              <button
+                onClick={() => setActiveTab('usuarios')}
+                className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
+                  activeTab === 'usuarios'
+                    ? 'border-primary-500 text-primary-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+              >
+                Usuarios
               </button>
               <button
                 onClick={() => setActiveTab('puntos-venta')}
@@ -379,7 +393,7 @@ const AdminPanel: React.FC = () => {
                     : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                 }`}
               >
-                Gestión de Socios
+                Socios
               </button>
             </nav>
           </div>
@@ -492,6 +506,8 @@ const AdminPanel: React.FC = () => {
                 </table>
               </div>
             )
+            ) : activeTab === 'usuarios' ? (
+              <AdminUsuariosPanel />
             ) : activeTab === 'puntos-venta' ? (
               <AdminPuntosVentaPanel />
             ) : (

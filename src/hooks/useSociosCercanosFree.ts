@@ -130,7 +130,7 @@ export function useSociosCercanosFree(): UseSociosCercanosReturn {
     });
 
     setSociosConCoordenadas(sociosConDistancia);
-  }, [location, calculateDistance]);
+  }, [location, calculateDistance, sociosConCoordenadas]);
 
   /**
    * Geocodificar automáticamente cuando cambian los socios

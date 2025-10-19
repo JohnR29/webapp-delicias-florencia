@@ -5,7 +5,7 @@ import { useAuthContext } from '../context/AuthContext';
 import { useProfile } from '../hooks/useProfile';
 import { useAddresses } from '../hooks/useAddresses';
 import PersonalInfoForm from '@/components/PersonalInfoForm';
-import AddressManager from './AddressManager';
+import AddressManager from './AddressManagerV2';
 
 type TabType = 'personal' | 'direcciones';
 

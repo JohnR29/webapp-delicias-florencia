@@ -1,7 +1,14 @@
 {
+  "type": "FeatureCollection",
+  "features": [
+    {
       "type": "Feature",
       "properties": {
-        "cost": 0
+        "cost": 1000,
+        "labelPosition": {
+          "lat": -33.58587812924025,
+          "lng": -70.67058388451902
+        }
       },
       "geometry": {
         "coordinates": [
@@ -75,7 +82,11 @@
     {
       "type": "Feature",
       "properties": {
-        "cost": 2000
+        "cost": 2000,
+        "labelPosition": {
+          "lat": -33.50517949662596,
+          "lng": -70.69133476838627
+        }
       },
       "geometry": {
         "coordinates": [
@@ -153,7 +164,11 @@
     {
       "type": "Feature",
       "properties": {
-        "cost": 3000
+        "cost": 3000,
+        "labelPosition": {
+          "lat": -33.452523596252014,
+          "lng": -70.61187364422294
+        }
       },
       "geometry": {
         "coordinates": [
@@ -231,7 +246,11 @@
     {
       "type": "Feature",
       "properties": {
-        "cost": 4000
+        "cost": 4000,
+        "labelPosition": {
+          "lat": -33.39565604471302,
+          "lng": -70.55029263774684
+        }
       },
       "geometry": {
         "coordinates": [

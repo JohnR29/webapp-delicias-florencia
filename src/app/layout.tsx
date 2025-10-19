@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { Poppins, Dancing_Script } from 'next/font/google'
 import StructuredData from '@/components/StructuredData'
+import Script from 'next/script'
 import './globals.css'
 import { AuthProvider } from '@/context/AuthContext';
 
@@ -105,6 +106,10 @@ export default function RootLayout({
       <head>
         <StructuredData />
       </head>
+      <Script
+        src={`https://maps.googleapis.com/maps/api/js?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}&libraries=places,geometry`}
+        strategy="afterInteractive"
+      />
       <body className={`${poppins.className} antialiased`}>
         <AuthProvider>
           {children}

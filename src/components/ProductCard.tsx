@@ -18,6 +18,7 @@ interface ProductCardProps {
   total9oz: number;
   onUpdateQuantity: (productKey: string, cantidad: number) => void;
   priority?: boolean;
+  disabled?: boolean;
 }
 
 export default function ProductCard({ 
@@ -26,7 +27,8 @@ export default function ProductCard({
   total12oz, 
   total9oz, 
   onUpdateQuantity,
-  priority = false
+  priority = false,
+  disabled = false
 }: ProductCardProps) {
 
   const [imageError, setImageError] = useState(false);
@@ -84,7 +86,15 @@ export default function ProductCard({
   };
 
   return (
-    <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-6 transition-all duration-300 hover:shadow-xl">
+    <div className={`bg-white rounded-2xl shadow-lg border border-gray-200 p-6 transition-all duration-300 hover:shadow-xl relative ${disabled ? 'opacity-70' : ''}`}>
+      {disabled && (
+        <div className="absolute inset-0 bg-gray-100 bg-opacity-50 rounded-2xl flex items-center justify-center z-10">
+          <div className="text-center">
+            <div className="text-2xl mb-2">🔒</div>
+            <div className="text-sm font-medium text-gray-600">Disponible después de la aprobación</div>
+          </div>
+        </div>
+      )}
       <div className="flex flex-col">
         {/* Título del producto - ocupa todo el ancho */}
         <h3 className="text-2xl font-bold text-gray-800 mb-4 text-center">
@@ -139,35 +149,44 @@ export default function ProductCard({
             </div>
             <div className="flex items-center justify-center gap-2 relative">
               <button
-                onClick={() => decrementQuantity('12oz')}
-                disabled={getQuantity('12oz') === 0}
-                className="w-7 h-7 rounded bg-gray-200 hover:bg-gray-300 
-                         flex items-center justify-center text-gray-700 font-bold
-                         transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed text-base"
+                onClick={() => !disabled && decrementQuantity('12oz')}
+                disabled={disabled || getQuantity('12oz') === 0}
+                className={`w-7 h-7 rounded flex items-center justify-center font-bold transition-all duration-200 text-base ${
+                  disabled 
+                    ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
+                    : 'bg-gray-200 hover:bg-gray-300 text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed'
+                }`}
                 aria-label="Restar 12oz"
               >
                 −
               </button>
               <span
-                className="min-w-[1.5rem] text-center font-bold text-gray-800 tabular-nums text-lg cursor-pointer border-b border-dotted border-gray-400 hover:text-red-500"
-                onClick={() => setOpenMenu(openMenu === '12oz' ? null : '12oz')}
-                tabIndex={0}
+                className={`min-w-[1.5rem] text-center font-bold tabular-nums text-lg ${
+                  disabled 
+                    ? 'text-gray-400 cursor-not-allowed' 
+                    : 'text-gray-800 cursor-pointer border-b border-dotted border-gray-400 hover:text-red-500'
+                }`}
+                onClick={() => !disabled && setOpenMenu(openMenu === '12oz' ? null : '12oz')}
+                tabIndex={disabled ? -1 : 0}
                 role="button"
                 aria-label="Seleccionar cantidad 12oz"
               >
                 {getQuantity('12oz')}
               </span>
               <button
-                onClick={() => incrementQuantity('12oz')}
-                className="w-7 h-7 rounded bg-red-500 hover:bg-red-600 
-                         flex items-center justify-center text-white font-bold
-                         transition-all duration-200 text-base"
+                onClick={() => !disabled && incrementQuantity('12oz')}
+                disabled={disabled}
+                className={`w-7 h-7 rounded flex items-center justify-center font-bold transition-all duration-200 text-base ${
+                  disabled 
+                    ? 'bg-gray-300 text-gray-500 cursor-not-allowed' 
+                    : 'bg-red-500 hover:bg-red-600 text-white'
+                }`}
                 aria-label="Agregar 12oz"
               >
                 +
               </button>
               {/* Menú desplegable */}
-              {openMenu === '12oz' && (
+              {!disabled && openMenu === '12oz' && (
                 <div className="absolute z-20 top-10 left-1/2 -translate-x-1/2 bg-white border border-gray-200 rounded-lg shadow-lg p-2 w-32 animate-fade-in">
                   {[5, 10, 15, 20].map((opt) => (
                     <button
@@ -219,35 +238,44 @@ export default function ProductCard({
             </div>
             <div className="flex items-center justify-center gap-2 relative">
               <button
-                onClick={() => decrementQuantity('9oz')}
-                disabled={getQuantity('9oz') === 0}
-                className="w-7 h-7 rounded bg-gray-200 hover:bg-gray-300 
-                         flex items-center justify-center text-gray-700 font-bold
-                         transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed text-base"
+                onClick={() => !disabled && decrementQuantity('9oz')}
+                disabled={disabled || getQuantity('9oz') === 0}
+                className={`w-7 h-7 rounded flex items-center justify-center font-bold transition-all duration-200 text-base ${
+                  disabled 
+                    ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
+                    : 'bg-gray-200 hover:bg-gray-300 text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed'
+                }`}
                 aria-label="Restar 9oz"
               >
                 −
               </button>
               <span
-                className="min-w-[1.5rem] text-center font-bold text-gray-800 tabular-nums text-lg cursor-pointer border-b border-dotted border-gray-400 hover:text-red-500"
-                onClick={() => setOpenMenu(openMenu === '9oz' ? null : '9oz')}
-                tabIndex={0}
+                className={`min-w-[1.5rem] text-center font-bold tabular-nums text-lg ${
+                  disabled 
+                    ? 'text-gray-400 cursor-not-allowed' 
+                    : 'text-gray-800 cursor-pointer border-b border-dotted border-gray-400 hover:text-red-500'
+                }`}
+                onClick={() => !disabled && setOpenMenu(openMenu === '9oz' ? null : '9oz')}
+                tabIndex={disabled ? -1 : 0}
                 role="button"
                 aria-label="Seleccionar cantidad 9oz"
               >
                 {getQuantity('9oz')}
               </span>
               <button
-                onClick={() => incrementQuantity('9oz')}
-                className="w-7 h-7 rounded bg-red-500 hover:bg-red-600 
-                         flex items-center justify-center text-white font-bold
-                         transition-all duration-200 text-base"
+                onClick={() => !disabled && incrementQuantity('9oz')}
+                disabled={disabled}
+                className={`w-7 h-7 rounded flex items-center justify-center font-bold transition-all duration-200 text-base ${
+                  disabled 
+                    ? 'bg-gray-300 text-gray-500 cursor-not-allowed' 
+                    : 'bg-red-500 hover:bg-red-600 text-white'
+                }`}
                 aria-label="Agregar 9oz"
               >
                 +
               </button>
               {/* Menú desplegable */}
-              {openMenu === '9oz' && (
+              {!disabled && openMenu === '9oz' && (
                 <div className="absolute z-20 top-10 left-1/2 -translate-x-1/2 bg-white border border-gray-200 rounded-lg shadow-lg p-2 w-32 animate-fade-in">
                   {[5, 10, 15, 20].map((opt) => (
                     <button

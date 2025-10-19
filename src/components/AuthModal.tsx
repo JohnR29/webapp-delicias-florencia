@@ -14,6 +14,9 @@ interface AuthModalProps {
 export default function AuthModal({ isOpen, onClose, defaultMode = 'login' }: AuthModalProps) {
   const [mode, setMode] = useState<'login' | 'register'>(defaultMode);
   const [nombre, setNombre] = useState('');
+  const [telefono, setTelefono] = useState('');
+  const [nombreNegocio, setNombreNegocio] = useState('');
+  const [tipoNegocio, setTipoNegocio] = useState('');
   
   // Sincronizar mode cuando cambie defaultMode
   useEffect(() => {
@@ -34,11 +37,14 @@ export default function AuthModal({ isOpen, onClose, defaultMode = 'login' }: Au
   const { login, register } = useAuth();
 
   const resetForm = () => {
-  setEmail('');
-  setPassword('');
-  setConfirmPassword('');
-  setNombre('');
-  setErrors('');
+    setEmail('');
+    setPassword('');
+    setConfirmPassword('');
+    setNombre('');
+    setTelefono('');
+    setNombreNegocio('');
+    setTipoNegocio('');
+    setErrors('');
   };
 
   const validateEmail = (email: string): boolean => {
@@ -80,6 +86,16 @@ export default function AuthModal({ isOpen, onClose, defaultMode = 'login' }: Au
       return;
     }
 
+    if (mode === 'register' && nombreNegocio.trim().length < 2) {
+      setErrors('Por favor ingresa el nombre de tu negocio');
+      return;
+    }
+
+    if (mode === 'register' && !tipoNegocio) {
+      setErrors('Por favor selecciona el tipo de negocio');
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
@@ -87,18 +103,24 @@ export default function AuthModal({ isOpen, onClose, defaultMode = 'login' }: Au
       if (mode === 'login') {
         result = await login(email, password);
       } else {
-        result = await register(email, password, nombre);
+        const userData = {
+          nombre: nombre.trim(),
+          phone: telefono.trim(),
+          business_name: nombreNegocio.trim(),
+          business_type: tipoNegocio
+        };
+        result = await register(email, password, userData);
       }
 
       // Para login/register: éxito si NO hay error
       if (result && !result.error) {
         if (mode === 'register') {
-          setSuccessMsg('Registro exitoso. Revisa tu correo para confirmar tu cuenta.');
+          setSuccessMsg('¡Registro exitoso! Revisa tu correo para confirmar tu cuenta y completar el proceso de aprobación.');
           resetForm();
           setTimeout(() => {
             setSuccessMsg('');
             onClose();
-          }, 3000);
+          }, 4000);
         } else {
           setSuccessMsg('¡Inicio de sesión exitoso!');
           resetForm();
@@ -156,22 +178,74 @@ export default function AuthModal({ isOpen, onClose, defaultMode = 'login' }: Au
 
           {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-4">
-            {/* Nombre (solo en registro) */}
+            {/* Campos de registro */}
             {mode === 'register' && (
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Nombre <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  value={nombre}
-                  onChange={(e) => setNombre(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-                  placeholder="Tu nombre"
-                  required
-                  minLength={2}
-                />
-              </div>
+              <>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Nombre completo <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={nombre}
+                    onChange={(e) => setNombre(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                    placeholder="Tu nombre completo"
+                    required
+                    minLength={2}
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Teléfono
+                  </label>
+                  <input
+                    type="tel"
+                    value={telefono}
+                    onChange={(e) => setTelefono(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                    placeholder="+56 9 1234 5678"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Nombre del negocio <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={nombreNegocio}
+                    onChange={(e) => setNombreNegocio(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                    placeholder="Ej: Almacén Don Pedro"
+                    required
+                    minLength={2}
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Tipo de negocio <span className="text-red-500">*</span>
+                  </label>
+                  <select
+                    value={tipoNegocio}
+                    onChange={(e) => setTipoNegocio(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                    required
+                  >
+                    <option value="">Selecciona el tipo de negocio</option>
+                    <option value="Almacén">Almacén</option>
+                    <option value="Minimarket">Minimarket</option>
+                    <option value="Pastelería">Pastelería</option>
+                    <option value="Cafetería">Cafetería</option>
+                    <option value="Restaurante">Restaurante</option>
+                    <option value="Panadería">Panadería</option>
+                    <option value="Distribuidora">Distribuidora</option>
+                    <option value="Otro">Otro</option>
+                  </select>
+                </div>
+              </>
             )}
 
             {/* Email */}

@@ -3,14 +3,17 @@
 import { useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
-import ClientHeaderPublico from '@/components/ClientHeaderPublico';
+import HeaderPublico from '@/components/HeaderPublico';
 import AuthModal from '@/components/AuthModal';
 
 function LoginContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { user, isAuthenticated } = useAuth();
-  const redirect = searchParams.get('redirect') || '/mayorista';
+  let redirect = '/mayorista';
+  if (searchParams) {
+    redirect = searchParams.get('redirect') || '/mayorista';
+  }
 
   useEffect(() => {
     if (isAuthenticated && user) {
@@ -31,7 +34,7 @@ function LoginContent() {
 
   return (
     <main className="min-h-screen bg-gradient-to-br from-primary-50 via-white to-secondary-50">
-      <ClientHeaderPublico />
+      <HeaderPublico />
       
       {/* Spacer for fixed header */}
       <div className="h-20"></div>

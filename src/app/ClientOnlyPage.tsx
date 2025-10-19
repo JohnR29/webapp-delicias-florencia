@@ -1,6 +1,6 @@
 "use client";
 
-import ClientHeaderPublico from '@/components/ClientHeaderPublico';
+import HeaderPublico from '@/components/HeaderPublico';
 import Banner from '@/components/Banner';
 import { saboresUnicos } from '@/data/productos';
 import MapaDistribuidoresGoogle from '@/components/MapaDistribuidoresGoogle';
@@ -16,7 +16,7 @@ export default function ClientOnlyPage() {
   return (
     <main className="min-h-screen bg-gradient-to-br from-primary-50 via-white to-secondary-50">
       
-      <ClientHeaderPublico />
+      <HeaderPublico />
       <Banner />
 
       {/* Catálogo de Productos */}
