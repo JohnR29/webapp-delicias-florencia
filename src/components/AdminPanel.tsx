@@ -80,11 +80,18 @@ const AdminPanel: React.FC = () => {
   }, [isAuthenticated, filter, activeTab, fetchOrders]);
 
   const handleConfirmOrder = async () => {
-    if (!selectedOrder || !dispatchDate) {
-      alert('Por favor selecciona una fecha de despacho');
+    if (!selectedOrder) {
+      window.alert('No hay pedido seleccionado.');
       return;
     }
-
+    if (!dispatchDate) {
+      window.alert('Por favor selecciona una fecha de despacho.');
+      return;
+    }
+    if (!user?.id) {
+      window.alert('No tienes permisos de administrador para confirmar pedidos.');
+      return;
+    }
     setProcessing(true);
     try {
       const response = await fetch('/api/confirm-order', {
@@ -94,27 +101,26 @@ const AdminPanel: React.FC = () => {
         },
         body: JSON.stringify({
           orderId: selectedOrder.id,
-          dispatchDate: dispatchDate,
-          dispatchNotes: dispatchNotes,
-          adminUserId: user?.id
+          dispatchDate,
+          dispatchNotes,
+          adminUserId: user.id
         }),
       });
-
       const result = await response.json();
-
       if (result.success) {
-        alert('¡Pedido confirmado exitosamente! Se envió correo al cliente.');
+        // Feedback visual
+        window.alert('¡Pedido confirmado exitosamente! Se envió correo al cliente.');
         setShowConfirmModal(false);
         setSelectedOrder(null);
         setDispatchDate('');
         setDispatchNotes('');
-        fetchOrders(); // Recargar la lista
+        fetchOrders();
       } else {
-        alert('Error confirmando pedido: ' + result.message);
+        window.alert('Error confirmando pedido: ' + (result.message || 'Error desconocido.'));
       }
     } catch (error) {
       console.error('Error confirming order:', error);
-      alert('Error enviando confirmación');
+      window.alert('Error enviando confirmación. Verifica tu conexión o permisos.');
     } finally {
       setProcessing(false);
     }
@@ -122,10 +128,13 @@ const AdminPanel: React.FC = () => {
 
   const handleMarkAsDelivered = async () => {
     if (!selectedOrder) {
-      alert('No hay pedido seleccionado');
+      window.alert('No hay pedido seleccionado.');
       return;
     }
-
+    if (!user?.id) {
+      window.alert('No tienes permisos de administrador para marcar como entregado.');
+      return;
+    }
     setProcessing(true);
     try {
       const response = await fetch('/api/confirm-order', {
@@ -136,25 +145,23 @@ const AdminPanel: React.FC = () => {
         body: JSON.stringify({
           orderId: selectedOrder.id,
           status: 'delivered',
-          deliveryNotes: deliveryNotes,
-          adminUserId: user?.id
+          deliveryNotes,
+          adminUserId: user.id
         }),
       });
-
       const result = await response.json();
-
       if (result.success) {
-        alert('¡Pedido marcado como entregado exitosamente!');
+        window.alert('¡Pedido marcado como entregado exitosamente!');
         setShowDeliveryModal(false);
         setSelectedOrder(null);
         setDeliveryNotes('');
-        fetchOrders(); // Recargar la lista
+        fetchOrders();
       } else {
-        alert('Error marcando pedido como entregado: ' + result.message);
+        window.alert('Error marcando pedido como entregado: ' + (result.message || 'Error desconocido.'));
       }
     } catch (error) {
       console.error('Error marking order as delivered:', error);
-      alert('Error actualizando estado del pedido');
+      window.alert('Error actualizando estado del pedido. Verifica tu conexión o permisos.');
     } finally {
       setProcessing(false);
     }
@@ -168,7 +175,6 @@ const AdminPanel: React.FC = () => {
       delivered: 'bg-purple-100 text-purple-800 border-purple-300',
       cancelled: 'bg-red-100 text-red-800 border-red-300'
     };
-    
     const labels = {
       pending: 'Pendiente',
       confirmed: 'Confirmado',
@@ -176,9 +182,12 @@ const AdminPanel: React.FC = () => {
       delivered: 'Entregado',
       cancelled: 'Cancelado'
     };
-
     return (
-      <span className={`px-2 py-1 text-xs rounded-full border ${styles[status as keyof typeof styles] || 'bg-gray-100 text-gray-800 border-gray-300'}`}>
+      <span
+        className={`px-2 py-1 text-xs rounded-full border ${styles[status as keyof typeof styles] || 'bg-gray-100 text-gray-800 border-gray-300'}`}
+        aria-label={`Estado del pedido: ${labels[status as keyof typeof labels] || status}`}
+        role="status"
+      >
         {labels[status as keyof typeof labels] || status}
       </span>
     );

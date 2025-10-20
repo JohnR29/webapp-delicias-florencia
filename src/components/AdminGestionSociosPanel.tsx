@@ -100,66 +100,65 @@ export function AdminGestionSociosPanel() {
   };
 
   const handleUpdateSocio = async () => {
-    if (!selectedSocio) return;
-
+    if (!selectedSocio) {
+      window.alert('No hay socio seleccionado para editar.');
+      return;
+    }
+    if (!editForm.full_name || !editForm.email) {
+      window.alert('Completa todos los campos obligatorios: nombre completo y email.');
+      return;
+    }
     setProcesando(true);
     try {
       // Por ahora, solo mostrar mensaje ya que la actualización requiere auth.admin
-      alert('Funcionalidad de edición temporalmente deshabilitada. Requiere configuración adicional de permisos.');
+      window.alert('Funcionalidad de edición temporalmente deshabilitada. Requiere configuración adicional de permisos.');
       setShowEditModal(false);
       setSelectedSocio(null);
     } catch (err: any) {
       console.error('Error updating socio:', err);
-      alert('Error actualizando socio: ' + err.message);
+      window.alert('Error actualizando socio: ' + err.message);
     } finally {
       setProcesando(false);
     }
   };
 
   const handleDeleteSocio = async (socio: Socio) => {
-    if (!confirm(`¿Estás seguro de eliminar todas las direcciones del socio ${socio.email}? Esta acción no se puede deshacer.`)) {
+    if (!window.confirm(`¿Estás seguro de eliminar todas las direcciones del socio ${socio.email}? Esta acción no se puede deshacer.`)) {
       return;
     }
-
     setProcesando(true);
     try {
-      // Solo eliminar direcciones del socio (el usuario permanecerá en auth)
       const { error: addressError } = await supabase
         .from('addresses')
         .delete()
         .eq('user_id', socio.id);
-
       if (addressError) throw addressError;
-
-      alert('Direcciones del socio eliminadas exitosamente');
-      await fetchSocios(); // Recargar lista
+      window.alert('Direcciones del socio eliminadas exitosamente');
+      await fetchSocios();
     } catch (err: any) {
       console.error('Error deleting socio addresses:', err);
-      alert('Error eliminando direcciones del socio: ' + err.message);
+      window.alert('Error eliminando direcciones del socio: ' + err.message);
     } finally {
       setProcesando(false);
     }
   };
 
   const handleDeleteDireccion = async (direccionId: string) => {
-    if (!confirm('¿Estás seguro de eliminar esta dirección?')) return;
-
+    if (!window.confirm('¿Estás seguro de eliminar esta dirección?')) return;
     try {
       const { error } = await supabase
         .from('addresses')
         .delete()
         .eq('id', direccionId);
-
       if (error) throw error;
-
-      alert('Dirección eliminada exitosamente');
+      window.alert('Dirección eliminada exitosamente');
       if (selectedSocio) {
         await fetchDireccionesSocio(selectedSocio.id);
-        await fetchSocios(); // Actualizar conteo
+        await fetchSocios();
       }
     } catch (err: any) {
       console.error('Error deleting direccion:', err);
-      alert('Error eliminando dirección: ' + err.message);
+      window.alert('Error eliminando dirección: ' + err.message);
     }
   };
 
@@ -262,7 +261,11 @@ export function AdminGestionSociosPanel() {
                     {new Date(socio.created_at).toLocaleDateString('es-CL')}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <span className="px-2 py-1 text-xs rounded-full bg-green-100 text-green-800">
+                    <span
+                      className="px-2 py-1 text-xs rounded-full bg-green-100 text-green-800"
+                      aria-label="Estado: Activo"
+                      role="status"
+                    >
                       Activo
                     </span>
                   </td>

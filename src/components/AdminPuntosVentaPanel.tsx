@@ -90,21 +90,30 @@ export function AdminPuntosVentaPanel() {
 
   // Guardar edición
   const guardarEdicion = async () => {
-    if (!puntoEditando) return;
-
+    if (!puntoEditando) {
+      window.alert('No hay punto de venta seleccionado para editar.');
+      return;
+    }
+    // Validaciones obligatorias
+    if (!datosEdicion.nombre_comercial || !datosEdicion.direccion || !datosEdicion.comuna || !datosEdicion.contacto) {
+      window.alert('Completa todos los campos obligatorios: nombre comercial, dirección, comuna y contacto.');
+      return;
+    }
     setProcesando(prev => ({ ...prev, [puntoEditando.id]: true }));
-    
     try {
       const result = await editarPuntoVenta(puntoEditando.id, datosEdicion);
-      
       if (result.success) {
-        // Actualizar estadísticas
         const stats = await getEstadisticas();
         setEstadisticas(stats);
         setMostrarModalEdicion(false);
         setPuntoEditando(null);
         setDatosEdicion({});
+        window.alert('Punto de venta actualizado exitosamente.');
+      } else {
+        window.alert('Error al actualizar el punto de venta: ' + (result.message || 'Error desconocido.'));
       }
+    } catch (err) {
+      window.alert('Error al actualizar el punto de venta. Verifica tu conexión o permisos.');
     } finally {
       setProcesando(prev => ({ ...prev, [puntoEditando.id]: false }));
     }
@@ -112,20 +121,24 @@ export function AdminPuntosVentaPanel() {
 
   // Ejecutar eliminación
   const ejecutarEliminacion = async () => {
-    if (!puntoEliminando) return;
-
+    if (!puntoEliminando) {
+      window.alert('No hay punto de venta seleccionado para eliminar.');
+      return;
+    }
     setProcesando(prev => ({ ...prev, [puntoEliminando.id]: true }));
-    
     try {
       const result = await eliminarPuntoVenta(puntoEliminando.id);
-      
       if (result.success) {
-        // Actualizar estadísticas
         const stats = await getEstadisticas();
         setEstadisticas(stats);
         setMostrarConfirmacionEliminacion(false);
         setPuntoEliminando(null);
+        window.alert('Punto de venta eliminado exitosamente.');
+      } else {
+        window.alert('Error al eliminar el punto de venta: ' + (result.message || 'Error desconocido.'));
       }
+    } catch (err) {
+      window.alert('Error al eliminar el punto de venta. Verifica tu conexión o permisos.');
     } finally {
       setProcesando(prev => ({ ...prev, [puntoEliminando.id]: false }));
     }
@@ -133,29 +146,38 @@ export function AdminPuntosVentaPanel() {
 
   // Cambiar estado de punto
   const cambiarEstado = async (punto: PuntoVentaPendiente, nuevoEstado: 'pendiente' | 'aprobado' | 'rechazado') => {
-    if (!user?.id) return;
-    
+    if (!user?.id) {
+      window.alert('No tienes permisos de administrador para esta acción.');
+      return;
+    }
     setProcesando(prev => ({ ...prev, [punto.id]: true }));
-    
     try {
       const result = await cambiarEstadoPuntoVenta(
-        punto.id, 
+        punto.id,
         nuevoEstado,
-        user.id, 
+        user.id,
         comentarios[punto.id]
       );
-      
       if (result.success) {
-        // Actualizar estadísticas
         const stats = await getEstadisticas();
         setEstadisticas(stats);
-        // Limpiar comentario
         setComentarios(prev => {
           const nuevo = { ...prev };
           delete nuevo[punto.id];
           return nuevo;
         });
+        window.alert(
+          nuevoEstado === 'aprobado'
+            ? 'Punto de venta aprobado exitosamente.'
+            : nuevoEstado === 'rechazado'
+              ? 'Punto de venta rechazado.'
+              : 'Punto de venta marcado como pendiente.'
+        );
+      } else {
+        window.alert('Error al cambiar el estado: ' + (result.message || 'Error desconocido.'));
       }
+    } catch (err) {
+      window.alert('Error al cambiar el estado del punto de venta. Verifica tu conexión o permisos.');
     } finally {
       setProcesando(prev => ({ ...prev, [punto.id]: false }));
     }
@@ -287,13 +309,23 @@ export function AdminPuntosVentaPanel() {
                       </p>
                     )}
                   </div>
-                  <span className={`px-2 py-1 text-xs font-medium rounded ${
-                    punto.estado_aprobacion === 'pendiente' 
-                      ? 'bg-yellow-100 text-yellow-800' 
-                      : punto.estado_aprobacion === 'aprobado'
-                      ? 'bg-green-100 text-green-800'
-                      : 'bg-red-100 text-red-800'
-                  }`}>
+                  <span
+                    className={`px-2 py-1 text-xs font-medium rounded ${
+                      punto.estado_aprobacion === 'pendiente'
+                        ? 'bg-yellow-100 text-yellow-800'
+                        : punto.estado_aprobacion === 'aprobado'
+                        ? 'bg-green-100 text-green-800'
+                        : 'bg-red-100 text-red-800'
+                    }`}
+                    aria-label={`Estado: ${
+                      punto.estado_aprobacion === 'pendiente'
+                        ? 'Pendiente'
+                        : punto.estado_aprobacion === 'aprobado'
+                        ? 'Aprobado'
+                        : 'Rechazado'
+                    }`}
+                    role="status"
+                  >
                     {punto.estado_aprobacion === 'pendiente' && '⏳ Pendiente'}
                     {punto.estado_aprobacion === 'aprobado' && '✅ Aprobado'}
                     {punto.estado_aprobacion === 'rechazado' && '❌ Rechazado'}

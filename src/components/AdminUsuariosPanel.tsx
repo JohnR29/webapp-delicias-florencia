@@ -98,14 +98,27 @@ export const AdminUsuariosPanel: React.FC = () => {
   };
 
   const executeAction = async () => {
-    if (!selectedUser || !user) return;
-
+    if (!selectedUser) {
+      window.alert('No hay usuario seleccionado.');
+      return;
+    }
+    if (!user) {
+      window.alert('No tienes permisos de administrador para esta acción.');
+      return;
+    }
+    if (modalAction === 'reject' && !rejectionReason.trim()) {
+      window.alert('Debes ingresar una razón de rechazo.');
+      return;
+    }
+    if (modalAction === 'modify' && (!userUpdates.nombre || !userUpdates.business_name)) {
+      window.alert('Nombre y nombre de negocio son obligatorios.');
+      return;
+    }
     setProcessing(true);
     try {
-      const endpoint = modalAction === 'delete' ? '/api/admin/users' : '/api/admin/users';
+      const endpoint = '/api/admin/users';
       const method = modalAction === 'delete' ? 'DELETE' : 'POST';
-      
-      const body = modalAction === 'delete' 
+      const body = modalAction === 'delete'
         ? { userId: selectedUser.id, adminId: user.id }
         : {
             userId: selectedUser.id,
@@ -114,7 +127,6 @@ export const AdminUsuariosPanel: React.FC = () => {
             reason: rejectionReason,
             userUpdates: modalAction === 'modify' ? userUpdates : undefined
           };
-
       const response = await fetch(endpoint, {
         method,
         headers: {
@@ -123,20 +135,18 @@ export const AdminUsuariosPanel: React.FC = () => {
         },
         body: JSON.stringify(body),
       });
-
       const result = await response.json();
-
       if (result.success) {
-        alert(result.message);
+        window.alert(result.message);
         setShowModal(false);
         setSelectedUser(null);
-        fetchUsers(); // Recargar la lista
+        fetchUsers();
       } else {
-        alert('Error: ' + result.message);
+        window.alert('Error: ' + (result.message || 'Error desconocido.'));
       }
     } catch (error) {
       console.error('Error executing action:', error);
-      alert('Error ejecutando la acción');
+      window.alert('Error ejecutando la acción. Verifica tu conexión o permisos.');
     } finally {
       setProcessing(false);
     }
@@ -149,19 +159,15 @@ export const AdminUsuariosPanel: React.FC = () => {
       approved: 'bg-green-100 text-green-800 border-green-300',
       rejected: 'bg-red-100 text-red-800 border-red-300'
     };
-    
     const labels = {
       pending: 'Pendiente',
       approved: 'Aprobado',
       rejected: 'Rechazado'
     };
-
     return (
-      <div className="flex items-center gap-2">
-        <span className={`px-2 py-1 text-xs rounded-full border ${styles[status as keyof typeof styles]}`}>
-          {labels[status as keyof typeof labels]}
-        </span>
-        <span className={`text-xs ${verified ? 'text-green-600' : 'text-red-600'}`} title={verified ? 'Email verificado' : 'Email no verificado'}>
+      <div className="flex items-center gap-2" role="status" aria-label={`Estado: ${labels[status as keyof typeof labels]}`}> 
+        <span className={`px-2 py-1 text-xs rounded-full border ${styles[status as keyof typeof styles]}`}>{labels[status as keyof typeof labels]}</span>
+        <span className={`text-xs ${verified ? 'text-green-600' : 'text-red-600'}`} title={verified ? 'Email verificado' : 'Email no verificado'} aria-label={verified ? 'Email verificado' : 'Email no verificado'}>
           {verifiedIcon}
         </span>
       </div>

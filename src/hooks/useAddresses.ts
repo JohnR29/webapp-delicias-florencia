@@ -5,32 +5,15 @@ import { TipoNegocio } from '@/types/negocio';
 export interface Address {
   id: string;
   user_id: string;
-  nombre: string;
-  contacto: string;
-  telefono: string;
-  comuna: string;
+  nombreDireccion: string;
+  nombrePersona: string;
+  telefonoPersona: string;
+  nombreLocal: string;
   direccion: string;
-  
-  // Campos para punto de venta público (simplificado)
-  es_punto_venta_publico?: boolean;
-  
-  // Información adicional del negocio (cuando es punto de venta)
-  nombre_comercial?: string;
-  telefono_negocio?: string;
-  tipo_negocio?: TipoNegocio;
-  horario_atencion?: string;
-  descripcion_negocio?: string;
-  email_negocio?: string;
-  whatsapp_negocio?: string;
-  permite_pedidos_directos?: boolean;
-  observaciones?: string;
-  
-  // Campos de aprobación (para puntos de venta públicos)
-  estado_aprobacion?: 'pendiente' | 'aprobado' | 'rechazado';
-  aprobado_por?: string; // UUID del admin, mantenemos como string en el frontend
-  fecha_aprobacion?: string;
-  comentarios_admin?: string;
-  
+  horario: string;
+  notas?: string;
+  aparecerEnMapa: boolean;
+  mostrarTelefonoMapa: boolean;
   created_at: string;
 }
 
